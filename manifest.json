@@ -1,11 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-omnivore",
+	"name": "Obsidian Omnivore plugin",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "This is an Omnivore plugin for Obsidian.",
+	"author": "Omnivore",
+	"authorUrl": "https://github.com/omnivore-app",
 	"isDesktopOnly": false
 }
