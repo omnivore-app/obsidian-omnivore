@@ -59,7 +59,8 @@ const DEFAULT_SETTINGS: Settings = {
   labels: {{#labels}}[[{{{name}}}]]{{/labels}}
   {{/labels.length}}
   date_saved: {{{dateSaved}}}`,
-  highlightTemplate: `> {{{text}}} [⤴️]({{{highlightUrl}}})`,
+  highlightTemplate: `> {{{text}}} [⤴️]({{{highlightUrl}}})
+  {{{note}}}`,
   highlightOrder: HighlightOrder.TIME,
   syncing: false,
   folder: "Omnivore",
@@ -205,6 +206,7 @@ export default class OmnivorePlugin extends Plugin {
                 text: highlight.quote,
                 highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
                 dateHighlighted: new Date(highlight.updatedAt).toString(),
+                note: highlight.annotation,
               });
 
               content += `${highlightContent}\n\n`;
