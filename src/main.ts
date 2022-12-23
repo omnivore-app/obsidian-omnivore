@@ -42,6 +42,7 @@ interface Settings {
   highlightTemplate: string;
   syncing: boolean;
   folder: string;
+  intervalId: number;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -64,6 +65,7 @@ const DEFAULT_SETTINGS: Settings = {
   highlightOrder: HighlightOrder.TIME,
   syncing: false,
   folder: "Omnivore",
+  intervalId: 0,
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -92,15 +94,7 @@ export default class OmnivorePlugin extends Plugin {
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new OmnivoreSettingTab(this.app, this));
 
-    // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-    if (this.settings.frequency > 0) {
-      this.registerInterval(
-        window.setInterval(
-          () => console.log("setInterval"),
-          this.settings.frequency * 60 * 1000
-        )
-      );
-    }
+    await this.syncOmnivore();
   }
 
   onunload() {}
@@ -249,6 +243,30 @@ export default class OmnivorePlugin extends Plugin {
       return "";
     }
   }
+
+  async syncOmnivore() {
+    const settings = this.settings;
+    const intervalId = settings.intervalId;
+
+    // clear interval if it exists
+    if (intervalId) {
+      window.clearInterval(intervalId);
+    }
+
+    // sync every frequency minutes
+    if (settings.frequency > 0) {
+      const intervalId = this.registerInterval(
+        window.setInterval(
+          async () => await this.fetchOmnivore(),
+          settings.frequency * 60 * 1000,
+          settings.syncAt
+        )
+      );
+
+      this.settings.intervalId = intervalId;
+      this.saveSettings();
+    }
+  }
 }
 
 class OmnivoreSettingTab extends PluginSettingTab {
@@ -325,6 +343,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
             console.log("frequency: " + value);
             this.plugin.settings.frequency = parseInt(value);
             await this.plugin.saveSettings();
+
+            await this.plugin.syncOmnivore();
           })
       );
 
