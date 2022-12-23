@@ -1,6 +1,6 @@
 import { diff_match_patch } from 'diff-match-patch'
 import { DateTime } from 'luxon'
-import * as escape from 'markdown-escape'
+import escape from 'markdown-escape'
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`

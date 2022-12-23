@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import * as Mustache from "mustache";
+import Mustache from "mustache";
 import {
   App,
   Notice,
