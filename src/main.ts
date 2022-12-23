@@ -9,7 +9,15 @@ import {
   addIcon,
   normalizePath,
 } from "obsidian";
-import { Article, loadArticles, parseDateTime, DATE_FORMAT } from "./util";
+import {
+  Article,
+  loadArticles,
+  parseDateTime,
+  DATE_FORMAT,
+  PageType,
+  compareHighlightsInFile,
+  getHighlightLocation,
+} from "./util";
 
 // Remember to rename these classes and interfaces!
 enum Filter {
@@ -79,59 +87,9 @@ export default class OmnivorePlugin extends Plugin {
       // Called when the user clicks the icon.
       await this.fetchOmnivore();
     });
-    // Perform additional things with the ribbon
-    // ribbonIconEl.addClass("my-plugin-ribbon-class");
-
-    // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-    // const statusBarItemEl = this.addStatusBarItem();
-    // statusBarItemEl.setText("Status Bar Text");
-
-    // This adds a simple command that can be triggered anywhere
-    // this.addCommand({
-    //   id: "open-sample-modal-simple",
-    //   name: "Open sample modal (simple)",
-    //   callback: () => {
-    //     new SampleModal(this.app).open();
-    //   },
-    // });
-    // This adds an editor command that can perform some operation on the current editor instance
-    // this.addCommand({
-    //   id: "sample-editor-command",
-    //   name: "Sample editor command",
-    //   editorCallback: (editor: Editor, view: MarkdownView) => {
-    //     console.log(editor.getSelection());
-    //     editor.replaceSelection("Sample Editor Command");
-    //   },
-    // });
-    // This adds a complex command that can check whether the current state of the app allows execution of the command
-    // this.addCommand({
-    //   id: "open-sample-modal-complex",
-    //   name: "Open sample modal (complex)",
-    //   checkCallback: (checking: boolean) => {
-    //     // Conditions to check
-    //     const markdownView =
-    //       this.app.workspace.getActiveViewOfType(MarkdownView);
-    //     if (markdownView) {
-    //       // If checking is true, we're simply "checking" if the command can be run.
-    //       // If checking is false, then we want to actually perform the operation.
-    //       if (!checking) {
-    //         new SampleModal(this.app).open();
-    //       }
-
-    //       // This command will only show up in Command Palette when the check function returns true
-    //       return true;
-    //     }
-    //   },
-    // });
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new OmnivoreSettingTab(this.app, this));
-
-    // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-    // Using this function will automatically remove the event listener when this plugin is disabled.
-    // this.registerDomEvent(document, "click", (evt: MouseEvent) => {
-    //   console.log("click", evt);
-    // });
 
     // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
     if (this.settings.frequency > 0) {
@@ -209,7 +167,7 @@ export default class OmnivorePlugin extends Plugin {
             this.siteNameFromUrl(article.originalArticleUrl);
           const dateSaved = new Date(article.savedAt).toString();
           // Build content string based on template
-          const content = Mustache.render(articleTemplate, {
+          let content = Mustache.render(articleTemplate, {
             title: article.title,
             omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
             siteName,
@@ -218,6 +176,40 @@ export default class OmnivorePlugin extends Plugin {
             labels: article.labels,
             dateSaved,
           });
+
+          // sort highlights by location if selected in options
+          highlightOrder === HighlightOrder.LOCATION &&
+            article.highlights?.sort((a, b) => {
+              try {
+                if (article.pageType === PageType.File) {
+                  // sort by location in file
+                  return compareHighlightsInFile(a, b);
+                }
+                // for web page, sort by location in the page
+                return (
+                  getHighlightLocation(a.patch) - getHighlightLocation(b.patch)
+                );
+              } catch (e) {
+                console.error(e);
+                return compareHighlightsInFile(a, b);
+              }
+            });
+
+          content += "\n\n";
+
+          if (article.highlights && article.highlights.length > 0) {
+            content += "## Highlights\n\n";
+
+            for (const highlight of article.highlights) {
+              const highlightContent = Mustache.render(highlightTemplate, {
+                text: highlight.quote,
+                highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
+                dateHighlighted: new Date(highlight.updatedAt).toString(),
+              });
+
+              content += `${highlightContent}\n\n`;
+            }
+          }
 
           await this.app.vault.adapter.write(normalizePath(pageName), content);
         }
@@ -256,22 +248,6 @@ export default class OmnivorePlugin extends Plugin {
     }
   }
 }
-
-// class SampleModal extends Modal {
-//   constructor(app: App) {
-//     super(app);
-//   }
-
-//   onOpen() {
-//     const { contentEl } = this;
-//     contentEl.setText("Woah!");
-//   }
-
-//   onClose() {
-//     const { contentEl } = this;
-//     contentEl.empty();
-//   }
-// }
 
 class OmnivoreSettingTab extends PluginSettingTab {
   plugin: OmnivorePlugin;
