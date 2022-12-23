@@ -33,11 +33,11 @@ enum HighlightOrder {
 
 interface Settings {
   apiKey: string;
-  filter: Filter;
+  filter: string;
   syncAt: string;
   frequency: number;
   customQuery: string;
-  highlightOrder: HighlightOrder;
+  highlightOrder: string;
   articleTemplate: string;
   highlightTemplate: string;
   syncing: boolean;
@@ -47,7 +47,7 @@ interface Settings {
 
 const DEFAULT_SETTINGS: Settings = {
   apiKey: "",
-  filter: Filter.HIGHLIGHTS,
+  filter: "HIGHLIGHTS",
   syncAt: "",
   frequency: 60,
   customQuery: "",
@@ -62,7 +62,7 @@ const DEFAULT_SETTINGS: Settings = {
   date_saved: {{{dateSaved}}}`,
   highlightTemplate: `> {{{text}}} [⤴️]({{{highlightUrl}}})
   {{{note}}}`,
-  highlightOrder: HighlightOrder.TIME,
+  highlightOrder: "TIME",
   syncing: false,
   folder: "Omnivore",
   intervalId: 0,
@@ -173,7 +173,7 @@ export default class OmnivorePlugin extends Plugin {
           });
 
           // sort highlights by location if selected in options
-          highlightOrder === HighlightOrder.LOCATION &&
+          highlightOrder === "LOCATION" &&
             article.highlights?.sort((a, b) => {
               try {
                 if (article.pageType === PageType.File) {
@@ -213,23 +213,22 @@ export default class OmnivorePlugin extends Plugin {
 
       new Notice("🔖 Articles fetched");
       this.settings.syncAt = DateTime.local().toFormat(DATE_FORMAT);
-      this.saveSettings();
     } catch (e) {
       new Notice("Failed to fetch articles");
       console.error(e);
     } finally {
       this.settings.syncing = false;
-      this.saveSettings();
+      await this.saveSettings();
     }
   }
 
-  getQueryFromFilter(filter: Filter, customQuery: string): string {
+  getQueryFromFilter(filter: string, customQuery: string): string {
     switch (filter) {
-      case Filter.ALL:
+      case "ALL":
         return "";
-      case Filter.HIGHLIGHTS:
+      case "HIGHLIGHTS":
         return `has:highlights`;
-      case Filter.ADVANCED:
+      case "ADVANCED":
         return customQuery;
       default:
         return "";
@@ -264,7 +263,7 @@ export default class OmnivorePlugin extends Plugin {
       );
 
       this.settings.intervalId = intervalId;
-      this.saveSettings();
+      await this.saveSettings();
     }
   }
 }
@@ -305,7 +304,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
         dropdown.addOptions(Filter);
         dropdown
           .setValue(this.plugin.settings.filter)
-          .onChange(async (value: Filter) => {
+          .onChange(async (value) => {
             console.log("filter: " + value);
             this.plugin.settings.filter = value;
             await this.plugin.saveSettings();
@@ -370,7 +369,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
         dropdown.addOptions(HighlightOrder);
         dropdown
           .setValue(this.plugin.settings.highlightOrder)
-          .onChange(async (value: HighlightOrder) => {
+          .onChange(async (value) => {
             console.log("highlightOrder: " + value);
             this.plugin.settings.highlightOrder = value;
             await this.plugin.saveSettings();
