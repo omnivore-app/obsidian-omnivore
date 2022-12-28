@@ -162,7 +162,7 @@ export default class OmnivorePlugin extends Plugin {
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
-          const dateSaved = new Date(article.savedAt).toString();
+          const dateSaved = DateTime.fromISO(article.savedAt).toFormat(this.settings.dateFormat)
           // Build content string based on template
           let content = Mustache.render(articleTemplate, {
             title: article.title,
