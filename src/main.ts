@@ -422,16 +422,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
     
     new Setting(containerEl)
       .setName("Date Format")
-      .setDesc("Enter the format date for use in rendered template")
-      .addMomentFormat((momentFormat) =>
-      momentFormat
-        .setPlaceholder("Last Sync")
-        .setValue(this.plugin.settings.dateFormat)
-        .setDefaultFormat("yyyy-MM-dd")
-        .onChange(async (value) => {
-          console.log("syncAt: " + value);
-          this.plugin.settings.dateFormat = value;
-          await this.plugin.saveSettings();
+      .setDesc('Enter the format date for use in rendered template')
+      .addText((text) =>
+        text
+          .setPlaceholder("Date Format")
+          .setValue(this.plugin.settings.dateFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.dateFormat = value;
+            await this.plugin.saveSettings();
       })
   );
   }
