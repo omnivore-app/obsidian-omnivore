@@ -273,6 +273,9 @@ export default class OmnivorePlugin extends Plugin {
 class OmnivoreSettingTab extends PluginSettingTab {
   plugin: OmnivorePlugin;
 
+  private static createFragmentWithHTML = (html: string) =>
+    createFragment((documentFragment) => (documentFragment.createDiv().innerHTML = html));
+
   constructor(app: App, plugin: OmnivorePlugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -422,7 +425,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     
     new Setting(containerEl)
       .setName("Date Format")
-      .setDesc('Enter the format date for use in rendered template')
+      .setDesc(OmnivoreSettingTab.createFragmentWithHTML('Enter the format date for use in rendered template.\nFormat <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens">reference</a>.'))
       .addText((text) =>
         text
           .setPlaceholder("Date Format")
