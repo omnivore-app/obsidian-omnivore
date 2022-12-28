@@ -43,6 +43,7 @@ interface Settings {
   syncing: boolean;
   folder: string;
   intervalId: number;
+  dateFormat: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -66,6 +67,7 @@ const DEFAULT_SETTINGS: Settings = {
   syncing: false,
   folder: "Omnivore",
   intervalId: 0,
+  dateFormat: "yyyy-MM-dd"
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -417,5 +419,20 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+    
+    new Setting(containerEl)
+      .setName("Date Format")
+      .setDesc("Enter the format date for use in rendered template")
+      .addMomentFormat((momentFormat) =>
+      momentFormat
+        .setPlaceholder("Last Sync")
+        .setValue(this.plugin.settings.dateFormat)
+        .setDefaultFormat("yyyy-MM-dd")
+        .onChange(async (value) => {
+          console.log("syncAt: " + value);
+          this.plugin.settings.dateFormat = value;
+          await this.plugin.saveSettings();
+      })
+  );
   }
 }
