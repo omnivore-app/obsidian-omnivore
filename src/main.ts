@@ -40,7 +40,6 @@ interface Settings {
   highlightTemplate: string;
   syncing: boolean;
   folder: string;
-  intervalId: number;
   dateFormat: string;
 }
 
@@ -49,21 +48,28 @@ const DEFAULT_SETTINGS: Settings = {
   filter: "HIGHLIGHTS",
   syncAt: "",
   customQuery: "",
-  articleTemplate: `[{{{title}}}]({{{omnivoreUrl}}})
-  site: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
-  {{#author}}
-  author: {{{author}}}
-  {{/author}}
-  {{#labels.length}}
-  labels: {{#labels}}[[{{{name}}}]]{{/labels}}
-  {{/labels.length}}
-  date_saved: {{{dateSaved}}}`,
+  articleTemplate: `---
+{{#author}}
+author: {{{author}}}
+{{/author}}
+{{#labels.length}}
+tags:
+{{#labels}}  - {{{name}}}
+{{/labels}}
+{{/labels.length}}
+date_saved: {{{dateSaved}}}
+---
+
+# {{{title}}}
+
+[Omnivore Source]({{{omnivoreUrl}}})
+[Original Source]({{{originalUrl}}})`,
   highlightTemplate: `> {{{text}}} [⤴️]({{{highlightUrl}}})
-  {{{note}}}`,
+
+{{{note}}}`,
   highlightOrder: "TIME",
   syncing: false,
   folder: "Omnivore",
-  intervalId: 0,
   dateFormat: "yyyy-MM-dd",
 };
 
