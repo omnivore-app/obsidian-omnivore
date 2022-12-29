@@ -331,7 +331,11 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Article Template")
-      .setDesc("Enter the template for the article")
+      .setDesc(
+        OmnivoreSettingTab.createFragmentWithHTML(
+          `Enter the template for the article. <a href="https://github.com/janl/mustache.js">Link to reference</a>`
+        )
+      )
       .addTextArea((text) =>
         text
           .setPlaceholder("Enter the article template")
@@ -345,7 +349,11 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Highlight Template")
-      .setDesc("Enter the template for the highlight")
+      .setDesc(
+        OmnivoreSettingTab.createFragmentWithHTML(
+          `Enter the template for the highlight. <a href="https://github.com/janl/mustache.js">Link to reference</a>`
+        )
+      )
       .addTextArea((text) =>
         text
           .setPlaceholder("Enter the highlight template")
