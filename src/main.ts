@@ -6,7 +6,6 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
-  addIcon,
   normalizePath,
 } from "obsidian";
 import {
@@ -35,7 +34,6 @@ interface Settings {
   apiKey: string;
   filter: string;
   syncAt: string;
-  frequency: number;
   customQuery: string;
   highlightOrder: string;
   articleTemplate: string;
@@ -50,7 +48,6 @@ const DEFAULT_SETTINGS: Settings = {
   apiKey: "",
   filter: "HIGHLIGHTS",
   syncAt: "",
-  frequency: 60,
   customQuery: "",
   articleTemplate: `[{{{title}}}]({{{omnivoreUrl}}})
   site: {{#siteName}}[{{{siteName}}}]{{/siteName}}({{{originalUrl}}})
@@ -67,7 +64,7 @@ const DEFAULT_SETTINGS: Settings = {
   syncing: false,
   folder: "Omnivore",
   intervalId: 0,
-  dateFormat: "yyyy-MM-dd"
+  dateFormat: "yyyy-MM-dd",
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -77,17 +74,15 @@ export default class OmnivorePlugin extends Plugin {
     await this.loadSettings();
 
     this.addCommand({
-      id: 'obsidian-omnivore-sync',
-      name: 'Sync Omnivore data',
+      id: "obsidian-omnivore-sync",
+      name: "Sync Omnivore data",
       callback: () => {
         this.fetchOmnivore();
-      }
+      },
     });
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new OmnivoreSettingTab(this.app, this));
-
-    await this.syncOmnivore();
   }
 
   onunload() {}
@@ -153,7 +148,9 @@ export default class OmnivorePlugin extends Plugin {
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
-          const dateSaved = DateTime.fromISO(article.savedAt).toFormat(this.settings.dateFormat)
+          const dateSaved = DateTime.fromISO(article.savedAt).toFormat(
+            this.settings.dateFormat
+          );
           // Build content string based on template
           let content = Mustache.render(articleTemplate, {
             title: article.title,
@@ -235,37 +232,15 @@ export default class OmnivorePlugin extends Plugin {
       return "";
     }
   }
-
-  async syncOmnivore() {
-    const settings = this.settings;
-    const intervalId = settings.intervalId;
-
-    // clear interval if it exists
-    if (intervalId) {
-      window.clearInterval(intervalId);
-    }
-
-    // sync every frequency minutes
-    if (settings.frequency > 0) {
-      const intervalId = this.registerInterval(
-        window.setInterval(
-          async () => await this.fetchOmnivore(),
-          settings.frequency * 60 * 1000,
-          settings.syncAt
-        )
-      );
-
-      this.settings.intervalId = intervalId;
-      await this.saveSettings();
-    }
-  }
 }
 
 class OmnivoreSettingTab extends PluginSettingTab {
   plugin: OmnivorePlugin;
 
   private static createFragmentWithHTML = (html: string) =>
-    createFragment((documentFragment) => (documentFragment.createDiv().innerHTML = html));
+    createFragment(
+      (documentFragment) => (documentFragment.createDiv().innerHTML = html)
+    );
 
   constructor(app: App, plugin: OmnivorePlugin) {
     super(app, plugin);
@@ -322,24 +297,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
             console.log("query: " + value);
             this.plugin.settings.customQuery = value;
             await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(containerEl)
-      .setName("Frequency")
-      .setDesc(
-        "Enter sync with Omnivore frequency in minutes here or 0 to disable"
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder("Enter sync frequency in minutes")
-          .setValue(this.plugin.settings.frequency.toString())
-          .onChange(async (value) => {
-            console.log("frequency: " + value);
-            this.plugin.settings.frequency = parseInt(value);
-            await this.plugin.saveSettings();
-
-            await this.plugin.syncOmnivore();
           })
       );
 
@@ -413,10 +370,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
-    
+
     new Setting(containerEl)
       .setName("Date Format")
-      .setDesc(OmnivoreSettingTab.createFragmentWithHTML('Enter the format date for use in rendered template.\nFormat <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens">reference</a>.'))
+      .setDesc(
+        OmnivoreSettingTab.createFragmentWithHTML(
+          'Enter the format date for use in rendered template.\nFormat <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens">reference</a>.'
+        )
+      )
       .addText((text) =>
         text
           .setPlaceholder("Date Format")
@@ -424,7 +385,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.dateFormat = value;
             await this.plugin.saveSettings();
-      })
-  );
+          })
+      );
   }
 }
