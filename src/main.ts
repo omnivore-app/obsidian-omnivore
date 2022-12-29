@@ -165,7 +165,11 @@ export default class OmnivorePlugin extends Plugin {
             siteName,
             originalUrl: article.originalArticleUrl,
             author: article.author,
-            labels: article.labels,
+            labels: article.labels?.map((l) => {
+              return {
+                name: l.name.replace(" ", "_"),
+              };
+            }),
             dateSaved,
           });
 
