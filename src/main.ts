@@ -43,6 +43,7 @@ interface Settings {
   syncing: boolean;
   folder: string;
   intervalId: number;
+  dateFormat: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -66,6 +67,7 @@ const DEFAULT_SETTINGS: Settings = {
   syncing: false,
   folder: "Omnivore",
   intervalId: 0,
+  dateFormat: "yyyy-MM-dd"
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -160,7 +162,7 @@ export default class OmnivorePlugin extends Plugin {
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
-          const dateSaved = new Date(article.savedAt).toString();
+          const dateSaved = DateTime.fromISO(article.savedAt).toFormat(this.settings.dateFormat)
           // Build content string based on template
           let content = Mustache.render(articleTemplate, {
             title: article.title,
@@ -270,6 +272,9 @@ export default class OmnivorePlugin extends Plugin {
 
 class OmnivoreSettingTab extends PluginSettingTab {
   plugin: OmnivorePlugin;
+
+  private static createFragmentWithHTML = (html: string) =>
+    createFragment((documentFragment) => (documentFragment.createDiv().innerHTML = html));
 
   constructor(app: App, plugin: OmnivorePlugin) {
     super(app, plugin);
@@ -417,5 +422,18 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+    
+    new Setting(containerEl)
+      .setName("Date Format")
+      .setDesc(OmnivoreSettingTab.createFragmentWithHTML('Enter the format date for use in rendered template.\nFormat <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens">reference</a>.'))
+      .addText((text) =>
+        text
+          .setPlaceholder("Date Format")
+          .setValue(this.plugin.settings.dateFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.dateFormat = value;
+            await this.plugin.saveSettings();
+      })
+  );
   }
 }
