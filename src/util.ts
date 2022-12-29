@@ -82,10 +82,7 @@ export interface HighlightPoint {
   top: number;
 }
 
-const prod = process.argv[2] === "production";
-const ENDPOINT = prod
-  ? "https://api-prod.omnivore.app/api/graphql"
-  : "http://localhost:4000/api/graphql";
+const ENDPOINT = "https://api-prod.omnivore.app/api/graphql";
 const requestHeaders = (apiKey: string) => ({
   "Content-Type": "application/json",
   authorization: apiKey,
