@@ -66,8 +66,10 @@ date_saved: {{{dateSaved}}}
 [Omnivore Source]({{{omnivoreUrl}}})
 [Original Source]({{{originalUrl}}})`,
   highlightTemplate: `> {{{text}}} [⤴️]({{{highlightUrl}}})
+{{#note}}
 
-{{{note}}}`,
+{{{note}}}
+{{/note}}`,
   highlightOrder: "TIME",
   syncing: false,
   folder: "Omnivore",
@@ -198,13 +200,13 @@ export default class OmnivorePlugin extends Plugin {
 
             for (const highlight of article.highlights) {
               const highlightContent = Mustache.render(highlightTemplate, {
-                text: highlight.quote,
+                text: highlight.quote.replace(/\n/g, "\n> "),
                 highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
                 dateHighlighted: new Date(highlight.updatedAt).toString(),
                 note: highlight.annotation,
               });
 
-              content += `${highlightContent}\n\n`;
+              content += `${highlightContent}\n`;
             }
           }
 
@@ -344,7 +346,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
       .setName("Article Template")
       .setDesc(
         OmnivoreSettingTab.createFragmentWithHTML(
-          `Enter the template for the article. <a href="https://github.com/janl/mustache.js">Link to reference</a>`
+          `Enter the template for the article. <a href="https://github.com/janl/mustache.js/#templates">Link to reference</a>`
         )
       )
       .addTextArea((text) =>
@@ -362,7 +364,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
       .setName("Highlight Template")
       .setDesc(
         OmnivoreSettingTab.createFragmentWithHTML(
-          `Enter the template for the highlight. <a href="https://github.com/janl/mustache.js">Link to reference</a>`
+          `Enter the template for the highlight. <a href="https://github.com/janl/mustache.js/#templates">Link to reference</a>`
         )
       )
       .addTextArea((text) =>
