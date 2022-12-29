@@ -61,6 +61,7 @@ date_saved: {{{dateSaved}}}
 ---
 
 # {{{title}}}
+#Omnivore
 
 [Omnivore Source]({{{omnivoreUrl}}})
 [Original Source]({{{originalUrl}}})`,
