@@ -104,13 +104,14 @@ export const loadArticle = async (
 };
 
 export const loadArticles = async (
+  endpoint: string,
   apiKey: string,
   after = 0,
   first = 10,
   updatedAt = "",
   query = ""
 ): Promise<[Article[], boolean]> => {
-  const res = await fetch(ENDPOINT, {
+  const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
     body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            pageType\\n            highlights {\\n            id\\n        quote\\n        annotation\\n        patch\\n        updatedAt\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       updatedAt ? "updated:" + updatedAt : ""
@@ -125,12 +126,13 @@ export const loadArticles = async (
 };
 
 export const loadDeletedArticleSlugs = async (
+  endpoint: string,
   apiKey: string,
   after = 0,
   first = 10,
   updatedAt = ""
 ): Promise<[string[], boolean]> => {
-  const res = await fetch(ENDPOINT, {
+  const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
     body: `{"query":"\\n    query UpdatesSince($after: String, $first: Int, $since: Date!) {\\n      updatesSince(first: $first, after: $after, since: $since) {\\n        ... on UpdatesSinceSuccess {\\n          edges {\\n       updateReason\\n        node {\\n              slug\\n        }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on UpdatesSinceError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "since":"${
       updatedAt || "2021-01-01"

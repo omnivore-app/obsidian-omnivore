@@ -41,6 +41,7 @@ interface Settings {
   syncing: boolean;
   folder: string;
   dateFormat: string;
+  endpoint: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -74,6 +75,7 @@ date_saved: {{{dateSaved}}}
   syncing: false,
   folder: "Omnivore",
   dateFormat: "yyyy-MM-dd",
+  endpoint: "https://api-prod.omnivore.app/api/graphql",
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -145,6 +147,7 @@ export default class OmnivorePlugin extends Plugin {
         after += size
       ) {
         [articles, hasNextPage] = await loadArticles(
+          this.settings.endpoint,
           apiKey,
           after,
           size,
@@ -265,10 +268,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Settings for omnivore plugin." });
+    containerEl.createEl("h2", { text: "Settings for omnivore plugin" });
+
+    containerEl.createEl("h3", { text: "General Settings" });
 
     new Setting(containerEl)
-      .setName("Api Key")
+      .setName("API Key")
       .setDesc("You can create an API key at https://omnivore.app/settings/api")
       .addText((text) =>
         text
@@ -405,6 +410,22 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.dateFormat)
           .onChange(async (value) => {
             this.plugin.settings.dateFormat = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    containerEl.createEl("h3", { text: "Advanced Settings" });
+
+    new Setting(containerEl)
+      .setName("API Endpoint")
+      .setDesc("Enter the Omnivore server's API endpoint")
+      .addText((text) =>
+        text
+          .setPlaceholder("API endpoint")
+          .setValue(this.plugin.settings.endpoint)
+          .onChange(async (value) => {
+            console.log("endpoint: " + value);
+            this.plugin.settings.endpoint = value;
             await this.plugin.saveSettings();
           })
       );
