@@ -270,9 +270,17 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "Settings for omnivore plugin" });
 
-    containerEl.createEl("h3", { text: "General Settings" });
+    // create a group of general settings
+    containerEl.createEl("div", {
+      cls: "collapsible",
+      text: "General Settings",
+    });
 
-    new Setting(containerEl)
+    const generalSettings = containerEl.createEl("div", {
+      cls: "content",
+    });
+
+    new Setting(generalSettings)
       .setName("API Key")
       .setDesc("You can create an API key at https://omnivore.app/settings/api")
       .addText((text) =>
@@ -286,7 +294,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
+    new Setting(generalSettings)
       .setName("Filter")
       .setDesc("Select an Omnivore search filter type")
       .addDropdown((dropdown) => {
@@ -300,7 +308,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(containerEl)
+    new Setting(generalSettings)
       .setName("Custom query")
       .setDesc(
         "See https://omnivore.app/help/search for more info on search query syntax"
@@ -318,7 +326,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
+    new Setting(generalSettings)
       .setName("Last Sync")
       .setDesc("Last time the plugin synced with Omnivore")
       .addMomentFormat((momentFormat) =>
@@ -333,7 +341,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
+    new Setting(generalSettings)
       .setName("Highlight Order")
       .setDesc("Select the order in which highlights are applied")
       .addDropdown((dropdown) => {
@@ -347,7 +355,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(containerEl)
+    new Setting(generalSettings)
       .setName("Article Template")
       .setDesc(
         OmnivoreSettingTab.createFragmentWithHTML(
@@ -365,7 +373,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
+    new Setting(generalSettings)
       .setName("Highlight Template")
       .setDesc(
         OmnivoreSettingTab.createFragmentWithHTML(
@@ -383,7 +391,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
+    new Setting(generalSettings)
       .setName("Folder")
       .setDesc("Enter the folder where the data will be stored")
       .addText((text) =>
@@ -397,7 +405,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl)
+    new Setting(generalSettings)
       .setName("Date Format")
       .setDesc(
         OmnivoreSettingTab.createFragmentWithHTML(
@@ -414,9 +422,16 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", { text: "Advanced Settings" });
+    containerEl.createEl("div", {
+      cls: "collapsible",
+      text: "Advanced Settings",
+    });
 
-    new Setting(containerEl)
+    const advancedSettings = containerEl.createEl("div", {
+      cls: "content",
+    });
+
+    new Setting(advancedSettings)
       .setName("API Endpoint")
       .setDesc("Enter the Omnivore server's API endpoint")
       .addText((text) =>
@@ -429,5 +444,20 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    const coll = document.getElementsByClassName("collapsible");
+    let i;
+
+    for (i = 0; i < coll.length; i++) {
+      coll[i].addEventListener("click", function () {
+        this.classList.toggle("active");
+        const content = this.nextElementSibling;
+        if (content.style.maxHeight) {
+          content.style.maxHeight = null;
+        } else {
+          content.style.maxHeight = content.scrollHeight + "px";
+        }
+      });
+    }
   }
 }
