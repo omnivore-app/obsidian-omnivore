@@ -271,7 +271,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "Settings for omnivore plugin" });
 
     // create a group of general settings
-    containerEl.createEl("div", {
+    containerEl.createEl("h3", {
       cls: "collapsible",
       text: "General Settings",
     });
@@ -422,7 +422,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("div", {
+    containerEl.createEl("h3", {
       cls: "collapsible",
       text: "Advanced Settings",
     });
@@ -445,6 +445,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
+    // script to make collapsible sections
     const coll = document.getElementsByClassName("collapsible");
     let i;
 
