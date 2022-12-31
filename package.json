@@ -12,6 +12,9 @@
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
+		"@semantic-release/changelog": "^6.0.2",
+		"@semantic-release/exec": "^6.0.3",
+		"@semantic-release/git": "^10.0.1",
 		"@types/diff-match-patch": "^1.0.32",
 		"@types/luxon": "^3.1.0",
 		"@types/markdown-escape": "^1.1.0",
@@ -31,5 +34,8 @@
 		"luxon": "^3.1.1",
 		"markdown-escape": "^2.0.0",
 		"mustache": "^4.2.0"
+	},
+	"volta": {
+		"node": "16.15.1"
 	}
 }
