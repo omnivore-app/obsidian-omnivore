@@ -104,6 +104,16 @@ export default class OmnivorePlugin extends Plugin {
       },
     });
 
+    this.addCommand({
+      id: "obsidian-omnivore-reset",
+      name: "Reset Omnivore syncAt",
+      callback: () => {
+        this.settings.syncAt = "";
+        this.saveSettings();
+        new Notice("Omnivore syncAt reset");
+      },
+    });
+
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new OmnivoreSettingTab(this.app, this));
   }
