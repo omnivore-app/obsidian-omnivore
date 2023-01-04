@@ -2,22 +2,23 @@ import { DateTime } from "luxon";
 import Mustache from "mustache";
 import {
   App,
+  normalizePath,
   Notice,
   Plugin,
   PluginSettingTab,
   Setting,
-  normalizePath,
+  TFile,
 } from "obsidian";
 import {
   Article,
-  loadArticles,
-  parseDateTime,
-  DATE_FORMAT,
-  PageType,
   compareHighlightsInFile,
+  DATE_FORMAT,
   getHighlightLocation,
+  loadArticles,
+  PageType,
+  parseDateTime,
 } from "./util";
-import {FolderSuggest} from "./settings/file-suggest";
+import { FileSuggest, FolderSuggest } from "./settings/file-suggest";
 
 // Remember to rename these classes and interfaces!
 enum Filter {
@@ -37,12 +38,12 @@ interface Settings {
   syncAt: string;
   customQuery: string;
   highlightOrder: string;
-  articleTemplate: string;
-  highlightTemplate: string;
+  template: string;
   syncing: boolean;
   folder: string;
   dateFormat: string;
   endpoint: string;
+  templateFileLocation: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -50,7 +51,8 @@ const DEFAULT_SETTINGS: Settings = {
   filter: "HIGHLIGHTS",
   syncAt: "",
   customQuery: "",
-  articleTemplate: `---
+  template: `---
+title: {{{title}}}
 {{#author}}
 author: {{{author}}}
 {{/author}}
@@ -65,18 +67,27 @@ date_saved: {{{dateSaved}}}
 # {{{title}}}
 #Omnivore
 
-[Omnivore Source]({{{omnivoreUrl}}})
-[Original Source]({{{originalUrl}}})`,
-  highlightTemplate: `> {{{text}}} [⤴️]({{{highlightUrl}}})
+[Read on Omnivore]({{{omnivoreUrl}}})
+[Read Original]({{{originalUrl}}})
+
+{{#highlights.length}}
+## Highlights
+
+{{#highlights}}
+> {{{text}}} [⤴️]({{{highlightUrl}}})
 {{#note}}
 
 {{{note}}}
-{{/note}}`,
+{{/note}}
+
+{{/highlights}}
+{{/highlights.length}}`,
   highlightOrder: "TIME",
   syncing: false,
   folder: "Omnivore",
   dateFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
+  templateFileLocation: "",
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -115,9 +126,9 @@ export default class OmnivorePlugin extends Plugin {
       customQuery,
       highlightOrder,
       syncing,
-      articleTemplate,
-      highlightTemplate,
+      template,
       folder,
+      templateFileLocation,
     } = this.settings;
 
     if (syncing) return;
@@ -156,7 +167,9 @@ export default class OmnivorePlugin extends Plugin {
             this.settings.dateFormat
           );
           const folderName = `${folder}/${dateSaved}`;
-          if (!(await this.app.vault.adapter.exists(normalizePath(folderName)))) {
+          if (
+            !(await this.app.vault.adapter.exists(normalizePath(folderName)))
+          ) {
             await this.app.vault.createFolder(folderName);
           }
 
@@ -164,21 +177,6 @@ export default class OmnivorePlugin extends Plugin {
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
-
-          // Build content string based on template
-          let content = Mustache.render(articleTemplate, {
-            title: article.title,
-            omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
-            siteName,
-            originalUrl: article.originalArticleUrl,
-            author: article.author,
-            labels: article.labels?.map((l) => {
-              return {
-                name: l.name.replace(" ", "_"),
-              };
-            }),
-            dateSaved,
-          });
 
           // sort highlights by location if selected in options
           highlightOrder === "LOCATION" &&
@@ -198,22 +196,40 @@ export default class OmnivorePlugin extends Plugin {
               }
             });
 
-          content += "\n\n";
+          const highlights = article.highlights?.map((highlight) => {
+            return {
+              text: highlight.quote.replace(/\n/g, "\n> "),
+              highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
+              dateHighlighted: new Date(highlight.updatedAt).toString(),
+              note: highlight.annotation,
+            };
+          });
 
-          if (article.highlights && article.highlights.length > 0) {
-            content += "## Highlights\n\n";
-
-            for (const highlight of article.highlights) {
-              const highlightContent = Mustache.render(highlightTemplate, {
-                text: highlight.quote.replace(/\n/g, "\n> "),
-                highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-                dateHighlighted: new Date(highlight.updatedAt).toString(),
-                note: highlight.annotation,
-              });
-
-              content += `${highlightContent}\n`;
+          // use template from file if specified
+          let templateToUse = template;
+          if (templateFileLocation) {
+            const templateFile =
+              this.app.vault.getAbstractFileByPath(templateFileLocation);
+            if (templateFile) {
+              templateToUse = await this.app.vault.read(templateFile as TFile);
             }
           }
+
+          // Build content string based on template
+          const content = Mustache.render(templateToUse, {
+            title: article.title,
+            omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
+            siteName,
+            originalUrl: article.originalArticleUrl,
+            author: article.author,
+            labels: article.labels?.map((l) => {
+              return {
+                name: l.name.replace(" ", "_"),
+              };
+            }),
+            dateSaved,
+            highlights,
+          });
 
           await this.app.vault.adapter.write(normalizePath(pageName), content);
         }
@@ -255,15 +271,15 @@ export default class OmnivorePlugin extends Plugin {
 class OmnivoreSettingTab extends PluginSettingTab {
   plugin: OmnivorePlugin;
 
-  private static createFragmentWithHTML = (html: string) =>
-    createFragment(
-      (documentFragment) => (documentFragment.createDiv().innerHTML = html)
-    );
-
   constructor(app: App, plugin: OmnivorePlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
+
+  private static createFragmentWithHTML = (html: string) =>
+    createFragment(
+      (documentFragment) => (documentFragment.createDiv().innerHTML = html)
+    );
 
   display(): void {
     const { containerEl } = this;
@@ -358,47 +374,44 @@ class OmnivoreSettingTab extends PluginSettingTab {
       });
 
     new Setting(generalSettings)
-      .setName("Article Template")
+      .setName("Template")
       .setDesc(
         OmnivoreSettingTab.createFragmentWithHTML(
-          `Enter the template for the article. <a href="https://github.com/janl/mustache.js/#templates">Link to reference</a>`
+          `Enter the template. <a href="https://github.com/janl/mustache.js/#templates">Link to reference</a>`
         )
       )
       .addTextArea((text) =>
         text
-          .setPlaceholder("Enter the article template")
-          .setValue(this.plugin.settings.articleTemplate)
+          .setPlaceholder("Enter the template")
+          .setValue(this.plugin.settings.template)
           .onChange(async (value) => {
-            console.log("articleTemplate: " + value);
-            this.plugin.settings.articleTemplate = value;
+            console.log("template: " + value);
+            this.plugin.settings.template = value;
             await this.plugin.saveSettings();
           })
       );
 
     new Setting(generalSettings)
-      .setName("Highlight Template")
-      .setDesc(
-        OmnivoreSettingTab.createFragmentWithHTML(
-          `Enter the template for the highlight. <a href="https://github.com/janl/mustache.js/#templates">Link to reference</a>`
-        )
-      )
-      .addTextArea((text) =>
-        text
-          .setPlaceholder("Enter the highlight template")
-          .setValue(this.plugin.settings.highlightTemplate)
+      .setName("Template file location")
+      .setDesc("Choose the file to use as the template")
+      .addSearch((search) => {
+        new FileSuggest(this.app, search.inputEl);
+        search
+          .setPlaceholder("Enter the file path")
+          .setValue(this.plugin.settings.templateFileLocation)
           .onChange(async (value) => {
-            console.log("highlightTemplate: " + value);
-            this.plugin.settings.highlightTemplate = value;
+            this.plugin.settings.templateFileLocation = value;
             await this.plugin.saveSettings();
-          })
-      );
+          });
+      });
 
     new Setting(generalSettings)
       .setName("Folder")
       .setDesc("Enter the folder where the data will be stored")
-      .addSearch((cb) => {
-        new FolderSuggest(this.app, cb.inputEl);
-        cb.setPlaceholder("Enter the folder")
+      .addSearch((search) => {
+        new FolderSuggest(this.app, search.inputEl);
+        search
+          .setPlaceholder("Enter the folder")
           .setValue(this.plugin.settings.folder)
           .onChange(async (value) => {
             this.plugin.settings.folder = value;
