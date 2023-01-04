@@ -130,11 +130,6 @@ export default class OmnivorePlugin extends Plugin {
     this.settings.syncing = true;
     await this.saveSettings();
 
-    const folderName = folder || "Omnivore";
-    if (!(await this.app.vault.adapter.exists(normalizePath(folderName)))) {
-      await this.app.vault.createFolder(folderName);
-    }
-
     try {
       console.log(`obsidian-omnivore starting sync since: '${syncAt}`);
 
@@ -156,13 +151,19 @@ export default class OmnivorePlugin extends Plugin {
         );
 
         for (const article of articles) {
+          const dateSaved = DateTime.fromISO(article.savedAt).toFormat(
+            this.settings.dateFormat
+          );
+          const folderName = `${folder}/${dateSaved}`;
+          if (!(await this.app.vault.adapter.exists(normalizePath(folderName)))) {
+            await this.app.vault.createFolder(folderName);
+          }
+
           const pageName = `${folderName}/${article.slug}.md`;
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
-          const dateSaved = DateTime.fromISO(article.savedAt).toFormat(
-            this.settings.dateFormat
-          );
+
           // Build content string based on template
           let content = Mustache.render(articleTemplate, {
             title: article.title,
