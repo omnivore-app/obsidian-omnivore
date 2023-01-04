@@ -17,6 +17,7 @@ import {
   compareHighlightsInFile,
   getHighlightLocation,
 } from "./util";
+import {FolderSuggest} from "./settings/file-suggest";
 
 // Remember to rename these classes and interfaces!
 enum Filter {
@@ -395,16 +396,15 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(generalSettings)
       .setName("Folder")
       .setDesc("Enter the folder where the data will be stored")
-      .addText((text) =>
-        text
-          .setPlaceholder("Enter the folder")
+      .addSearch((cb) => {
+        new FolderSuggest(this.app, cb.inputEl);
+        cb.setPlaceholder("Enter the folder")
           .setValue(this.plugin.settings.folder)
           .onChange(async (value) => {
-            console.log("folder: " + value);
             this.plugin.settings.folder = value;
             await this.plugin.saveSettings();
-          })
-      );
+          });
+      });
 
     new Setting(generalSettings)
       .setName("Date Format")

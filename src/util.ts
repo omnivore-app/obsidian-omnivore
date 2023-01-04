@@ -194,3 +194,7 @@ export const parseDateTime = (str: string): DateTime => {
   }
   return DateTime.fromFormat(str, DATE_FORMAT_W_OUT_SECONDS);
 };
+
+export const wrapAround = (value: number, size: number): number => {
+  return ((value % size) + size) % size;
+};
