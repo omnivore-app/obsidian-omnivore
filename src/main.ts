@@ -98,7 +98,7 @@ export default class OmnivorePlugin extends Plugin {
 
     this.addCommand({
       id: "obsidian-omnivore-sync",
-      name: "Sync Omnivore data",
+      name: "Sync",
       callback: () => {
         this.fetchOmnivore();
       },
@@ -106,11 +106,11 @@ export default class OmnivorePlugin extends Plugin {
 
     this.addCommand({
       id: "obsidian-omnivore-resync",
-      name: "Resync all Omnivore data",
+      name: "Resync",
       callback: () => {
         this.settings.syncAt = "";
         this.saveSettings();
-        new Notice("Omnivore syncAt reset");
+        new Notice("Omnivore Last Sync reset");
         this.fetchOmnivore();
       },
     });
@@ -209,9 +209,11 @@ export default class OmnivorePlugin extends Plugin {
 
           const highlights = article.highlights?.map((highlight) => {
             return {
-              text: highlight.quote.replace(/\n/g, "\n> "),
+              text: highlight.quote,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-              dateHighlighted: new Date(highlight.updatedAt).toString(),
+              dateHighlighted: DateTime.fromISO(highlight.updatedAt).toFormat(
+                this.settings.dateFormat
+              ),
               note: highlight.annotation,
             };
           });
