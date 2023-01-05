@@ -63,6 +63,7 @@ export interface Article {
   updatedAt: string;
   savedAt: string;
   pageType: PageType;
+  content?: string;
 }
 
 export interface Label {
@@ -109,13 +110,15 @@ export const loadArticles = async (
   after = 0,
   first = 10,
   updatedAt = "",
-  query = ""
+  query = "",
+  includeContent = false,
+  format = "html"
 ): Promise<[Article[], boolean]> => {
   const res = await fetch(endpoint, {
     headers: requestHeaders(apiKey),
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String) {\\n      search(first: $first, after: $after, query: $query) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            pageType\\n            highlights {\\n            id\\n        quote\\n        annotation\\n        patch\\n        updatedAt\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
+    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {\\n      search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            pageType\\n            content\\n            highlights {\\n            id\\n        quote\\n        annotation\\n        patch\\n        updatedAt\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       updatedAt ? "updated:" + updatedAt : ""
-    } sort:saved-asc ${query}"}}`,
+    } sort:saved-asc ${query}", "includeContent": ${includeContent}, "format": "${format}"}}`,
     method: "POST",
   });
 
