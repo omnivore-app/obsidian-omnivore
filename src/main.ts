@@ -69,6 +69,10 @@ date_saved: {{{dateSaved}}}
 
 [Read on Omnivore]({{{omnivoreUrl}}})
 [Read Original]({{{originalUrl}}})
+{{#content}}
+
+{{{content}}}
+{{/content}}
 
 {{#highlights.length}}
 ## Highlights
@@ -170,7 +174,9 @@ export default class OmnivorePlugin extends Plugin {
           after,
           size,
           parseDateTime(syncAt).toISO(),
-          this.getQueryFromFilter(filter, customQuery)
+          this.getQueryFromFilter(filter, customQuery),
+          true,
+          "markdown"
         );
 
         for (const article of articles) {
@@ -242,6 +248,7 @@ export default class OmnivorePlugin extends Plugin {
             }),
             dateSaved,
             highlights,
+            content: article.content,
           });
 
           await this.app.vault.adapter.write(normalizePath(pageName), content);
