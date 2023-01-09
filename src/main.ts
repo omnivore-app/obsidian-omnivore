@@ -7,7 +7,6 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
-  TFile,
 } from "obsidian";
 import {
   Article,
@@ -18,7 +17,7 @@ import {
   PageType,
   parseDateTime,
 } from "./util";
-import { FileSuggest, FolderSuggest } from "./settings/file-suggest";
+import { FolderSuggest } from "./settings/file-suggest";
 
 // Remember to rename these classes and interfaces!
 enum Filter {
@@ -43,7 +42,7 @@ interface Settings {
   folder: string;
   dateFormat: string;
   endpoint: string;
-  templateFileLocation: string;
+  // templateFileLocation: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -91,7 +90,7 @@ date_saved: {{{dateSaved}}}
   folder: "Omnivore",
   dateFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
-  templateFileLocation: "",
+  // templateFileLocation: "",
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -143,7 +142,6 @@ export default class OmnivorePlugin extends Plugin {
       syncing,
       template,
       folder,
-      templateFileLocation,
     } = this.settings;
 
     if (syncing) return;
@@ -224,18 +222,18 @@ export default class OmnivorePlugin extends Plugin {
             };
           });
 
-          // use template from file if specified
-          let templateToUse = template;
-          if (templateFileLocation) {
-            const templateFile =
-              this.app.vault.getAbstractFileByPath(templateFileLocation);
-            if (templateFile) {
-              templateToUse = await this.app.vault.read(templateFile as TFile);
-            }
-          }
+          // // use template from file if specified
+          // let templateToUse = template;
+          // if (templateFileLocation) {
+          //   const templateFile =
+          //     this.app.vault.getAbstractFileByPath(templateFileLocation);
+          //   if (templateFile) {
+          //     templateToUse = await this.app.vault.read(templateFile as TFile);
+          //   }
+          // }
 
           // Build content string based on template
-          const content = Mustache.render(templateToUse, {
+          const content = Mustache.render(template, {
             title: article.title,
             omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
             siteName,
@@ -411,19 +409,19 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(generalSettings)
-      .setName("Template file location")
-      .setDesc("Choose the file to use as the template")
-      .addSearch((search) => {
-        new FileSuggest(this.app, search.inputEl);
-        search
-          .setPlaceholder("Enter the file path")
-          .setValue(this.plugin.settings.templateFileLocation)
-          .onChange(async (value) => {
-            this.plugin.settings.templateFileLocation = value;
-            await this.plugin.saveSettings();
-          });
-      });
+    // new Setting(generalSettings)
+    //   .setName("Template file location")
+    //   .setDesc("Choose the file to use as the template")
+    //   .addSearch((search) => {
+    //     new FileSuggest(this.app, search.inputEl);
+    //     search
+    //       .setPlaceholder("Enter the file path")
+    //       .setValue(this.plugin.settings.templateFileLocation)
+    //       .onChange(async (value) => {
+    //         this.plugin.settings.templateFileLocation = value;
+    //         await this.plugin.saveSettings();
+    //       });
+    //   });
 
     new Setting(generalSettings)
       .setName("Folder")
