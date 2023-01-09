@@ -320,7 +320,11 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     new Setting(generalSettings)
       .setName("API Key")
-      .setDesc("You can create an API key at https://omnivore.app/settings/api")
+      .setDesc(
+        OmnivoreSettingTab.createFragmentWithHTML(
+          "You can create an API key at <a href='https://omnivore.app/settings/api'>https://omnivore.app/settings/api</a>"
+        )
+      )
       .addText((text) =>
         text
           .setPlaceholder("Enter your Omnivore Api Key")
@@ -349,7 +353,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(generalSettings)
       .setName("Custom query")
       .setDesc(
-        "See https://omnivore.app/help/search for more info on search query syntax"
+        OmnivoreSettingTab.createFragmentWithHTML(
+          "See <a href='https://omnivore.app/help/search'>https://omnivore.app/help/search</a> for more info on search query syntax"
+        )
       )
       .addText((text) =>
         text
@@ -397,7 +403,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
       .setName("Template")
       .setDesc(
         OmnivoreSettingTab.createFragmentWithHTML(
-          `Enter the template. <a href="https://github.com/janl/mustache.js/#templates">Link to reference</a>`
+          `Enter template to render articles with. <a href="https://github.com/janl/mustache.js/#templates">Reference</a>`
         )
       )
       .addTextArea((text) =>
@@ -439,6 +445,15 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
+    containerEl.createEl("h3", {
+      cls: "collapsible",
+      text: "Advanced Settings",
+    });
+
+    const advancedSettings = containerEl.createEl("div", {
+      cls: "content",
+    });
+
     new Setting(generalSettings)
       .setName("Date Format")
       .setDesc(
@@ -455,15 +470,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
-
-    containerEl.createEl("h3", {
-      cls: "collapsible",
-      text: "Advanced Settings",
-    });
-
-    const advancedSettings = containerEl.createEl("div", {
-      cls: "content",
-    });
 
     new Setting(advancedSettings)
       .setName("API Endpoint")
