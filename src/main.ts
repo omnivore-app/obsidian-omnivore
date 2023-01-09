@@ -110,7 +110,7 @@ export default class OmnivorePlugin extends Plugin {
 
     this.addCommand({
       id: "obsidian-omnivore-resync",
-      name: "Resync",
+      name: "Resync all articles",
       callback: () => {
         this.settings.syncAt = "";
         this.saveSettings();
