@@ -86,7 +86,7 @@ date_saved: {{{dateSaved}}}
 
 {{/highlights}}
 {{/highlights.length}}`,
-  highlightOrder: "TIME",
+  highlightOrder: "LOCATION",
   syncing: false,
   folder: "Omnivore",
   dateFormat: "yyyy-MM-dd",
