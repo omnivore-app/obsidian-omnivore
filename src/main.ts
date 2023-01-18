@@ -16,6 +16,7 @@ import {
   loadArticles,
   PageType,
   parseDateTime,
+  unicodeSlug,
 } from "./util";
 import { FolderSuggest } from "./settings/file-suggest";
 
@@ -100,7 +101,7 @@ export default class OmnivorePlugin extends Plugin {
     await this.loadSettings();
 
     this.addCommand({
-      id: "obsidian-omnivore-sync",
+      id: "omnivore-sync",
       name: "Sync",
       callback: () => {
         this.fetchOmnivore();
@@ -108,7 +109,7 @@ export default class OmnivorePlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "obsidian-omnivore-resync",
+      id: "omnivore-resync",
       name: "Resync all articles",
       callback: () => {
         this.settings.syncAt = "";
@@ -188,7 +189,11 @@ export default class OmnivorePlugin extends Plugin {
             await this.app.vault.createFolder(folderName);
           }
 
-          const pageName = `${folderName}/${article.slug}.md`;
+          // use unicode slug to show characters from other languages in the file name
+          const pageName = `${folderName}/${unicodeSlug(
+            article.title,
+            article.savedAt
+          )}.md`;
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);

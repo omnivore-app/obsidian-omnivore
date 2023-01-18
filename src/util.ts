@@ -201,3 +201,25 @@ export const parseDateTime = (str: string): DateTime => {
 export const wrapAround = (value: number, size: number): number => {
   return ((value % size) + size) % size;
 };
+
+export const unicodeSlug = (str: string, savedAt: string) => {
+  return (
+    str
+      .normalize("NFKD") // using NFKD method returns the Unicode Normalization Form of a given string.
+      .replace(/[\u0300-\u036f]/g, "") // remove all previously split accents
+      .trim()
+      .toLowerCase()
+      .replace(
+        /[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g,
+        ""
+      ) // replace all the symbols with -
+      .replace(/\s+/g, "-") // collapse whitespace and replace by -
+      .replace(/_/g, "-") // replace _ with -
+      .replace(/-+/g, "-") // collapse dashes
+      // remove trailing -
+      .replace(/-$/g, "")
+      .substring(0, 64) +
+    "-" +
+    new Date(savedAt).getTime().toString(16)
+  );
+};
