@@ -1,29 +1,34 @@
 module.exports = {
-  branches: 'master',
+  branches: "master",
+  tagFormat: "${version}",
   plugins: [
-    '@semantic-release/commit-analyzer',
-    '@semantic-release/release-notes-generator',
-    '@semantic-release/changelog',
-    ['@semantic-release/npm', { npmPublish: false }],
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    ["@semantic-release/npm", { npmPublish: false }],
     [
-      '@semantic-release/exec',
+      "@semantic-release/exec",
       {
-        prepareCmd:
-          'npm run version',
+        prepareCmd: "npm run version",
       },
     ],
     [
-      '@semantic-release/git',
+      "@semantic-release/git",
       {
-        assets: ['CHANGELOG.md', 'package.json', 'manifest.json', 'style.css'],
+        assets: [
+          "CHANGELOG.md",
+          "package.json",
+          "manifest.json",
+          "versions.json",
+        ],
         message:
-          'chore(release): ${nextRelease.version}\n\n${nextRelease.notes}',
+          "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}",
       },
     ],
     [
-      '@semantic-release/github',
+      "@semantic-release/github",
       {
-        assets: ['main.js', 'manifest.json', 'style.css'],
+        assets: ["main.js", "manifest.json", "styles.css"],
       },
     ],
   ],
