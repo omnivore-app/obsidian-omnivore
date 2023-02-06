@@ -1,6 +1,7 @@
 import { diff_match_patch } from "diff-match-patch";
 import { DateTime } from "luxon";
 import escape from "markdown-escape";
+import { requestUrl } from "obsidian";
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm";
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`;
@@ -94,12 +95,13 @@ export const loadArticle = async (
   slug: string,
   apiKey: string
 ): Promise<Article> => {
-  const res = await fetch(ENDPOINT, {
+  const res = await requestUrl({
+    url: ENDPOINT,
     headers: requestHeaders(apiKey),
     body: `{"query":"\\n  query GetArticle(\\n    $username: String!\\n    $slug: String!\\n  ) {\\n    article(username: $username, slug: $slug) {\\n      ... on ArticleSuccess {\\n        article {\\n          ...ArticleFields\\n          highlights {\\n            ...HighlightFields\\n          }\\n          labels {\\n            ...LabelFields\\n          }\\n        }\\n      }\\n      ... on ArticleError {\\n        errorCodes\\n      }\\n    }\\n  }\\n  \\n  fragment ArticleFields on Article {\\n    savedAt\\n  }\\n\\n  \\n  fragment HighlightFields on Highlight {\\n  id\\n  quote\\n  annotation\\n  }\\n\\n  \\n  fragment LabelFields on Label {\\n    name\\n  }\\n\\n","variables":{"username":"me","slug":"${slug}"}}`,
     method: "POST",
   });
-  const response = (await res.json()) as GetArticleResponse;
+  const response = res.json as GetArticleResponse;
 
   return response.data.article.article;
 };
@@ -114,7 +116,8 @@ export const loadArticles = async (
   includeContent = false,
   format = "html"
 ): Promise<[Article[], boolean]> => {
-  const res = await fetch(endpoint, {
+  const res = await requestUrl({
+    url: endpoint,
     headers: requestHeaders(apiKey),
     body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {\\n      search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            pageType\\n            content\\n            highlights {\\n            id\\n        quote\\n        annotation\\n        patch\\n        updatedAt\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
       updatedAt ? "updated:" + updatedAt : ""
@@ -122,7 +125,7 @@ export const loadArticles = async (
     method: "POST",
   });
 
-  const jsonRes = (await res.json()) as SearchResponse;
+  const jsonRes = res.json as SearchResponse;
   const articles = jsonRes.data.search.edges.map((e) => e.node);
 
   return [articles, jsonRes.data.search.pageInfo.hasNextPage];
@@ -135,7 +138,8 @@ export const loadDeletedArticleSlugs = async (
   first = 10,
   updatedAt = ""
 ): Promise<[string[], boolean]> => {
-  const res = await fetch(endpoint, {
+  const res = await requestUrl({
+    url: endpoint,
     headers: requestHeaders(apiKey),
     body: `{"query":"\\n    query UpdatesSince($after: String, $first: Int, $since: Date!) {\\n      updatesSince(first: $first, after: $after, since: $since) {\\n        ... on UpdatesSinceSuccess {\\n          edges {\\n       updateReason\\n        node {\\n              slug\\n        }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on UpdatesSinceError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "since":"${
       updatedAt || "2021-01-01"
@@ -143,7 +147,7 @@ export const loadDeletedArticleSlugs = async (
     method: "POST",
   });
 
-  const jsonRes = (await res.json()) as UpdatesSinceResponse;
+  const jsonRes = res.json as UpdatesSinceResponse;
   const deletedArticleSlugs = jsonRes.data.updatesSince.edges
     .filter((edge) => edge.updateReason === UpdateReason.DELETED)
     .map((edge) => edge.node.slug);
