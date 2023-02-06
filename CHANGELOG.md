@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.2...1.0.3) (2023-02-06)
+
+
+### Bug Fixes
+
+* potential issues with new release in the community market based on the feedback from Obsidian team ([d987f21](https://github.com/omnivore-app/obsidian-omnivore/commit/d987f21cd2dba39d5bf6cfe76b1a6258b471c415))
+
 ## [1.0.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.1...1.0.2) (2023-01-31)
 
 
