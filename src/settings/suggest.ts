@@ -1,3 +1,5 @@
+// Credits go to Liam's Periodic Notes Plugin: https://github.com/liamcain/obsidian-periodic-notes
+
 import { createPopper, type Instance as PopperInstance } from "@popperjs/core";
 import { App, type ISuggestOwner, Scope } from "obsidian";
 import { wrapAround } from "../util";

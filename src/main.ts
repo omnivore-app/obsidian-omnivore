@@ -8,6 +8,8 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
+  TFile,
+  TFolder,
 } from "obsidian";
 import {
   Article,
@@ -21,7 +23,6 @@ import {
 } from "./util";
 import { FolderSuggest } from "./settings/file-suggest";
 
-// Remember to rename these classes and interfaces!
 enum Filter {
   ALL = "import all my articles",
   HIGHLIGHTS = "import just highlights",
@@ -102,7 +103,7 @@ export default class OmnivorePlugin extends Plugin {
     await this.loadSettings();
 
     this.addCommand({
-      id: "omnivore-sync",
+      id: "sync",
       name: "Sync",
       callback: () => {
         this.fetchOmnivore();
@@ -110,7 +111,7 @@ export default class OmnivorePlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "omnivore-resync",
+      id: "resync",
       name: "Resync all articles",
       callback: () => {
         this.settings.syncAt = "";
@@ -201,9 +202,10 @@ export default class OmnivorePlugin extends Plugin {
             this.settings.dateFormat
           );
           const folderName = `${folder}/${dateSaved}`;
-          if (
-            !(await this.app.vault.adapter.exists(normalizePath(folderName)))
-          ) {
+          const omnivoreFolder = app.vault.getAbstractFileByPath(
+            normalizePath(folderName)
+          );
+          if (!(omnivoreFolder instanceof TFolder)) {
             await this.app.vault.createFolder(folderName);
           }
 
@@ -245,16 +247,6 @@ export default class OmnivorePlugin extends Plugin {
             };
           });
 
-          // // use template from file if specified
-          // let templateToUse = template;
-          // if (templateFileLocation) {
-          //   const templateFile =
-          //     this.app.vault.getAbstractFileByPath(templateFileLocation);
-          //   if (templateFile) {
-          //     templateToUse = await this.app.vault.read(templateFile as TFile);
-          //   }
-          // }
-
           // Build content string based on template
           const content = Mustache.render(template, {
             title: article.title,
@@ -272,7 +264,16 @@ export default class OmnivorePlugin extends Plugin {
             content: article.content,
           });
 
-          await this.app.vault.adapter.write(normalizePath(pageName), content);
+          const normalizedPath = normalizePath(pageName);
+          const omnivoreFile = app.vault.getAbstractFileByPath(normalizedPath);
+          if (omnivoreFile instanceof TFile) {
+            const existingContent = await this.app.vault.read(omnivoreFile);
+            if (existingContent !== content) {
+              await this.app.vault.modify(omnivoreFile, content);
+            }
+          } else {
+            await this.app.vault.create(normalizedPath, content);
+          }
         }
       }
 
@@ -317,17 +318,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
-  private static createFragmentWithHTML = (html: string) =>
-    createFragment(
-      (documentFragment) => (documentFragment.createDiv().innerHTML = html)
-    );
-
   display(): void {
     const { containerEl } = this;
 
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Settings for omnivore plugin" });
+    containerEl.createEl("h2", { text: "Settings for Omnivore plugin" });
 
     // create a group of general settings
     containerEl.createEl("h3", {
@@ -342,16 +338,21 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(generalSettings)
       .setName("API Key")
       .setDesc(
-        OmnivoreSettingTab.createFragmentWithHTML(
-          "You can create an API key at <a href='https://omnivore.app/settings/api'>https://omnivore.app/settings/api</a>"
-        )
+        createFragment((fragment) => {
+          fragment.append(
+            "You can create an API key at ",
+            fragment.createEl("a", {
+              text: "https://omnivore.app/settings/api",
+              href: "https://omnivore.app/settings/api",
+            })
+          );
+        })
       )
       .addText((text) =>
         text
           .setPlaceholder("Enter your Omnivore Api Key")
           .setValue(this.plugin.settings.apiKey)
           .onChange(async (value) => {
-            console.log("apiKey: " + value);
             this.plugin.settings.apiKey = value;
             await this.plugin.saveSettings();
           })
@@ -365,7 +366,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
         dropdown
           .setValue(this.plugin.settings.filter)
           .onChange(async (value) => {
-            console.log("filter: " + value);
             this.plugin.settings.filter = value;
             await this.plugin.saveSettings();
           });
@@ -374,9 +374,16 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(generalSettings)
       .setName("Custom query")
       .setDesc(
-        OmnivoreSettingTab.createFragmentWithHTML(
-          "See <a href='https://omnivore.app/help/search'>https://omnivore.app/help/search</a> for more info on search query syntax"
-        )
+        createFragment((fragment) => {
+          fragment.append(
+            "See ",
+            fragment.createEl("a", {
+              text: "https://omnivore.app/help/search",
+              href: "https://omnivore.app/help/search",
+            }),
+            " for more info on search query syntax"
+          );
+        })
       )
       .addText((text) =>
         text
@@ -385,7 +392,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
           )
           .setValue(this.plugin.settings.customQuery)
           .onChange(async (value) => {
-            console.log("query: " + value);
             this.plugin.settings.customQuery = value;
             await this.plugin.saveSettings();
           })
@@ -400,7 +406,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.syncAt)
           .setDefaultFormat("yyyy-MM-dd'T'HH:mm:ss")
           .onChange(async (value) => {
-            console.log("syncAt: " + value);
             this.plugin.settings.syncAt = value;
             await this.plugin.saveSettings();
           })
@@ -414,7 +419,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
         dropdown
           .setValue(this.plugin.settings.highlightOrder)
           .onChange(async (value) => {
-            console.log("highlightOrder: " + value);
             this.plugin.settings.highlightOrder = value;
             await this.plugin.saveSettings();
           });
@@ -423,34 +427,25 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(generalSettings)
       .setName("Template")
       .setDesc(
-        OmnivoreSettingTab.createFragmentWithHTML(
-          `Enter template to render articles with. <a href="https://github.com/janl/mustache.js/#templates">Reference</a>`
-        )
+        createFragment((fragment) => {
+          fragment.append(
+            "Enter template to render articles with ",
+            fragment.createEl("a", {
+              text: "Reference",
+              href: "https://github.com/janl/mustache.js/#templates",
+            })
+          );
+        })
       )
       .addTextArea((text) =>
         text
           .setPlaceholder("Enter the template")
           .setValue(this.plugin.settings.template)
           .onChange(async (value) => {
-            console.log("template: " + value);
             this.plugin.settings.template = value;
             await this.plugin.saveSettings();
           })
       );
-
-    // new Setting(generalSettings)
-    //   .setName("Template file location")
-    //   .setDesc("Choose the file to use as the template")
-    //   .addSearch((search) => {
-    //     new FileSuggest(this.app, search.inputEl);
-    //     search
-    //       .setPlaceholder("Enter the file path")
-    //       .setValue(this.plugin.settings.templateFileLocation)
-    //       .onChange(async (value) => {
-    //         this.plugin.settings.templateFileLocation = value;
-    //         await this.plugin.saveSettings();
-    //       });
-    //   });
 
     new Setting(generalSettings)
       .setName("Folder")
@@ -478,9 +473,15 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(generalSettings)
       .setName("Date Format")
       .setDesc(
-        OmnivoreSettingTab.createFragmentWithHTML(
-          'Enter the format date for use in rendered template.\nFormat <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens">reference</a>.'
-        )
+        createFragment((fragment) => {
+          fragment.append(
+            "Enter the format date for use in rendered template.\nFormat ",
+            fragment.createEl("a", {
+              text: "reference",
+              href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",
+            })
+          );
+        })
       )
       .addText((text) =>
         text
