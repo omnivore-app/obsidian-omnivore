@@ -271,7 +271,7 @@ export default class OmnivorePlugin extends Plugin {
             if (existingContent !== content) {
               await this.app.vault.modify(omnivoreFile, content);
             }
-          } else {
+          } else if (!omnivoreFile) {
             await this.app.vault.create(normalizedPath, content);
           }
         }
