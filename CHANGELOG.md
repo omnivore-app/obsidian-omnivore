@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.3...1.0.4) (2023-02-19)
+
+
+### Bug Fixes
+
+* create an omnivore file for an existing TFolder ([b7768ff](https://github.com/omnivore-app/obsidian-omnivore/commit/b7768ffed335baec2eb841aeaffd283573a14c8d))
+
 ## [1.0.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.2...1.0.3) (2023-02-06)
 
 
