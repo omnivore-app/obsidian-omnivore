@@ -8,6 +8,7 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
+  stringifyYaml,
   TFile,
   TFolder,
 } from "obsidian";
@@ -19,7 +20,7 @@ import {
   loadArticles,
   PageType,
   parseDateTime,
-  unicodeSlug,
+  replaceIllegalChars,
 } from "./util";
 import { FolderSuggest } from "./settings/file-suggest";
 
@@ -57,6 +58,7 @@ const DEFAULT_SETTINGS: Settings = {
   syncAt: "",
   customQuery: "",
   template: `---
+id: {{{id}}}
 title: {{{title}}}
 {{#author}}
 author: {{{author}}}
@@ -179,7 +181,7 @@ export default class OmnivorePlugin extends Plugin {
     await this.saveSettings();
 
     try {
-      console.log(`obsidian-omnivore starting sync since: '${syncAt}`);
+      console.log(`obsidian-omnivore starting sync since: '${syncAt}'`);
 
       new Notice("🚀 Fetching articles ...");
 
@@ -215,11 +217,6 @@ export default class OmnivorePlugin extends Plugin {
             await this.app.vault.createFolder(folderName);
           }
 
-          // use unicode slug to show characters from other languages in the file name
-          const pageName = `${folderName}/${unicodeSlug(
-            article.title,
-            article.savedAt
-          )}.md`;
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
@@ -255,6 +252,7 @@ export default class OmnivorePlugin extends Plugin {
 
           // Build content string based on template
           const content = Mustache.render(template, {
+            id: article.id,
             title: article.title,
             omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
             siteName,
@@ -270,15 +268,82 @@ export default class OmnivorePlugin extends Plugin {
             content: article.content,
           });
 
+          // add frontmatter to the content
+          const frontmatter = {
+            id: article.id,
+            title: article.title,
+            author: article.author,
+            tags: article.labels?.map((l) => l.name),
+            date_saved: dateSaved,
+          };
+          // remove null and empty values from frontmatter
+          const filteredFrontmatter = Object.fromEntries(
+            Object.entries(frontmatter).filter(
+              ([_, value]) => value != null && value !== ""
+            )
+          );
+          const frontmatterYaml = stringifyYaml(filteredFrontmatter);
+          const frontmatterString = `---\n${frontmatterYaml}---`;
+          // Modify the contents of the note with the updated front matter
+          const updatedContent = content.replace(
+            /^(---[\s\S]*?---)/gm,
+            frontmatterString
+          );
+          // use the title as the filename
+          const pageName = `${folderName}/${replaceIllegalChars(
+            article.title
+          )}.md`;
           const normalizedPath = normalizePath(pageName);
           const omnivoreFile = app.vault.getAbstractFileByPath(normalizedPath);
-          if (omnivoreFile instanceof TFile) {
-            const existingContent = await this.app.vault.read(omnivoreFile);
-            if (existingContent !== content) {
-              await this.app.vault.modify(omnivoreFile, content);
+          try {
+            if (omnivoreFile instanceof TFile) {
+              await app.fileManager.processFrontMatter(
+                omnivoreFile,
+                async (frontMatter) => {
+                  const id = frontMatter.id;
+                  if (id && id !== article.id) {
+                    // this article has the same name but different id
+                    const newPageName = `${folderName}/${replaceIllegalChars(
+                      article.title
+                    )}-${article.id}.md`;
+                    const newNormalizedPath = normalizePath(newPageName);
+                    const newOmnivoreFile =
+                      app.vault.getAbstractFileByPath(newNormalizedPath);
+                    if (newOmnivoreFile instanceof TFile) {
+                      // a file with the same name and id already exists, so we need to update it
+                      const existingContent = await this.app.vault.read(
+                        newOmnivoreFile
+                      );
+                      if (existingContent !== updatedContent) {
+                        await this.app.vault.modify(
+                          newOmnivoreFile,
+                          updatedContent
+                        );
+                      }
+                      return;
+                    }
+                    // a file with the same name but different id already exists, so we need to create it
+                    await this.app.vault.create(
+                      newNormalizedPath,
+                      updatedContent
+                    );
+                    return;
+                  }
+                  // a file with the same id already exists, so we might need to update it
+                  const existingContent = await this.app.vault.read(
+                    omnivoreFile
+                  );
+                  if (existingContent !== updatedContent) {
+                    await this.app.vault.modify(omnivoreFile, updatedContent);
+                  }
+                }
+              );
+            } else if (!omnivoreFile) {
+              // file doesn't exist, so we need to create it
+              await this.app.vault.create(normalizedPath, updatedContent);
             }
-          } else if (!omnivoreFile) {
-            await this.app.vault.create(normalizedPath, content);
+          } catch (e) {
+            console.error(e);
           }
         }
       }
