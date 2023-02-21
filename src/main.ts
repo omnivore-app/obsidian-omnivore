@@ -217,10 +217,6 @@ export default class OmnivorePlugin extends Plugin {
             await this.app.vault.createFolder(folderName);
           }
 
-          const siteName =
-            article.siteName ||
-            this.siteNameFromUrl(article.originalArticleUrl);
-
           // sort highlights by location if selected in options
           highlightOrder === "LOCATION" &&
             article.highlights?.sort((a, b) => {
@@ -238,7 +234,6 @@ export default class OmnivorePlugin extends Plugin {
                 return compareHighlightsInFile(a, b);
               }
             });
-
           const highlights = article.highlights?.map((highlight) => {
             return {
               text: highlight.quote,
@@ -249,7 +244,9 @@ export default class OmnivorePlugin extends Plugin {
               note: highlight.annotation,
             };
           });
-
+          const siteName =
+            article.siteName ||
+            this.siteNameFromUrl(article.originalArticleUrl);
           // Build content string based on template
           const content = Mustache.render(template, {
             id: article.id,
@@ -267,7 +264,6 @@ export default class OmnivorePlugin extends Plugin {
             highlights,
             content: article.content,
           });
-
           // add frontmatter to the content
           const frontmatter = {
             id: article.id,
@@ -285,10 +281,14 @@ export default class OmnivorePlugin extends Plugin {
           const frontmatterYaml = stringifyYaml(filteredFrontmatter);
           const frontmatterString = `---\n${frontmatterYaml}---`;
           // Modify the contents of the note with the updated front matter
-          const updatedContent = content.replace(
+          let updatedContent = content.replace(
             /^(---[\s\S]*?---)/gm,
             frontmatterString
           );
+          // if the content doesn't have frontmatter, add it
+          if (!content.match(/^(---[\s\S]*?---)/gm)) {
+            updatedContent = `${frontmatterString}\n\n${content}`;
+          }
           // use the title as the filename
           const pageName = `${folderName}/${replaceIllegalChars(
             article.title
