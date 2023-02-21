@@ -76,10 +76,6 @@ date_saved: {{{dateSaved}}}
 
 [Read on Omnivore]({{{omnivoreUrl}}})
 [Read Original]({{{originalUrl}}})
-{{#content}}
-
-{{{content}}}
-{{/content}}
 
 {{#highlights.length}}
 ## Highlights
