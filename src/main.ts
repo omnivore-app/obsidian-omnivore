@@ -43,12 +43,15 @@ interface Settings {
   template: string;
   syncing: boolean;
   folder: string;
-  dateFormat: string;
+  folderFormat: string;
   endpoint: string;
+  dateHighlightedFormat: string;
+  dateSavedFormat: string;
   // templateFileLocation: string;
 }
-
 const DEFAULT_SETTINGS: Settings = {
+  dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
+  dateSavedFormat: "yyyy-MM-dd HH:mm:ss",
   apiKey: "",
   filter: "HIGHLIGHTS",
   syncAt: "",
@@ -91,7 +94,7 @@ date_saved: {{{dateSaved}}}
   highlightOrder: "LOCATION",
   syncing: false,
   folder: "Omnivore",
-  dateFormat: "yyyy-MM-dd",
+  folderFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
   // templateFileLocation: "",
 };
@@ -199,9 +202,12 @@ export default class OmnivorePlugin extends Plugin {
 
         for (const article of articles) {
           const dateSaved = DateTime.fromISO(article.savedAt).toFormat(
-            this.settings.dateFormat
+            this.settings.dateSavedFormat
           );
-          const folderName = `${folder}/${dateSaved}`;
+          const subFolderName = DateTime.fromISO(article.savedAt).toFormat(
+            this.settings.folderFormat
+          );
+          const folderName = `${folder}/${subFolderName}`;
           const omnivoreFolder = app.vault.getAbstractFileByPath(
             normalizePath(folderName)
           );
@@ -241,7 +247,7 @@ export default class OmnivorePlugin extends Plugin {
               text: highlight.quote,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
               dateHighlighted: DateTime.fromISO(highlight.updatedAt).toFormat(
-                this.settings.dateFormat
+                this.settings.dateHighlightedFormat
               ),
               note: highlight.annotation,
             };
@@ -471,7 +477,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     });
 
     new Setting(generalSettings)
-      .setName("Date Format")
+      .setName("Folder Date Format")
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
@@ -485,10 +491,30 @@ class OmnivoreSettingTab extends PluginSettingTab {
       )
       .addText((text) =>
         text
-          .setPlaceholder("Date Format")
-          .setValue(this.plugin.settings.dateFormat)
+          .setPlaceholder("yyyy-MM-dd")
+          .setValue(this.plugin.settings.folderFormat)
           .onChange(async (value) => {
-            this.plugin.settings.dateFormat = value;
+            this.plugin.settings.folderFormat = value;
+            await this.plugin.saveSettings();
+          })
+      );
+    new Setting(generalSettings).setName("Date Saved Format").addText((text) =>
+      text
+        .setPlaceholder("yyyy-MM-dd'T'HH:mm:ss")
+        .setValue(this.plugin.settings.dateSavedFormat)
+        .onChange(async (value) => {
+          this.plugin.settings.dateSavedFormat = value;
+          await this.plugin.saveSettings();
+        })
+    );
+    new Setting(generalSettings)
+      .setName("Date Highlighted Format")
+      .addText((text) =>
+        text
+          .setPlaceholder("Date Highlighted Format")
+          .setValue(this.plugin.settings.dateHighlightedFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.dateHighlightedFormat = value;
             await this.plugin.saveSettings();
           })
       );
