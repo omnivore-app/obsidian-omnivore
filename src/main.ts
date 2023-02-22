@@ -190,7 +190,7 @@ export default class OmnivorePlugin extends Plugin {
         for (const article of articles) {
           const dateFormat = this.settings.dateSavedFormat;
           const subFolderName = formatDate(article.savedAt, this.settings.folderFormat);
-          let folderName;
+          let folderName: string;
           if (this.settings.useFolder) {
             folderName = `${folder}/${subFolderName}`;
           } else {
