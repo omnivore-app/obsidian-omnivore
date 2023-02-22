@@ -57,21 +57,7 @@ const DEFAULT_SETTINGS: Settings = {
   filter: "HIGHLIGHTS",
   syncAt: "",
   customQuery: "",
-  template: `---
-id: {{{id}}}
-title: {{{title}}}
-{{#author}}
-author: {{{author}}}
-{{/author}}
-{{#labels.length}}
-tags:
-{{#labels}}  - {{{name}}}
-{{/labels}}
-{{/labels.length}}
-date_saved: {{{dateSaved}}}
----
-
-# {{{title}}}
+  template: `# {{{title}}}
 #Omnivore
 
 [Read on Omnivore]({{{omnivoreUrl}}})
@@ -502,6 +488,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
               href: "https://github.com/janl/mustache.js/#templates",
             }),
             fragment.createEl("br"),
+            fragment.createEl("br"),
             "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, dateSaved, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted"
           );
         })
@@ -511,7 +498,11 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .setPlaceholder("Enter the template")
           .setValue(this.plugin.settings.template)
           .onChange(async (value) => {
-            this.plugin.settings.template = value;
+            // TODO: validate template
+            // if template is empty, use default template
+            this.plugin.settings.template = value
+              ? value
+              : DEFAULT_SETTINGS.template;
             await this.plugin.saveSettings();
           })
       );
