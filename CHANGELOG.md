@@ -1,3 +1,14 @@
+## [1.0.5](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.4...1.0.5) (2023-02-22)
+
+
+### Bug Fixes
+
+* add available variables to the template config description ([09f8c83](https://github.com/omnivore-app/obsidian-omnivore/commit/09f8c832cecffbc2800d22b1bcc87cb36d34910d))
+* add date_published in the frontmatter ([cf61925](https://github.com/omnivore-app/obsidian-omnivore/commit/cf61925243bb6cfccdbc625b6069d54600daf68c))
+* remove content from default template ([11a0202](https://github.com/omnivore-app/obsidian-omnivore/commit/11a020294922c7c1caad72063f6544cf2a2cb9e7))
+* use default template if empty ([7b4f7e4](https://github.com/omnivore-app/obsidian-omnivore/commit/7b4f7e4321e3b6ee42b1e635300dc8d07c290cd7))
+* use omnivore title as the filename and add omnivore id to the frontmatter which is used to deduplicate files with the same name ([8fbf85d](https://github.com/omnivore-app/obsidian-omnivore/commit/8fbf85d86baa23f065e9bf63bd8aef607609392c))
+
 ## [1.0.4](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.3...1.0.4) (2023-02-19)
 
 

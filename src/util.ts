@@ -53,6 +53,7 @@ export enum PageType {
 }
 
 export interface Article {
+  id: string;
   title: string;
   siteName: string;
   originalArticleUrl: string;
@@ -65,6 +66,7 @@ export interface Article {
   savedAt: string;
   pageType: PageType;
   content?: string;
+  publishedAt: string;
 }
 
 export interface Label {
@@ -119,9 +121,60 @@ export const loadArticles = async (
   const res = await requestUrl({
     url: endpoint,
     headers: requestHeaders(apiKey),
-    body: `{"query":"\\n    query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {\\n      search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {\\n        ... on SearchSuccess {\\n          edges {\\n            node {\\n              title\\n              slug\\n              siteName\\n              originalArticleUrl\\n              url\\n              author\\n              updatedAt\\n              description\\n              savedAt\\n            pageType\\n            content\\n            highlights {\\n            id\\n        quote\\n        annotation\\n        patch\\n        updatedAt\\n          }\\n        labels {\\n            name\\n          }\\n            }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on SearchError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "query":"${
-      updatedAt ? "updated:" + updatedAt : ""
-    } sort:saved-asc ${query}", "includeContent": ${includeContent}, "format": "${format}"}}`,
+    body: JSON.stringify({
+      query: `
+        query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {
+          search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {
+            ... on SearchSuccess {
+              edges {
+                node {
+                  id
+                  title
+                  slug
+                  siteName
+                  originalArticleUrl
+                  url
+                  author
+                  updatedAt
+                  description
+                  savedAt
+                  pageType
+                  content
+                  publishedAt
+                  highlights {
+                    id
+                    quote
+                    annotation
+                    patch
+                    updatedAt
+                    labels {
+                      name
+                    }
+                  }
+                  labels {
+                    name
+                  }
+                }
+              }
+              pageInfo {
+                hasNextPage
+              }
+            }
+            ... on SearchError {
+              errorCodes
+            }
+          }
+        }`,
+      variables: {
+        after: `${after}`,
+        first,
+        query: `${
+          updatedAt ? "updated:" + updatedAt : ""
+        } sort:saved-asc ${query}`,
+        includeContent,
+        format,
+      },
+    }),
     method: "POST",
   });
 
@@ -226,4 +279,12 @@ export const unicodeSlug = (str: string, savedAt: string) => {
     "-" +
     new Date(savedAt).getTime().toString(16)
   );
+};
+
+export const replaceIllegalChars = (str: string): string => {
+  return str.replace(/[/\\?%*:|"<>]/g, "-");
+};
+
+export const formatDate = (date: string, format: string): string => {
+  return DateTime.fromISO(date).toFormat(format);
 };
