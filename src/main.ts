@@ -16,6 +16,7 @@ import {
   Article,
   compareHighlightsInFile,
   DATE_FORMAT,
+  formatDate,
   getHighlightLocation,
   loadArticles,
   PageType,
@@ -185,12 +186,8 @@ export default class OmnivorePlugin extends Plugin {
         );
 
         for (const article of articles) {
-          const dateSaved = DateTime.fromISO(article.savedAt).toFormat(
-            this.settings.dateSavedFormat
-          );
-          const subFolderName = DateTime.fromISO(article.savedAt).toFormat(
-            this.settings.folderFormat
-          );
+          const dateFormat = this.settings.dateSavedFormat;
+          const subFolderName = formatDate(article.savedAt, this.settings.folderFormat);
           const folderName = `${folder}/${subFolderName}`;
           const omnivoreFolder = app.vault.getAbstractFileByPath(
             normalizePath(folderName)
@@ -226,6 +223,7 @@ export default class OmnivorePlugin extends Plugin {
               note: highlight.annotation,
             };
           });
+          const dateSaved = formatDate(article.savedAt, dateFormat);
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
@@ -246,6 +244,10 @@ export default class OmnivorePlugin extends Plugin {
             highlights,
             content: article.content,
           });
+          const publishedAt = article.publishedAt;
+          const datePublished = publishedAt
+            ? formatDate(publishedAt, dateFormat)
+            : null;
           // add frontmatter to the content
           const frontmatter = {
             id: article.id,
@@ -253,6 +255,7 @@ export default class OmnivorePlugin extends Plugin {
             author: article.author,
             tags: article.labels?.map((l) => l.name),
             date_saved: dateSaved,
+            date_published: datePublished,
           };
           // remove null and empty values from frontmatter
           const filteredFrontmatter = Object.fromEntries(
