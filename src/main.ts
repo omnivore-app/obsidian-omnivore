@@ -43,6 +43,7 @@ interface Settings {
   template: string;
   syncing: boolean;
   folder: string;
+  useFolder: boolean;
   folderFormat: string;
   endpoint: string;
   dateHighlightedFormat: string;
@@ -94,6 +95,7 @@ date_saved: {{{dateSaved}}}
   highlightOrder: "LOCATION",
   syncing: false,
   folder: "Omnivore",
+  useFolder: true,
   folderFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
   // templateFileLocation: "",
@@ -207,7 +209,12 @@ export default class OmnivorePlugin extends Plugin {
           const subFolderName = DateTime.fromISO(article.savedAt).toFormat(
             this.settings.folderFormat
           );
-          const folderName = `${folder}/${subFolderName}`;
+          let folderName;
+          if (this.settings.useFolder) {
+            folderName = `${folder}/${subFolderName}`;
+          } else {
+            folderName = `${folder}`;
+          }
           const omnivoreFolder = app.vault.getAbstractFileByPath(
             normalizePath(folderName)
           );
@@ -443,7 +450,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           );
         })
       )
-      .addTextArea((text) =>
+      .addTextArea((text) =>{
         text
           .setPlaceholder("Enter the template")
           .setValue(this.plugin.settings.template)
@@ -451,7 +458,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
             this.plugin.settings.template = value;
             await this.plugin.saveSettings();
           })
-      );
+        text.inputEl.setAttr("rows", 10);
+        text.inputEl.setAttr("cols", 40);
+        });
 
     new Setting(generalSettings)
       .setName("Folder")
@@ -475,6 +484,16 @@ class OmnivoreSettingTab extends PluginSettingTab {
     const advancedSettings = containerEl.createEl("div", {
       cls: "content",
     });
+
+    new Setting(generalSettings)
+    .setName('Use Folder Date Format Subfolder')
+    .setDesc('Save notes in dated subfolder')
+    .addToggle(toggle => toggle
+      .setValue(this.plugin.settings.useFolder)
+      .onChange(async (value) => {
+        this.plugin.settings.useFolder = value;
+        await this.plugin.saveSettings();
+      }));
 
     new Setting(generalSettings)
       .setName("Folder Date Format")
