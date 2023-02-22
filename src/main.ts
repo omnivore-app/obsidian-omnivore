@@ -45,12 +45,10 @@ interface Settings {
   template: string;
   syncing: boolean;
   folder: string;
-  useFolder: boolean;
-  folderFormat: string;
+  folderDateFormat: string;
   endpoint: string;
   dateHighlightedFormat: string;
   dateSavedFormat: string;
-  // templateFileLocation: string;
 }
 const DEFAULT_SETTINGS: Settings = {
   dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
@@ -79,11 +77,9 @@ const DEFAULT_SETTINGS: Settings = {
 {{/highlights.length}}`,
   highlightOrder: "LOCATION",
   syncing: false,
-  folder: "Omnivore",
-  useFolder: true,
-  folderFormat: "yyyy-MM-dd",
+  folder: "Omnivore/{{date}}",
+  folderDateFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
-  // templateFileLocation: "",
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -188,14 +184,13 @@ export default class OmnivorePlugin extends Plugin {
         );
 
         for (const article of articles) {
-          const dateFormat = this.settings.dateSavedFormat;
-          const subFolderName = formatDate(article.savedAt, this.settings.folderFormat);
-          let folderName;
-          if (this.settings.useFolder) {
-            folderName = `${folder}/${subFolderName}`;
-          } else {
-            folderName = `${folder}`;
-          }
+          const folderDate = formatDate(
+            article.savedAt,
+            this.settings.folderDateFormat
+          );
+          const folderName = Mustache.render(folder, {
+            date: folderDate,
+          });
           const omnivoreFolder = app.vault.getAbstractFileByPath(
             normalizePath(folderName)
           );
@@ -224,12 +219,14 @@ export default class OmnivorePlugin extends Plugin {
             return {
               text: highlight.quote,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-              dateHighlighted: DateTime.fromISO(highlight.updatedAt).toFormat(
+              dateHighlighted: formatDate(
+                highlight.updatedAt,
                 this.settings.dateHighlightedFormat
               ),
               note: highlight.annotation,
             };
           });
+          const dateFormat = this.settings.dateSavedFormat;
           const dateSaved = formatDate(article.savedAt, dateFormat);
           const siteName =
             article.siteName ||
@@ -503,7 +500,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           );
         })
       )
-      .addTextArea((text) =>{
+      .addTextArea((text) => {
         text
           .setPlaceholder("Enter the template")
           .setValue(this.plugin.settings.template)
@@ -514,14 +511,16 @@ class OmnivoreSettingTab extends PluginSettingTab {
               ? value
               : DEFAULT_SETTINGS.template;
             await this.plugin.saveSettings();
-          })
+          });
         text.inputEl.setAttr("rows", 10);
         text.inputEl.setAttr("cols", 40);
-        });
+      });
 
     new Setting(generalSettings)
       .setName("Folder")
-      .setDesc("Enter the folder where the data will be stored")
+      .setDesc(
+        "Enter the folder where the data will be stored. {{date}} could be used in the folder name"
+      )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl);
         search
@@ -543,21 +542,11 @@ class OmnivoreSettingTab extends PluginSettingTab {
     });
 
     new Setting(generalSettings)
-    .setName('Use Folder Date Format Subfolder')
-    .setDesc('Save notes in dated subfolder')
-    .addToggle(toggle => toggle
-      .setValue(this.plugin.settings.useFolder)
-      .onChange(async (value) => {
-        this.plugin.settings.useFolder = value;
-        await this.plugin.saveSettings();
-      }));
-
-    new Setting(generalSettings)
       .setName("Folder Date Format")
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter the format date for use in rendered template.\nFormat ",
+            "Enter the format date for use in rendered template. Format ",
             fragment.createEl("a", {
               text: "reference",
               href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",
@@ -568,9 +557,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
       .addText((text) =>
         text
           .setPlaceholder("yyyy-MM-dd")
-          .setValue(this.plugin.settings.folderFormat)
+          .setValue(this.plugin.settings.folderDateFormat)
           .onChange(async (value) => {
-            this.plugin.settings.folderFormat = value;
+            this.plugin.settings.folderDateFormat = value;
             await this.plugin.saveSettings();
           })
       );
