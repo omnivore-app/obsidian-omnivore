@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.5...1.0.6) (2023-02-23)
+
+
+### Bug Fixes
+
+* sub-folder can be config in folder name setting and {{date}} can be used ([57a45e5](https://github.com/omnivore-app/obsidian-omnivore/commit/57a45e5c761ebac4858787a27364cef44687df85))
+
 ## [1.0.5](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.4...1.0.5) (2023-02-22)
 
 
