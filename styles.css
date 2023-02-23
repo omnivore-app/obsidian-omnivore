@@ -1,21 +1,21 @@
 /* Style the button that is used to open and close the collapsible content */
-.collapsible {
+.omnivore-collapsible {
 	cursor: pointer;
 	border-bottom: outset;
 }
 
 /* Style the collapsible content. Note: hidden by default */
-.content {
+.omnivore-content {
 	max-height: 0;
 	overflow: hidden;
 	transition: max-height 0.2s ease-out;
 }
 
-.collapsible:after {
+.omnivore-collapsible:after {
 	content: "\02795"; /* Unicode character for "plus" sign (+) */
 	float: right;
 }
 
-.active:after {
+.omnivore-active:after {
 	content: "\2796"; /* Unicode character for "minus" sign (-) */
 }
