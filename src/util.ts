@@ -281,8 +281,11 @@ export const unicodeSlug = (str: string, savedAt: string) => {
   );
 };
 
+export const REPLACEMENT_CHAR = "-";
+export const ILLEGAL_CHAR_REGEX = /[/\\?%*:|"<>]/g;
+
 export const replaceIllegalChars = (str: string): string => {
-  return str.replace(/[/\\?%*:|"<>]/g, "-");
+  return str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR);
 };
 
 export const formatDate = (date: string, format: string): string => {
