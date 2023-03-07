@@ -140,6 +140,15 @@ export default class OmnivorePlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
+  getFilename(article: Article) {
+    const { filename, folderDateFormat } = this.settings;
+    const date = formatDate(article.savedAt, folderDateFormat);
+    return Mustache.render(filename, {
+      ...article,
+      date,
+    });
+  }
+
   async fetchOmnivore() {
     const {
       syncAt,
@@ -280,10 +289,9 @@ export default class OmnivorePlugin extends Plugin {
           if (!content.match(/^(---[\s\S]*?---)/gm)) {
             updatedContent = `${frontmatterString}\n\n${content}`;
           }
-          // use the title as the filename
-          const pageName = `${folderName}/${replaceIllegalChars(
-            article.title
-          )}.md`;
+          // use the custom filename
+          const filename = replaceIllegalChars(this.getFilename(article));
+          const pageName = `${folderName}/${filename}.md`;
           const normalizedPath = normalizePath(pageName);
           const omnivoreFile = app.vault.getAbstractFileByPath(normalizedPath);
           try {
@@ -294,9 +302,7 @@ export default class OmnivorePlugin extends Plugin {
                   const id = frontMatter.id;
                   if (id && id !== article.id) {
                     // this article has the same name but different id
-                    const newPageName = `${folderName}/${replaceIllegalChars(
-                      article.title
-                    )}-${article.id}.md`;
+                    const newPageName = `${folderName}/${filename}-${article.id}.md`;
                     const newNormalizedPath = normalizePath(newPageName);
                     const newOmnivoreFile =
                       app.vault.getAbstractFileByPath(newNormalizedPath);
