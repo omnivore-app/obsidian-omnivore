@@ -395,12 +395,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     // create a group of general settings
     containerEl.createEl("h3", {
-      cls: "collapsible",
+      cls: "omnivore-collapsible",
       text: "General Settings",
     });
 
     const generalSettings = containerEl.createEl("div", {
-      cls: "content",
+      cls: "omnivore-content",
     });
 
     new Setting(generalSettings)
@@ -598,12 +598,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
       );
 
     containerEl.createEl("h3", {
-      cls: "collapsible",
+      cls: "omnivore-collapsible",
       text: "Advanced Settings",
     });
 
     const advancedSettings = containerEl.createEl("div", {
-      cls: "content",
+      cls: "omnivore-content",
     });
 
     new Setting(advancedSettings)
@@ -629,7 +629,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     for (i = 0; i < coll.length; i++) {
       coll[i].addEventListener("click", function () {
-        this.classList.toggle("active");
+        this.classList.toggle("omnivore-active");
         const content = this.nextElementSibling;
         if (content.style.maxHeight) {
           content.style.maxHeight = null;
