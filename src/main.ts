@@ -49,6 +49,7 @@ interface Settings {
   endpoint: string;
   dateHighlightedFormat: string;
   dateSavedFormat: string;
+  filename: string;
 }
 const DEFAULT_SETTINGS: Settings = {
   dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
@@ -80,6 +81,7 @@ const DEFAULT_SETTINGS: Settings = {
   folder: "Omnivore/{{date}}",
   folderDateFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
+  filename: "{{{title}}}",
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -532,15 +534,20 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
-    containerEl.createEl("h3", {
-      cls: "collapsible",
-      text: "Advanced Settings",
-    });
-
-    const advancedSettings = containerEl.createEl("div", {
-      cls: "content",
-    });
-
+    new Setting(generalSettings)
+      .setName("Filename")
+      .setDesc(
+        "Enter the filename where the data will be stored. {{{title}}} and {{date}} could be used in the filename"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("Enter the filename")
+          .setValue(this.plugin.settings.filename)
+          .onChange(async (value) => {
+            this.plugin.settings.filename = value;
+            await this.plugin.saveSettings();
+          })
+      );
     new Setting(generalSettings)
       .setName("Folder Date Format")
       .setDesc(
@@ -583,6 +590,15 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    containerEl.createEl("h3", {
+      cls: "collapsible",
+      text: "Advanced Settings",
+    });
+
+    const advancedSettings = containerEl.createEl("div", {
+      cls: "content",
+    });
 
     new Setting(advancedSettings)
       .setName("API Endpoint")
