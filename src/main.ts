@@ -58,7 +58,24 @@ const DEFAULT_SETTINGS: Settings = {
   filter: "HIGHLIGHTS",
   syncAt: "",
   customQuery: "",
-  template: `# {{{title}}}
+  template: `---
+id: {{{id}}}
+title: {{{title}}}
+{{#author}}
+author: {{{author}}}
+{{/author}}
+{{#labels.length}}
+tags:
+{{#labels}} - {{{name}}}
+{{/labels}}
+{{/labels.length}}
+date_saved: {{{dateSaved}}}
+{{#datePublished}}
+date_published: {{{datePublished}}}
+{{/datePublished}}
+---
+
+# {{{title}}}
 #Omnivore
 
 [Read on Omnivore]({{{omnivoreUrl}}})
@@ -242,8 +259,12 @@ export default class OmnivorePlugin extends Plugin {
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
+          const publishedAt = article.publishedAt;
+          const datePublished = publishedAt
+            ? formatDate(publishedAt, dateFormat)
+            : null;
           // Build content string based on template
-          const content = Mustache.render(template, {
+          let content = Mustache.render(template, {
             id: article.id,
             title: article.title,
             omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -258,36 +279,25 @@ export default class OmnivorePlugin extends Plugin {
             dateSaved,
             highlights,
             content: article.content,
+            datePublished,
           });
-          const publishedAt = article.publishedAt;
-          const datePublished = publishedAt
-            ? formatDate(publishedAt, dateFormat)
-            : null;
-          // add frontmatter to the content
-          const frontmatter = {
-            id: article.id,
-            title: article.title,
-            author: article.author,
-            tags: article.labels?.map((l) => l.name),
-            date_saved: dateSaved,
-            date_published: datePublished,
-          };
-          // remove null and empty values from frontmatter
-          const filteredFrontmatter = Object.fromEntries(
-            Object.entries(frontmatter).filter(
-              ([_, value]) => value != null && value !== ""
-            )
-          );
-          const frontmatterYaml = stringifyYaml(filteredFrontmatter);
-          const frontmatterString = `---\n${frontmatterYaml}---`;
-          // Modify the contents of the note with the updated front matter
-          let updatedContent = content.replace(
-            /^(---[\s\S]*?---)/gm,
-            frontmatterString
-          );
-          // if the content doesn't have frontmatter, add it
-          if (!content.match(/^(---[\s\S]*?---)/gm)) {
-            updatedContent = `${frontmatterString}\n\n${content}`;
+          const frontmatterRegex = /^(---[\s\S]*?---)/gm;
+          // get the frontmatter from the content
+          const frontmatter = content.match(frontmatterRegex);
+          if (frontmatter) {
+            // replace the id in the frontmatter
+            content = content.replace(
+              frontmatter[0],
+              frontmatter[0].replace('id: ""', `id: ${article.id}`)
+            );
+          } else {
+            // if the content doesn't have frontmatter, add it
+            const frontmatter = {
+              id: article.id,
+            };
+            const frontmatterYaml = stringifyYaml(frontmatter);
+            const frontmatterString = `---\n${frontmatterYaml}---`;
+            content = `${frontmatterString}\n\n${content}`;
           }
           // use the custom filename
           const filename = replaceIllegalChars(this.getFilename(article));
@@ -311,33 +321,27 @@ export default class OmnivorePlugin extends Plugin {
                       const existingContent = await this.app.vault.read(
                         newOmnivoreFile
                       );
-                      if (existingContent !== updatedContent) {
-                        await this.app.vault.modify(
-                          newOmnivoreFile,
-                          updatedContent
-                        );
+                      if (existingContent !== content) {
+                        await this.app.vault.modify(newOmnivoreFile, content);
                       }
                       return;
                     }
                     // a file with the same name but different id already exists, so we need to create it
-                    await this.app.vault.create(
-                      newNormalizedPath,
-                      updatedContent
-                    );
+                    await this.app.vault.create(newNormalizedPath, content);
                     return;
                   }
                   // a file with the same id already exists, so we might need to update it
                   const existingContent = await this.app.vault.read(
                     omnivoreFile
                   );
-                  if (existingContent !== updatedContent) {
-                    await this.app.vault.modify(omnivoreFile, updatedContent);
+                  if (existingContent !== content) {
+                    await this.app.vault.modify(omnivoreFile, content);
                   }
                 }
               );
             } else if (!omnivoreFile) {
               // file doesn't exist, so we need to create it
-              await this.app.vault.create(normalizedPath, updatedContent);
+              await this.app.vault.create(normalizedPath, content);
             }
           } catch (e) {
             console.error(e);
@@ -502,9 +506,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
               text: "Reference",
               href: "https://github.com/janl/mustache.js/#templates",
             }),
-            fragment.createEl("br"),
-            fragment.createEl("br"),
-            "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, dateSaved, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted"
+            fragment.createEl("p", {
+              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, dateSaved, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted",
+            }),
+            fragment.createEl("p", {
+              text: "Please note that id in the frontmatter is required for the plugin to work properly.",
+            })
           );
         })
       )
