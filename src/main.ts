@@ -49,6 +49,7 @@ interface Settings {
   endpoint: string;
   dateHighlightedFormat: string;
   dateSavedFormat: string;
+  filename: string;
 }
 const DEFAULT_SETTINGS: Settings = {
   dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
@@ -57,7 +58,24 @@ const DEFAULT_SETTINGS: Settings = {
   filter: "HIGHLIGHTS",
   syncAt: "",
   customQuery: "",
-  template: `# {{{title}}}
+  template: `---
+id: {{{id}}}
+title: {{{title}}}
+{{#author}}
+author: {{{author}}}
+{{/author}}
+{{#labels.length}}
+tags:
+{{#labels}} - {{{name}}}
+{{/labels}}
+{{/labels.length}}
+date_saved: {{{dateSaved}}}
+{{#datePublished}}
+date_published: {{{datePublished}}}
+{{/datePublished}}
+---
+
+# {{{title}}}
 #Omnivore
 
 [Read on Omnivore]({{{omnivoreUrl}}})
@@ -80,6 +98,7 @@ const DEFAULT_SETTINGS: Settings = {
   folder: "Omnivore/{{date}}",
   folderDateFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
+  filename: "{{{title}}}",
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -136,6 +155,15 @@ export default class OmnivorePlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  getFilename(article: Article) {
+    const { filename, folderDateFormat } = this.settings;
+    const date = formatDate(article.savedAt, folderDateFormat);
+    return Mustache.render(filename, {
+      ...article,
+      date,
+    });
   }
 
   async fetchOmnivore() {
@@ -231,8 +259,12 @@ export default class OmnivorePlugin extends Plugin {
           const siteName =
             article.siteName ||
             this.siteNameFromUrl(article.originalArticleUrl);
+          const publishedAt = article.publishedAt;
+          const datePublished = publishedAt
+            ? formatDate(publishedAt, dateFormat)
+            : null;
           // Build content string based on template
-          const content = Mustache.render(template, {
+          let content = Mustache.render(template, {
             id: article.id,
             title: article.title,
             omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -247,41 +279,29 @@ export default class OmnivorePlugin extends Plugin {
             dateSaved,
             highlights,
             content: article.content,
+            datePublished,
           });
-          const publishedAt = article.publishedAt;
-          const datePublished = publishedAt
-            ? formatDate(publishedAt, dateFormat)
-            : null;
-          // add frontmatter to the content
-          const frontmatter = {
-            id: article.id,
-            title: article.title,
-            author: article.author,
-            tags: article.labels?.map((l) => l.name),
-            date_saved: dateSaved,
-            date_published: datePublished,
-          };
-          // remove null and empty values from frontmatter
-          const filteredFrontmatter = Object.fromEntries(
-            Object.entries(frontmatter).filter(
-              ([_, value]) => value != null && value !== ""
-            )
-          );
-          const frontmatterYaml = stringifyYaml(filteredFrontmatter);
-          const frontmatterString = `---\n${frontmatterYaml}---`;
-          // Modify the contents of the note with the updated front matter
-          let updatedContent = content.replace(
-            /^(---[\s\S]*?---)/gm,
-            frontmatterString
-          );
-          // if the content doesn't have frontmatter, add it
-          if (!content.match(/^(---[\s\S]*?---)/gm)) {
-            updatedContent = `${frontmatterString}\n\n${content}`;
+          const frontmatterRegex = /^(---[\s\S]*?---)/gm;
+          // get the frontmatter from the content
+          const frontmatter = content.match(frontmatterRegex);
+          if (frontmatter) {
+            // replace the id in the frontmatter
+            content = content.replace(
+              frontmatter[0],
+              frontmatter[0].replace('id: ""', `id: ${article.id}`)
+            );
+          } else {
+            // if the content doesn't have frontmatter, add it
+            const frontmatter = {
+              id: article.id,
+            };
+            const frontmatterYaml = stringifyYaml(frontmatter);
+            const frontmatterString = `---\n${frontmatterYaml}---`;
+            content = `${frontmatterString}\n\n${content}`;
           }
-          // use the title as the filename
-          const pageName = `${folderName}/${replaceIllegalChars(
-            article.title
-          )}.md`;
+          // use the custom filename
+          const filename = replaceIllegalChars(this.getFilename(article));
+          const pageName = `${folderName}/${filename}.md`;
           const normalizedPath = normalizePath(pageName);
           const omnivoreFile = app.vault.getAbstractFileByPath(normalizedPath);
           try {
@@ -292,9 +312,7 @@ export default class OmnivorePlugin extends Plugin {
                   const id = frontMatter.id;
                   if (id && id !== article.id) {
                     // this article has the same name but different id
-                    const newPageName = `${folderName}/${replaceIllegalChars(
-                      article.title
-                    )}-${article.id}.md`;
+                    const newPageName = `${folderName}/${filename}-${article.id}.md`;
                     const newNormalizedPath = normalizePath(newPageName);
                     const newOmnivoreFile =
                       app.vault.getAbstractFileByPath(newNormalizedPath);
@@ -303,33 +321,27 @@ export default class OmnivorePlugin extends Plugin {
                       const existingContent = await this.app.vault.read(
                         newOmnivoreFile
                       );
-                      if (existingContent !== updatedContent) {
-                        await this.app.vault.modify(
-                          newOmnivoreFile,
-                          updatedContent
-                        );
+                      if (existingContent !== content) {
+                        await this.app.vault.modify(newOmnivoreFile, content);
                       }
                       return;
                     }
                     // a file with the same name but different id already exists, so we need to create it
-                    await this.app.vault.create(
-                      newNormalizedPath,
-                      updatedContent
-                    );
+                    await this.app.vault.create(newNormalizedPath, content);
                     return;
                   }
                   // a file with the same id already exists, so we might need to update it
                   const existingContent = await this.app.vault.read(
                     omnivoreFile
                   );
-                  if (existingContent !== updatedContent) {
-                    await this.app.vault.modify(omnivoreFile, updatedContent);
+                  if (existingContent !== content) {
+                    await this.app.vault.modify(omnivoreFile, content);
                   }
                 }
               );
             } else if (!omnivoreFile) {
               // file doesn't exist, so we need to create it
-              await this.app.vault.create(normalizedPath, updatedContent);
+              await this.app.vault.create(normalizedPath, content);
             }
           } catch (e) {
             console.error(e);
@@ -387,12 +399,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     // create a group of general settings
     containerEl.createEl("h3", {
-      cls: "collapsible",
+      cls: "omnivore-collapsible",
       text: "General Settings",
     });
 
     const generalSettings = containerEl.createEl("div", {
-      cls: "content",
+      cls: "omnivore-content",
     });
 
     new Setting(generalSettings)
@@ -494,9 +506,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
               text: "Reference",
               href: "https://github.com/janl/mustache.js/#templates",
             }),
-            fragment.createEl("br"),
-            fragment.createEl("br"),
-            "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, dateSaved, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted"
+            fragment.createEl("p", {
+              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, dateSaved, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted",
+            }),
+            fragment.createEl("p", {
+              text: "Please note that id in the frontmatter is required for the plugin to work properly.",
+            })
           );
         })
       )
@@ -532,15 +547,20 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
-    containerEl.createEl("h3", {
-      cls: "collapsible",
-      text: "Advanced Settings",
-    });
-
-    const advancedSettings = containerEl.createEl("div", {
-      cls: "content",
-    });
-
+    new Setting(generalSettings)
+      .setName("Filename")
+      .setDesc(
+        "Enter the filename where the data will be stored. {{{title}}} and {{date}} could be used in the filename"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("Enter the filename")
+          .setValue(this.plugin.settings.filename)
+          .onChange(async (value) => {
+            this.plugin.settings.filename = value;
+            await this.plugin.saveSettings();
+          })
+      );
     new Setting(generalSettings)
       .setName("Folder Date Format")
       .setDesc(
@@ -584,6 +604,15 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
+    containerEl.createEl("h3", {
+      cls: "omnivore-collapsible",
+      text: "Advanced Settings",
+    });
+
+    const advancedSettings = containerEl.createEl("div", {
+      cls: "omnivore-content",
+    });
+
     new Setting(advancedSettings)
       .setName("API Endpoint")
       .setDesc("Enter the Omnivore server's API endpoint")
@@ -607,7 +636,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     for (i = 0; i < coll.length; i++) {
       coll[i].addEventListener("click", function () {
-        this.classList.toggle("active");
+        this.classList.toggle("omnivore-active");
         const content = this.nextElementSibling;
         if (content.style.maxHeight) {
           content.style.maxHeight = null;
