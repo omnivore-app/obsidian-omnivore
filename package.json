@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-omnivore",
-	"version": "1.0.6",
+	"version": "1.1.0",
 	"description": "This is an Omnivore plugin for Obsidian.",
 	"main": "main.js",
 	"scripts": {

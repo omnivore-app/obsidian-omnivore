@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.6...1.1.0) (2023-03-16)
+
+
+### Bug Fixes
+
+* make the settings collapsible ([71da2c2](https://github.com/omnivore-app/obsidian-omnivore/commit/71da2c292899f68f873c2b728472304318b9bf3b))
+* only add omnivore id to the frontmatter if frontmatter is not in the template ([f46b4fc](https://github.com/omnivore-app/obsidian-omnivore/commit/f46b4fca5065c5d5b93e4acaaacd213c7b8deeff))
+
+
+### Features
+
+* custom filenames ([650a9ad](https://github.com/omnivore-app/obsidian-omnivore/commit/650a9adc6a8559583604cc18f209bf69757b78c7))
+
 ## [1.0.6](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.5...1.0.6) (2023-02-23)
 
 
