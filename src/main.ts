@@ -106,7 +106,7 @@ export default class OmnivorePlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
-    await this.resetSyncingSettingStateSetting();
+    await this.resetSyncingStateSetting();
     this.addCommand({
       id: "sync",
       name: "Sync",
@@ -384,7 +384,7 @@ export default class OmnivorePlugin extends Plugin {
     }
   }
 
-  private async resetSyncingSettingStateSetting() {
+  private async resetSyncingStateSetting() {
     this.settings.syncing = false;
     await this.saveSettings();
   }
