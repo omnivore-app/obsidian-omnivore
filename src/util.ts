@@ -111,12 +111,12 @@ export const loadArticle = async (
 export const loadArticles = async (
   endpoint: string,
   apiKey: string,
-  after = 0,
-  first = 10,
-  updatedAt = "",
-  query = "",
-  includeContent = false,
-  format = "html"
+  after: number = 0,
+  first: number = 10,
+  updatedAt: string = "",
+  query: string = "",
+  includeContent: boolean = false,
+  format: string = "html"
 ): Promise<[Article[], boolean]> => {
   const res = await requestUrl({
     url: endpoint,
