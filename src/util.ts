@@ -289,6 +289,6 @@ export const replaceIllegalChars = (str: string): string => {
   return str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR);
 };
 
-export const formatDate = (date: string, format: string): string => {
+export function formatDate(date: string, format: string): string {
   return DateTime.fromISO(date).toFormat(format);
 };
