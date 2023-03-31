@@ -12,6 +12,7 @@ import {
   TFile,
   TFolder,
 } from "obsidian";
+import { FolderSuggest } from "./settings/file-suggest";
 import {
   Article,
   compareHighlightsInFile,
@@ -23,7 +24,6 @@ import {
   parseDateTime,
   replaceIllegalChars,
 } from "./util";
-import { FolderSuggest } from "./settings/file-suggest";
 
 enum Filter {
   ALL = "import all my articles",
@@ -255,6 +255,9 @@ export default class OmnivorePlugin extends Plugin {
                 this.settings.dateHighlightedFormat
               ),
               note: highlight.annotation,
+              labels: highlight.labels?.map((l) => ({
+                name: l.name,
+              })),
             };
           });
           const dateFormat = this.settings.dateSavedFormat;
@@ -515,7 +518,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
               href: "https://github.com/janl/mustache.js/#templates",
             }),
             fragment.createEl("p", {
-              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, dateSaved, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted",
+              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, dateSaved, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted, highlights.labels.name",
             }),
             fragment.createEl("p", {
               text: "Please note that id in the frontmatter is required for the plugin to work properly.",
