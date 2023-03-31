@@ -36,7 +36,7 @@ enum HighlightOrder {
   TIME = "the time that highlights are updated",
 }
 
-interface Settings {
+interface OmnivoreSettings {
   apiKey: string;
   filter: string;
   syncAt: string;
@@ -51,7 +51,8 @@ interface Settings {
   dateSavedFormat: string;
   filename: string;
 }
-const DEFAULT_SETTINGS: Settings = {
+
+const DEFAULT_SETTINGS: OmnivoreSettings = {
   dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
   dateSavedFormat: "yyyy-MM-dd HH:mm:ss",
   apiKey: "",
@@ -102,7 +103,7 @@ date_published: {{{datePublished}}}
 };
 
 export default class OmnivorePlugin extends Plugin {
-  settings: Settings;
+  settings: OmnivoreSettings;
 
   async onload() {
     await this.loadSettings();
