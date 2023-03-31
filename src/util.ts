@@ -79,6 +79,7 @@ export interface Highlight {
   annotation: string;
   patch: string;
   updatedAt: string;
+  labels?: Label[];
 }
 
 export interface HighlightPoint {
@@ -111,12 +112,12 @@ export const loadArticle = async (
 export const loadArticles = async (
   endpoint: string,
   apiKey: string,
-  after: number = 0,
-  first: number = 10,
-  updatedAt: string = "",
-  query: string = "",
-  includeContent: boolean = false,
-  format: string = "html"
+  after = 0,
+  first = 10,
+  updatedAt = "",
+  query = "",
+  includeContent = false,
+  format = "html"
 ): Promise<[Article[], boolean]> => {
   const res = await requestUrl({
     url: endpoint,
