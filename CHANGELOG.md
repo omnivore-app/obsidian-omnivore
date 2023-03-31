@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.1.0...1.1.1) (2023-03-31)
+
+
+### Bug Fixes
+
+* add labels of highlights to the template ([4b8aee1](https://github.com/omnivore-app/obsidian-omnivore/commit/4b8aee18dd58662270b981e62ffbd865c3f81c23))
+
 # [1.1.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.0.6...1.1.0) (2023-03-16)
 
 
