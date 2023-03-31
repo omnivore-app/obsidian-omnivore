@@ -290,5 +290,9 @@ export const replaceIllegalChars = (str: string): string => {
 };
 
 export function formatDate(date: string, format: string): string {
-  return DateTime.fromISO(date).toFormat(format);
-};
+  if (isNaN(Date.parse(date))) {
+    throw new Error(`Invalid date: ${date}`);
+  }
+  return DateTime.fromJSDate(new Date(date)).toFormat(format);
+}
+
