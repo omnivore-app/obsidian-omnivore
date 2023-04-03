@@ -85,7 +85,7 @@ date_published: {{{datePublished}}}
 ## Highlights
 
 {{#highlights}}
-> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #{{name}} {{/labels}}
+> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #{{{name}}} {{/labels}}
 {{#note}}
 
 {{{note}}}
