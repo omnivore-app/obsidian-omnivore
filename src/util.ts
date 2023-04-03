@@ -67,6 +67,7 @@ export interface Article {
   pageType: PageType;
   content?: string;
   publishedAt: string;
+  url: string;
 }
 
 export interface Label {
