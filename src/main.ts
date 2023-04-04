@@ -61,18 +61,19 @@ const DEFAULT_SETTINGS: Settings = {
   syncAt: "",
   customQuery: "",
   template: `---
-id: {{id}}
-title: {{{title}}}
+id: "{{id}}"
+title: "{{{title}}}"
 {{#author}}
-author: {{{author}}}
+author: "{{{author}}}"
 {{/author}}
 {{#labels.length}}
 tags:
-{{#labels}} - {{{name}}}
+{{#labels}} - "{{{name}}}"
 {{/labels}}
 {{/labels.length}}
-date_saved: {{{dateSaved}}}
-date_published: {{{datePublished}}}
+date_saved: "{{{dateSaved}}}"
+{{#datePublished}}
+date_published: "{{{datePublished}}}"
 {{/datePublished}}
 ---
 
@@ -81,6 +82,10 @@ date_published: {{{datePublished}}}
 
 [Read on Omnivore]({{{omnivoreUrl}}})
 [Read Original]({{{originalUrl}}})
+{{#pdfAttachment}}
+
+![[{{{pdfAttachment}}}]]
+{{/pdfAttachment}}
 
 {{#highlights.length}}
 ## Highlights
