@@ -189,9 +189,7 @@ export default class OmnivorePlugin extends Plugin {
     if (!(folder instanceof TFolder)) {
       await this.app.vault.createFolder(folderName);
     }
-    const fileName = normalizePath(
-      `${folderName}/${article.title}-${article.id}.pdf`
-    );
+    const fileName = normalizePath(`${folderName}/${article.id}.pdf`);
     const file = app.vault.getAbstractFileByPath(fileName);
     if (!(file instanceof TFile)) {
       const newFile = await this.app.vault.createBinary(
