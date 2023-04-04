@@ -563,7 +563,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
               href: "https://github.com/janl/mustache.js/#templates",
             }),
             fragment.createEl("p", {
-              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, description, dateSaved, pdfAttachment, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted, highlights.labels.name",
+              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, description, dateSaved, datePublished, pdfAttachment, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted, highlights.labels.name",
             }),
             fragment.createEl("p", {
               text: "Please note that id in the frontmatter is required for the plugin to work properly.",
