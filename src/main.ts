@@ -7,6 +7,7 @@ import {
   Notice,
   Plugin,
   PluginSettingTab,
+  requestUrl,
   Setting,
   stringifyYaml,
   TFile,
@@ -19,6 +20,7 @@ import {
   DATE_FORMAT,
   formatDate,
   getHighlightLocation,
+  HighlightType,
   loadArticles,
   PageType,
   parseDateTime,
@@ -50,6 +52,7 @@ interface Settings {
   dateHighlightedFormat: string;
   dateSavedFormat: string;
   filename: string;
+  attachmentFolder: string;
 }
 const DEFAULT_SETTINGS: Settings = {
   dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
@@ -59,19 +62,19 @@ const DEFAULT_SETTINGS: Settings = {
   syncAt: "",
   customQuery: "",
   template: `---
-id: {{{id}}}
-title: {{{title}}}
+id: {{id}}
+title: "{{{title}}}"
 {{#author}}
-author: {{{author}}}
+author: "{{{author}}}"
 {{/author}}
 {{#labels.length}}
 tags:
-{{#labels}} - {{{name}}}
+{{#labels}} - "{{{name}}}"
 {{/labels}}
 {{/labels.length}}
-date_saved: {{{dateSaved}}}
+date_saved: "{{{dateSaved}}}"
 {{#datePublished}}
-date_published: {{{datePublished}}}
+date_published: "{{{datePublished}}}"
 {{/datePublished}}
 ---
 
@@ -80,6 +83,15 @@ date_published: {{{datePublished}}}
 
 [Read on Omnivore]({{{omnivoreUrl}}})
 [Read Original]({{{originalUrl}}})
+{{#note}}
+## Note
+
+{{{note}}}
+{{/note}}
+{{#pdfAttachment}}
+
+![[{{{pdfAttachment}}}]]
+{{/pdfAttachment}}
 
 {{#highlights.length}}
 ## Highlights
@@ -95,10 +107,11 @@ date_published: {{{datePublished}}}
 {{/highlights.length}}`,
   highlightOrder: "LOCATION",
   syncing: false,
-  folder: "Omnivore/{{date}}",
+  folder: "Omnivore/{{{date}}}",
   folderDateFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
   filename: "{{{title}}}",
+  attachmentFolder: "Omnivore/attachments",
 };
 
 export default class OmnivorePlugin extends Plugin {
@@ -166,6 +179,39 @@ export default class OmnivorePlugin extends Plugin {
     });
   }
 
+  getAttachmentFolder(article: Article) {
+    const { attachmentFolder, folderDateFormat } = this.settings;
+    const date = formatDate(article.savedAt, folderDateFormat);
+    return Mustache.render(attachmentFolder, {
+      ...article,
+      date,
+    });
+  }
+
+  async downloadPDF(article: Article): Promise<string> {
+    // download pdf from the URL to the attachment folder
+    const url = article.url;
+    const response = await requestUrl({
+      url,
+      contentType: "application/pdf",
+    });
+    const folderName = normalizePath(this.getAttachmentFolder(article));
+    const folder = app.vault.getAbstractFileByPath(folderName);
+    if (!(folder instanceof TFolder)) {
+      await this.app.vault.createFolder(folderName);
+    }
+    const fileName = normalizePath(`${folderName}/${article.id}.pdf`);
+    const file = app.vault.getAbstractFileByPath(fileName);
+    if (!(file instanceof TFile)) {
+      const newFile = await this.app.vault.createBinary(
+        fileName,
+        response.arrayBuffer
+      );
+      return newFile.path;
+    }
+    return file.path;
+  }
+
   async fetchOmnivore() {
     const {
       syncAt,
@@ -219,19 +265,23 @@ export default class OmnivorePlugin extends Plugin {
             article.savedAt,
             this.settings.folderDateFormat
           );
-          const folderName = Mustache.render(folder, {
-            date: folderDate,
-          });
-          const omnivoreFolder = app.vault.getAbstractFileByPath(
-            normalizePath(folderName)
+          const folderName = normalizePath(
+            Mustache.render(folder, {
+              date: folderDate,
+            })
           );
+          const omnivoreFolder = app.vault.getAbstractFileByPath(folderName);
           if (!(omnivoreFolder instanceof TFolder)) {
             await this.app.vault.createFolder(folderName);
           }
-
+          // filter out notes and redactions
+          const articleHighlights =
+            article.highlights?.filter(
+              (h) => h.type === HighlightType.Highlight
+            ) || [];
           // sort highlights by location if selected in options
-          highlightOrder === "LOCATION" &&
-            article.highlights?.sort((a, b) => {
+          if (highlightOrder === "LOCATION") {
+            articleHighlights.sort((a, b) => {
               try {
                 if (article.pageType === PageType.File) {
                   // sort by location in file
@@ -246,7 +296,8 @@ export default class OmnivorePlugin extends Plugin {
                 return compareHighlightsInFile(a, b);
               }
             });
-          const highlights = article.highlights?.map((highlight) => {
+          }
+          const highlights = articleHighlights.map((highlight) => {
             return {
               text: highlight.quote,
               highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
@@ -269,6 +320,9 @@ export default class OmnivorePlugin extends Plugin {
           const datePublished = publishedAt
             ? formatDate(publishedAt, dateFormat)
             : null;
+          const articleNote = article.highlights?.find(
+            (h) => h.type === HighlightType.Note
+          );
           // Build content string based on template
           let content = Mustache.render(template, {
             id: article.id,
@@ -286,6 +340,12 @@ export default class OmnivorePlugin extends Plugin {
             highlights,
             content: article.content,
             datePublished,
+            pdfAttachment:
+              article.pageType === PageType.File
+                ? await this.downloadPDF(article)
+                : undefined,
+            description: article.description,
+            note: articleNote?.annotation,
           });
           const frontmatterRegex = /^(---[\s\S]*?---)/gm;
           // get the frontmatter from the content
@@ -518,7 +578,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
               href: "https://github.com/janl/mustache.js/#templates",
             }),
             fragment.createEl("p", {
-              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, dateSaved, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted, highlights.labels.name",
+              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, description, dateSaved, datePublished, pdfAttachment, note, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted, highlights.labels.name",
             }),
             fragment.createEl("p", {
               text: "Please note that id in the frontmatter is required for the plugin to work properly.",
@@ -545,7 +605,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(generalSettings)
       .setName("Folder")
       .setDesc(
-        "Enter the folder where the data will be stored. {{date}} could be used in the folder name"
+        "Enter the folder where the data will be stored. {{{date}}} could be used in the folder name"
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl);
@@ -557,11 +617,25 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
-
+    new Setting(generalSettings)
+      .setName("Attachment Folder")
+      .setDesc(
+        "Enter the folder where the attachment will be downloaded to. {{{date}}} could be used in the folder name"
+      )
+      .addSearch((search) => {
+        new FolderSuggest(this.app, search.inputEl);
+        search
+          .setPlaceholder("Enter the attachment folder")
+          .setValue(this.plugin.settings.attachmentFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.attachmentFolder = value;
+            await this.plugin.saveSettings();
+          });
+      });
     new Setting(generalSettings)
       .setName("Filename")
       .setDesc(
-        "Enter the filename where the data will be stored. {{{title}}} and {{date}} could be used in the filename"
+        "Enter the filename where the data will be stored. {{{title}}} and {{{date}}} could be used in the filename"
       )
       .addText((text) =>
         text
