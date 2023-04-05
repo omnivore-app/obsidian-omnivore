@@ -62,7 +62,7 @@ const DEFAULT_SETTINGS: Settings = {
   syncAt: "",
   customQuery: "",
   template: `---
-id: "{{id}}"
+id: {{id}}
 title: "{{{title}}}"
 {{#author}}
 author: "{{{author}}}"
@@ -83,6 +83,11 @@ date_published: "{{{datePublished}}}"
 
 [Read on Omnivore]({{{omnivoreUrl}}})
 [Read Original]({{{originalUrl}}})
+{{#note}}
+## Note
+
+{{{note}}}
+{{/note}}
 {{#pdfAttachment}}
 
 ![[{{{pdfAttachment}}}]]
@@ -315,7 +320,7 @@ export default class OmnivorePlugin extends Plugin {
           const datePublished = publishedAt
             ? formatDate(publishedAt, dateFormat)
             : null;
-          const note = article.highlights?.find(
+          const articleNote = article.highlights?.find(
             (h) => h.type === HighlightType.Note
           );
           // Build content string based on template
@@ -340,7 +345,7 @@ export default class OmnivorePlugin extends Plugin {
                 ? await this.downloadPDF(article)
                 : undefined,
             description: article.description,
-            note,
+            note: articleNote?.annotation,
           });
           const frontmatterRegex = /^(---[\s\S]*?---)/gm;
           // get the frontmatter from the content
