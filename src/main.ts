@@ -20,6 +20,7 @@ import {
   DATE_FORMAT,
   formatDate,
   getHighlightLocation,
+  HighlightType,
   loadArticles,
   PageType,
   parseDateTime,
@@ -268,9 +269,13 @@ export default class OmnivorePlugin extends Plugin {
           if (!(omnivoreFolder instanceof TFolder)) {
             await this.app.vault.createFolder(folderName);
           }
-          const articleHighlights = article.highlights || [];
+          // filter out notes and redactions
+          const articleHighlights =
+            article.highlights?.filter(
+              (h) => h.type === HighlightType.Highlight
+            ) || [];
           // sort highlights by location if selected in options
-          highlightOrder === "LOCATION" &&
+          if (highlightOrder === "LOCATION") {
             articleHighlights.sort((a, b) => {
               try {
                 if (article.pageType === PageType.File) {
@@ -286,6 +291,7 @@ export default class OmnivorePlugin extends Plugin {
                 return compareHighlightsInFile(a, b);
               }
             });
+          }
           const highlights = articleHighlights.map((highlight) => {
             return {
               text: highlight.quote,
@@ -309,6 +315,9 @@ export default class OmnivorePlugin extends Plugin {
           const datePublished = publishedAt
             ? formatDate(publishedAt, dateFormat)
             : null;
+          const note = article.highlights?.find(
+            (h) => h.type === HighlightType.Note
+          );
           // Build content string based on template
           let content = Mustache.render(template, {
             id: article.id,
@@ -331,6 +340,7 @@ export default class OmnivorePlugin extends Plugin {
                 ? await this.downloadPDF(article)
                 : undefined,
             description: article.description,
+            note,
           });
           const frontmatterRegex = /^(---[\s\S]*?---)/gm;
           // get the frontmatter from the content
