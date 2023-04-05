@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.1.1...1.2.0) (2023-04-05)
+
+
+### Bug Fixes
+
+* add note variable to the template ([ea65aa6](https://github.com/omnivore-app/obsidian-omnivore/commit/ea65aa6cf50118f8a50197501b2970d3693f9d79))
+* make description available in the template ([b8760a2](https://github.com/omnivore-app/obsidian-omnivore/commit/b8760a2030a969727d400d5229b4bba5a9e95e42))
+
+
+### Features
+
+* download pdf in attachment folder and expose a variable {{{pdfAttachment}}} in the template ([bed8835](https://github.com/omnivore-app/obsidian-omnivore/commit/bed8835c25b7566f1cad43433f94b1cc83a90c3f))
+
 ## [1.1.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.1.0...1.1.1) (2023-03-31)
 
 
