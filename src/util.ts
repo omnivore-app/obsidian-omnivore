@@ -74,6 +74,12 @@ export interface Label {
   name: string;
 }
 
+export enum HighlightType {
+  Highlight = "HIGHLIGHT",
+  Note = "NOTE",
+  Redaction = "REDACTION",
+}
+
 export interface Highlight {
   id: string;
   quote: string;
@@ -81,6 +87,7 @@ export interface Highlight {
   patch: string;
   updatedAt: string;
   labels?: Label[];
+  type: HighlightType;
 }
 
 export interface HighlightPoint {
@@ -149,6 +156,7 @@ export const loadArticles = async (
                     annotation
                     patch
                     updatedAt
+                    type
                     labels {
                       name
                     }
