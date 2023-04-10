@@ -88,6 +88,7 @@ export interface Highlight {
   updatedAt: string;
   labels?: Label[];
   type: HighlightType;
+  highlightPositionPercent?: number;
 }
 
 export interface HighlightPoint {
@@ -157,6 +158,7 @@ export const loadArticles = async (
                     patch
                     updatedAt
                     type
+                    highlightPositionPercent
                     labels {
                       name
                     }
