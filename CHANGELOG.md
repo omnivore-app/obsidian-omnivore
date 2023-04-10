@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.2.0...1.2.1) (2023-04-10)
+
+
+### Bug Fixes
+
+* sort highlights by position percentage if available ([4a614c7](https://github.com/omnivore-app/obsidian-omnivore/commit/4a614c79f3e6cce1066e68bb91fda0a3dbec1acb))
+
 # [1.2.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.1.1...1.2.0) (2023-04-05)
 
 
