@@ -297,6 +297,7 @@ export default class OmnivorePlugin extends Plugin {
                 : undefined,
             description: article.description,
             note: articleNote?.annotation,
+            type: article.pageType,
           });
           const frontmatterRegex = /^(---[\s\S]*?---)/gm;
           // get the frontmatter from the content
