@@ -67,10 +67,17 @@ export interface Article {
   pageType: PageType;
   content?: string;
   publishedAt: string;
+  url: string;
 }
 
 export interface Label {
   name: string;
+}
+
+export enum HighlightType {
+  Highlight = "HIGHLIGHT",
+  Note = "NOTE",
+  Redaction = "REDACTION",
 }
 
 export interface Highlight {
@@ -80,6 +87,8 @@ export interface Highlight {
   patch: string;
   updatedAt: string;
   labels?: Label[];
+  type: HighlightType;
+  highlightPositionPercent?: number;
 }
 
 export interface HighlightPoint {
@@ -148,6 +157,8 @@ export const loadArticles = async (
                     annotation
                     patch
                     updatedAt
+                    type
+                    highlightPositionPercent
                     labels {
                       name
                     }
