@@ -64,9 +64,7 @@ describe("formatDate on known formats", () => {
 
 function generateRandomISODateStrings(quantity: number) {
   const randomISODateStrings = [];
-  const timeZones: any[] = Intl.DateTimeFormat()
-    .resolvedOptions()
-    .timeZone.split(",");
+  const timeZones = Intl.DateTimeFormat().resolvedOptions().timeZone.split(",");
 
   for (let i = 0; i < quantity; i++) {
     const date = new Date(
