@@ -62,8 +62,8 @@ describe("formatDate on known formats", () => {
   });
 });
 
-function generateRandomISODateStrings(quantity: number) {
-  const randomISODateStrings = [];
+function generateRandomISODateStrings(quantity: number): string[] {
+  const randomISODateStrings: string[] = [];
   const timeZones = Intl.DateTimeFormat().resolvedOptions().timeZone.split(",");
 
   for (let i = 0; i < quantity; i++) {
@@ -106,7 +106,13 @@ describe("formatDate on random dates", () => {
   );
 });
 
-function getCasesWithRandomDates(testFormats: string[], quantity = 10) {
+function getCasesWithRandomDates(
+  testFormats: string[],
+  quantity = 10
+): {
+  date: string;
+  luxonFormat: string;
+}[] {
   return testFormats.flatMap((luxonFormat) =>
     generateRandomISODateStrings(quantity).map((date) => ({
       date,
