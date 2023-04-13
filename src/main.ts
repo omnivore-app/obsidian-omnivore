@@ -1,60 +1,62 @@
 import { DateTime } from "luxon";
-import Mustache from "mustache";
 import {
   addIcon,
-  App,
   normalizePath,
   Notice,
   Plugin,
-  PluginSettingTab,
   requestUrl,
-  Setting,
-  stringifyYaml,
   TFile,
   TFolder,
 } from "obsidian";
-import { FolderSuggest } from "./settings/file-suggest";
-import { DEFAULT_SETTINGS } from "./settings/settings";
+import { Article, loadArticles } from "./api";
 import {
-  Article,
-  compareHighlightsInFile,
+  DEFAULT_SETTINGS,
+  OmnivoreSettings,
+  OmnivoreSettingTab,
+} from "./settings";
+import {
+  renderArticleContnet,
+  renderAttachmentFolder,
+  renderFilename,
+  renderFolderName,
+} from "./template";
+import {
   DATE_FORMAT,
   formatDate,
-  getHighlightLocation,
-  HighlightType,
-  loadArticles,
-  PageType,
+  getQueryFromFilter,
   parseDateTime,
   replaceIllegalChars,
 } from "./util";
 
-enum Filter {
-  ALL = "import all my articles",
-  HIGHLIGHTS = "import just highlights",
-  ADVANCED = "advanced",
-}
-
-enum HighlightOrder {
-  LOCATION = "the location of highlights in the article",
-  TIME = "the time that highlights are updated",
-}
-
-export interface OmnivoreSettings {
-  apiKey: string;
-  filter: string;
-  syncAt: string;
-  customQuery: string;
-  highlightOrder: string;
-  template: string;
-  syncing: boolean;
-  folder: string;
-  folderDateFormat: string;
-  endpoint: string;
-  dateHighlightedFormat: string;
-  dateSavedFormat: string;
-  filename: string;
-  attachmentFolder: string;
-}
+export const downloadFileAsAttachment = async (
+  article: Article,
+  attachmentFolder: string,
+  folderDateFormat: string
+): Promise<string> => {
+  // download pdf from the URL to the attachment folder
+  const url = article.url;
+  const response = await requestUrl({
+    url,
+    contentType: "application/pdf",
+  });
+  const folderName = normalizePath(
+    renderAttachmentFolder(article, attachmentFolder, folderDateFormat)
+  );
+  const folder = app.vault.getAbstractFileByPath(folderName);
+  if (!(folder instanceof TFolder)) {
+    await app.vault.createFolder(folderName);
+  }
+  const fileName = normalizePath(`${folderName}/${article.id}.pdf`);
+  const file = app.vault.getAbstractFileByPath(fileName);
+  if (!(file instanceof TFile)) {
+    const newFile = await app.vault.createBinary(
+      fileName,
+      response.arrayBuffer
+    );
+    return newFile.path;
+  }
+  return file.path;
+};
 
 export default class OmnivorePlugin extends Plugin {
   settings: OmnivoreSettings;
@@ -112,48 +114,6 @@ export default class OmnivorePlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  getFilename(article: Article) {
-    const { filename, folderDateFormat } = this.settings;
-    const date = formatDate(article.savedAt, folderDateFormat);
-    return Mustache.render(filename, {
-      ...article,
-      date,
-    });
-  }
-
-  getAttachmentFolder(article: Article) {
-    const { attachmentFolder, folderDateFormat } = this.settings;
-    const date = formatDate(article.savedAt, folderDateFormat);
-    return Mustache.render(attachmentFolder, {
-      ...article,
-      date,
-    });
-  }
-
-  async downloadPDF(article: Article): Promise<string> {
-    // download pdf from the URL to the attachment folder
-    const url = article.url;
-    const response = await requestUrl({
-      url,
-      contentType: "application/pdf",
-    });
-    const folderName = normalizePath(this.getAttachmentFolder(article));
-    const folder = app.vault.getAbstractFileByPath(folderName);
-    if (!(folder instanceof TFolder)) {
-      await this.app.vault.createFolder(folderName);
-    }
-    const fileName = normalizePath(`${folderName}/${article.id}.pdf`);
-    const file = app.vault.getAbstractFileByPath(fileName);
-    if (!(file instanceof TFile)) {
-      const newFile = await this.app.vault.createBinary(
-        fileName,
-        response.arrayBuffer
-      );
-      return newFile.path;
-    }
-    return file.path;
-  }
-
   async fetchOmnivore() {
     const {
       syncAt,
@@ -164,6 +124,9 @@ export default class OmnivorePlugin extends Plugin {
       syncing,
       template,
       folder,
+      filename,
+      folderDateFormat,
+      attachmentFolder,
     } = this.settings;
 
     if (syncing) {
@@ -197,7 +160,7 @@ export default class OmnivorePlugin extends Plugin {
           after,
           size,
           parseDateTime(syncAt).toISO(),
-          this.getQueryFromFilter(filter, customQuery),
+          getQueryFromFilter(filter, customQuery),
           true,
           "markdown"
         );
@@ -208,132 +171,42 @@ export default class OmnivorePlugin extends Plugin {
             this.settings.folderDateFormat
           );
           const folderName = normalizePath(
-            Mustache.render(folder, {
-              date: folderDate,
-            })
+            renderFolderName(folder, folderDate)
           );
-          const omnivoreFolder = app.vault.getAbstractFileByPath(folderName);
+          const omnivoreFolder =
+            this.app.vault.getAbstractFileByPath(folderName);
           if (!(omnivoreFolder instanceof TFolder)) {
             await this.app.vault.createFolder(folderName);
           }
-          // filter out notes and redactions
-          const articleHighlights =
-            article.highlights?.filter(
-              (h) => h.type === HighlightType.Highlight
-            ) || [];
-          // sort highlights by location if selected in options
-          if (highlightOrder === "LOCATION") {
-            articleHighlights.sort((a, b) => {
-              try {
-                // sort by highlight position percent if available
-                if (
-                  a.highlightPositionPercent !== undefined &&
-                  b.highlightPositionPercent !== undefined
-                ) {
-                  return (
-                    a.highlightPositionPercent - b.highlightPositionPercent
-                  );
-                }
-                if (article.pageType === PageType.File) {
-                  // sort by location in file
-                  return compareHighlightsInFile(a, b);
-                }
-                // for web page, sort by location in the page
-                return (
-                  getHighlightLocation(a.patch) - getHighlightLocation(b.patch)
-                );
-              } catch (e) {
-                console.error(e);
-                return compareHighlightsInFile(a, b);
-              }
-            });
-          }
-          const highlights = articleHighlights.map((highlight) => {
-            return {
-              text: highlight.quote,
-              highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-              dateHighlighted: formatDate(
-                highlight.updatedAt,
-                this.settings.dateHighlightedFormat
-              ),
-              note: highlight.annotation,
-              labels: highlight.labels?.map((l) => ({
-                name: l.name,
-              })),
-            };
-          });
-          const dateFormat = this.settings.dateSavedFormat;
-          const dateSaved = formatDate(article.savedAt, dateFormat);
-          const siteName =
-            article.siteName ||
-            this.siteNameFromUrl(article.originalArticleUrl);
-          const publishedAt = article.publishedAt;
-          const datePublished = publishedAt
-            ? formatDate(publishedAt, dateFormat)
-            : null;
-          const articleNote = article.highlights?.find(
-            (h) => h.type === HighlightType.Note
+          const content = await renderArticleContnet(
+            article,
+            template,
+            highlightOrder,
+            this.settings.dateHighlightedFormat,
+            this.settings.dateSavedFormat,
+            attachmentFolder,
+            folderDateFormat
           );
-          // Build content string based on template
-          let content = Mustache.render(template, {
-            id: article.id,
-            title: article.title,
-            omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
-            siteName,
-            originalUrl: article.originalArticleUrl,
-            author: article.author,
-            labels: article.labels?.map((l) => {
-              return {
-                name: l.name.replace(" ", "_"),
-              };
-            }),
-            dateSaved,
-            highlights,
-            content: article.content,
-            datePublished,
-            pdfAttachment:
-              article.pageType === PageType.File
-                ? await this.downloadPDF(article)
-                : undefined,
-            description: article.description,
-            note: articleNote?.annotation,
-            type: article.pageType,
-          });
-          const frontmatterRegex = /^(---[\s\S]*?---)/gm;
-          // get the frontmatter from the content
-          const frontmatter = content.match(frontmatterRegex);
-          if (frontmatter) {
-            // replace the id in the frontmatter
-            content = content.replace(
-              frontmatter[0],
-              frontmatter[0].replace('id: ""', `id: ${article.id}`)
-            );
-          } else {
-            // if the content doesn't have frontmatter, add it
-            const frontmatter = {
-              id: article.id,
-            };
-            const frontmatterYaml = stringifyYaml(frontmatter);
-            const frontmatterString = `---\n${frontmatterYaml}---`;
-            content = `${frontmatterString}\n\n${content}`;
-          }
           // use the custom filename
-          const filename = replaceIllegalChars(this.getFilename(article));
-          const pageName = `${folderName}/${filename}.md`;
+          const customFilename = replaceIllegalChars(
+            renderFilename(article, filename, folderDateFormat)
+          );
+          const pageName = `${folderName}/${customFilename}.md`;
           const normalizedPath = normalizePath(pageName);
-          const omnivoreFile = app.vault.getAbstractFileByPath(normalizedPath);
+          const omnivoreFile =
+            this.app.vault.getAbstractFileByPath(normalizedPath);
           try {
             if (omnivoreFile instanceof TFile) {
-              await app.fileManager.processFrontMatter(
+              await this.app.fileManager.processFrontMatter(
                 omnivoreFile,
                 async (frontMatter) => {
                   const id = frontMatter.id;
                   if (id && id !== article.id) {
                     // this article has the same name but different id
-                    const newPageName = `${folderName}/${filename}-${article.id}.md`;
+                    const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
                     const newNormalizedPath = normalizePath(newPageName);
                     const newOmnivoreFile =
-                      app.vault.getAbstractFileByPath(newNormalizedPath);
+                      this.app.vault.getAbstractFileByPath(newNormalizedPath);
                     if (newOmnivoreFile instanceof TFile) {
                       // a file with the same name and id already exists, so we need to update it
                       const existingContent = await this.app.vault.read(
@@ -378,309 +251,8 @@ export default class OmnivorePlugin extends Plugin {
     }
   }
 
-  getQueryFromFilter(filter: string, customQuery: string): string {
-    switch (filter) {
-      case "ALL":
-        return "";
-      case "HIGHLIGHTS":
-        return `has:highlights`;
-      case "ADVANCED":
-        return customQuery;
-      default:
-        return "";
-    }
-  }
-
-  siteNameFromUrl(originalArticleUrl: string): string {
-    try {
-      return new URL(originalArticleUrl).hostname.replace(/^www\./, "");
-    } catch {
-      return "";
-    }
-  }
-
   private async resetSyncingStateSetting() {
     this.settings.syncing = false;
     await this.saveSettings();
-  }
-}
-
-class OmnivoreSettingTab extends PluginSettingTab {
-  plugin: OmnivorePlugin;
-
-  constructor(app: App, plugin: OmnivorePlugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-
-  display(): void {
-    const { containerEl } = this;
-
-    containerEl.empty();
-
-    containerEl.createEl("h2", { text: "Settings for Omnivore plugin" });
-
-    // create a group of general settings
-    containerEl.createEl("h3", {
-      cls: "omnivore-collapsible",
-      text: "General Settings",
-    });
-
-    const generalSettings = containerEl.createEl("div", {
-      cls: "omnivore-content",
-    });
-
-    new Setting(generalSettings)
-      .setName("API Key")
-      .setDesc(
-        createFragment((fragment) => {
-          fragment.append(
-            "You can create an API key at ",
-            fragment.createEl("a", {
-              text: "https://omnivore.app/settings/api",
-              href: "https://omnivore.app/settings/api",
-            })
-          );
-        })
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder("Enter your Omnivore Api Key")
-          .setValue(this.plugin.settings.apiKey)
-          .onChange(async (value) => {
-            this.plugin.settings.apiKey = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(generalSettings)
-      .setName("Filter")
-      .setDesc("Select an Omnivore search filter type")
-      .addDropdown((dropdown) => {
-        dropdown.addOptions(Filter);
-        dropdown
-          .setValue(this.plugin.settings.filter)
-          .onChange(async (value) => {
-            this.plugin.settings.filter = value;
-            await this.plugin.saveSettings();
-          });
-      });
-
-    new Setting(generalSettings)
-      .setName("Custom query")
-      .setDesc(
-        createFragment((fragment) => {
-          fragment.append(
-            "See ",
-            fragment.createEl("a", {
-              text: "https://omnivore.app/help/search",
-              href: "https://omnivore.app/help/search",
-            }),
-            " for more info on search query syntax"
-          );
-        })
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder(
-            "Enter an Omnivore custom search query if advanced filter is selected"
-          )
-          .setValue(this.plugin.settings.customQuery)
-          .onChange(async (value) => {
-            this.plugin.settings.customQuery = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(generalSettings)
-      .setName("Last Sync")
-      .setDesc("Last time the plugin synced with Omnivore")
-      .addMomentFormat((momentFormat) =>
-        momentFormat
-          .setPlaceholder("Last Sync")
-          .setValue(this.plugin.settings.syncAt)
-          .setDefaultFormat("yyyy-MM-dd'T'HH:mm:ss")
-          .onChange(async (value) => {
-            this.plugin.settings.syncAt = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    new Setting(generalSettings)
-      .setName("Highlight Order")
-      .setDesc("Select the order in which highlights are applied")
-      .addDropdown((dropdown) => {
-        dropdown.addOptions(HighlightOrder);
-        dropdown
-          .setValue(this.plugin.settings.highlightOrder)
-          .onChange(async (value) => {
-            this.plugin.settings.highlightOrder = value;
-            await this.plugin.saveSettings();
-          });
-      });
-
-    new Setting(generalSettings)
-      .setName("Template")
-      .setDesc(
-        createFragment((fragment) => {
-          fragment.append(
-            "Enter template to render articles with ",
-            fragment.createEl("a", {
-              text: "Reference",
-              href: "https://github.com/janl/mustache.js/#templates",
-            }),
-            fragment.createEl("p", {
-              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, description, dateSaved, datePublished, pdfAttachment, note, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted, highlights.labels.name",
-            }),
-            fragment.createEl("p", {
-              text: "Please note that id in the frontmatter is required for the plugin to work properly.",
-            })
-          );
-        })
-      )
-      .addTextArea((text) => {
-        text
-          .setPlaceholder("Enter the template")
-          .setValue(this.plugin.settings.template)
-          .onChange(async (value) => {
-            // TODO: validate template
-            // if template is empty, use default template
-            this.plugin.settings.template = value
-              ? value
-              : DEFAULT_SETTINGS.template;
-            await this.plugin.saveSettings();
-          });
-        text.inputEl.setAttr("rows", 10);
-        text.inputEl.setAttr("cols", 40);
-      });
-
-    new Setting(generalSettings)
-      .setName("Folder")
-      .setDesc(
-        "Enter the folder where the data will be stored. {{{date}}} could be used in the folder name"
-      )
-      .addSearch((search) => {
-        new FolderSuggest(this.app, search.inputEl);
-        search
-          .setPlaceholder("Enter the folder")
-          .setValue(this.plugin.settings.folder)
-          .onChange(async (value) => {
-            this.plugin.settings.folder = value;
-            await this.plugin.saveSettings();
-          });
-      });
-    new Setting(generalSettings)
-      .setName("Attachment Folder")
-      .setDesc(
-        "Enter the folder where the attachment will be downloaded to. {{{date}}} could be used in the folder name"
-      )
-      .addSearch((search) => {
-        new FolderSuggest(this.app, search.inputEl);
-        search
-          .setPlaceholder("Enter the attachment folder")
-          .setValue(this.plugin.settings.attachmentFolder)
-          .onChange(async (value) => {
-            this.plugin.settings.attachmentFolder = value;
-            await this.plugin.saveSettings();
-          });
-      });
-    new Setting(generalSettings)
-      .setName("Filename")
-      .setDesc(
-        "Enter the filename where the data will be stored. {{{title}}} and {{{date}}} could be used in the filename"
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder("Enter the filename")
-          .setValue(this.plugin.settings.filename)
-          .onChange(async (value) => {
-            this.plugin.settings.filename = value;
-            await this.plugin.saveSettings();
-          })
-      );
-    new Setting(generalSettings)
-      .setName("Folder Date Format")
-      .setDesc(
-        createFragment((fragment) => {
-          fragment.append(
-            "Enter the format date for use in rendered template. Format ",
-            fragment.createEl("a", {
-              text: "reference",
-              href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",
-            })
-          );
-        })
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder("yyyy-MM-dd")
-          .setValue(this.plugin.settings.folderDateFormat)
-          .onChange(async (value) => {
-            this.plugin.settings.folderDateFormat = value;
-            await this.plugin.saveSettings();
-          })
-      );
-    new Setting(generalSettings).setName("Date Saved Format").addText((text) =>
-      text
-        .setPlaceholder("yyyy-MM-dd'T'HH:mm:ss")
-        .setValue(this.plugin.settings.dateSavedFormat)
-        .onChange(async (value) => {
-          this.plugin.settings.dateSavedFormat = value;
-          await this.plugin.saveSettings();
-        })
-    );
-    new Setting(generalSettings)
-      .setName("Date Highlighted Format")
-      .addText((text) =>
-        text
-          .setPlaceholder("Date Highlighted Format")
-          .setValue(this.plugin.settings.dateHighlightedFormat)
-          .onChange(async (value) => {
-            this.plugin.settings.dateHighlightedFormat = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    containerEl.createEl("h3", {
-      cls: "omnivore-collapsible",
-      text: "Advanced Settings",
-    });
-
-    const advancedSettings = containerEl.createEl("div", {
-      cls: "omnivore-content",
-    });
-
-    new Setting(advancedSettings)
-      .setName("API Endpoint")
-      .setDesc("Enter the Omnivore server's API endpoint")
-      .addText((text) =>
-        text
-          .setPlaceholder("API endpoint")
-          .setValue(this.plugin.settings.endpoint)
-          .onChange(async (value) => {
-            console.log("endpoint: " + value);
-            this.plugin.settings.endpoint = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
-    const help = containerEl.createEl("p");
-    help.innerHTML = `For more information, please visit the <a href="https://github.com/omnivore-app/obsidian-omnivore/blob/master/README.md">plugin's GitHub page</a> or email us at <a href="mailto:feedback@omnivore.app">feedback@omnivore.app</a>.`;
-
-    // script to make collapsible sections
-    const coll = document.getElementsByClassName("omnivore-collapsible");
-    let i;
-
-    for (i = 0; i < coll.length; i++) {
-      coll[i].addEventListener("click", function () {
-        this.classList.toggle("omnivore-active");
-        const content = this.nextElementSibling;
-        if (content.style.maxHeight) {
-          content.style.maxHeight = null;
-        } else {
-          content.style.maxHeight = "fit-content";
-        }
-      });
-    }
   }
 }

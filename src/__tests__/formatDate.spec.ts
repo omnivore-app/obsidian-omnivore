@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { DEFAULT_SETTINGS } from "../settings/settings";
+import { DEFAULT_SETTINGS } from "../settings";
 import { formatDate } from "../util";
 
 const jsDate = new Date("2023-02-18 13:02:08.169");
@@ -89,7 +89,7 @@ function generateRandomISODateStrings(quantity: number): string[] {
       date.toLocaleString("en-US", { timeZone: randomTimeZone })
     );
     const luxonDate = DateTime.fromJSDate(jsDateTimeWithZone);
-    randomISODateStrings.push(luxonDate.toISO());
+    randomISODateStrings.push(luxonDate.toISO() as string);
   }
 
   return randomISODateStrings;
