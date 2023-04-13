@@ -68,6 +68,7 @@ export interface Article {
   content?: string;
   publishedAt: string;
   url: string;
+  readAt?: string;
 }
 
 export interface Label {
@@ -151,6 +152,7 @@ export const loadArticles = async (
                   pageType
                   content
                   publishedAt
+                  readAt
                   highlights {
                     id
                     quote
