@@ -1,4 +1,4 @@
-import { OmnivoreSettings } from "./main";
+import { OmnivoreSettings } from "../main";
 
 export const DEFAULT_SETTINGS: OmnivoreSettings = {
   dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
@@ -44,8 +44,9 @@ date_published: {{{datePublished}}}
 {{/highlights.length}}`,
   highlightOrder: "LOCATION",
   syncing: false,
-  folder: "Omnivore/{{date}}",
+  folder: "Omnivore/{{{date}}}",
   folderDateFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
-  filename: "{{{title}}}"
+  filename: "{{{title}}}",
+  attachmentFolder: "Omnivore/attachments",
 };

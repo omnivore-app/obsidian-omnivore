@@ -14,6 +14,7 @@ import {
   TFolder,
 } from "obsidian";
 import { FolderSuggest } from "./settings/file-suggest";
+import { DEFAULT_SETTINGS } from "./settings/settings";
 import {
   Article,
   compareHighlightsInFile,
@@ -26,7 +27,6 @@ import {
   parseDateTime,
   replaceIllegalChars,
 } from "./util";
-import { DEFAULT_SETTINGS } from "./DEFAULT_SETTINGS";
 
 enum Filter {
   ALL = "import all my articles",
