@@ -409,8 +409,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
               : DEFAULT_SETTINGS.template;
             await this.plugin.saveSettings();
           });
-        text.inputEl.setAttr("rows", 10);
-        text.inputEl.setAttr("cols", 40);
+        text.inputEl.setAttr("rows", 30);
+        text.inputEl.setAttr("cols", 60);
       });
 
     new Setting(generalSettings)
