@@ -300,6 +300,10 @@ export const replaceIllegalChars = (str: string): string => {
   return str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR);
 };
 
-export const formatDate = (date: string, format: string): string => {
-  return DateTime.fromISO(date).toFormat(format);
-};
+export function formatDate(date: string, format: string): string {
+  if (isNaN(Date.parse(date))) {
+    throw new Error(`Invalid date: ${date}`);
+  }
+  return DateTime.fromJSDate(new Date(date)).toFormat(format);
+}
+

@@ -26,6 +26,7 @@ import {
   parseDateTime,
   replaceIllegalChars,
 } from "./util";
+import { DEFAULT_SETTINGS } from "./DEFAULT_SETTINGS";
 
 enum Filter {
   ALL = "import all my articles",
@@ -38,7 +39,7 @@ enum HighlightOrder {
   TIME = "the time that highlights are updated",
 }
 
-interface Settings {
+export interface OmnivoreSettings {
   apiKey: string;
   filter: string;
   syncAt: string;
@@ -54,68 +55,9 @@ interface Settings {
   filename: string;
   attachmentFolder: string;
 }
-const DEFAULT_SETTINGS: Settings = {
-  dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
-  dateSavedFormat: "yyyy-MM-dd HH:mm:ss",
-  apiKey: "",
-  filter: "HIGHLIGHTS",
-  syncAt: "",
-  customQuery: "",
-  template: `---
-id: {{id}}
-title: "{{{title}}}"
-{{#author}}
-author: "{{{author}}}"
-{{/author}}
-{{#labels.length}}
-tags:
-{{#labels}} - "{{{name}}}"
-{{/labels}}
-{{/labels.length}}
-date_saved: "{{{dateSaved}}}"
-{{#datePublished}}
-date_published: "{{{datePublished}}}"
-{{/datePublished}}
----
-
-# {{{title}}}
-#Omnivore
-
-[Read on Omnivore]({{{omnivoreUrl}}})
-[Read Original]({{{originalUrl}}})
-{{#note}}
-## Note
-
-{{{note}}}
-{{/note}}
-{{#pdfAttachment}}
-
-![[{{{pdfAttachment}}}]]
-{{/pdfAttachment}}
-
-{{#highlights.length}}
-## Highlights
-
-{{#highlights}}
-> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #{{{name}}} {{/labels}}
-{{#note}}
-
-{{{note}}}
-{{/note}}
-
-{{/highlights}}
-{{/highlights.length}}`,
-  highlightOrder: "LOCATION",
-  syncing: false,
-  folder: "Omnivore/{{{date}}}",
-  folderDateFormat: "yyyy-MM-dd",
-  endpoint: "https://api-prod.omnivore.app/api/graphql",
-  filename: "{{{title}}}",
-  attachmentFolder: "Omnivore/attachments",
-};
 
 export default class OmnivorePlugin extends Plugin {
-  settings: Settings;
+  settings: OmnivoreSettings;
 
   async onload() {
     await this.loadSettings();
