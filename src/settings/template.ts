@@ -1,13 +1,13 @@
 import Mustache from "mustache";
 import { stringifyYaml } from "obsidian";
-import { Article, HighlightType, PageType } from "./api";
-import { downloadFileAsAttachment } from "./main";
+import { Article, HighlightType, PageType } from "../api";
+// import { downloadFileAsAttachment } from "../main";
 import {
   compareHighlightsInFile,
   formatDate,
   getHighlightLocation,
   siteNameFromUrl,
-} from "./util";
+} from "../util";
 
 export const DEFAULT_TEMPLATE = `---
 id: {{{id}}}
@@ -45,6 +45,37 @@ date_published: {{{datePublished}}}
 {{/highlights}}
 {{/highlights.length}}`;
 
+export interface LabelVariable {
+  name: string;
+}
+
+export interface HighlightVariables {
+  text: string;
+  highlightUrl: string;
+  dateHighlighted: string;
+  note?: string;
+  labels?: LabelVariable[];
+}
+
+export interface ArticleVariables {
+  id: string;
+  title: string;
+  omnivoreUrl: string;
+  siteName: string;
+  originalUrl: string;
+  author?: string;
+  labels?: LabelVariable[];
+  dateSaved: string;
+  highlights: HighlightVariables[];
+  content: string;
+  datePublished?: string;
+  fileAttachment?: string;
+  description?: string;
+  note?: string;
+  type: PageType;
+  dateRead?: string;
+}
+
 export const renderFilename = (
   article: Article,
   filename: string,
@@ -69,14 +100,20 @@ export const renderAttachmentFolder = (
   });
 };
 
+export const renderLabels = (labels?: LabelVariable[]) => {
+  return labels?.map((l) => ({
+    // replace spaces with underscores because Obsidian doesn't allow spaces in tags
+    name: l.name.replace(" ", "_"),
+  }));
+};
+
 export const renderArticleContnet = async (
   article: Article,
   template: string,
   highlightOrder: string,
   dateHighlightedFormat: string,
   dateSavedFormat: string,
-  attachmentFolder: string,
-  folderDateFormat: string
+  fileAttachment?: string
 ) => {
   // filter out notes and redactions
   const articleHighlights =
@@ -104,29 +141,31 @@ export const renderArticleContnet = async (
       }
     });
   }
-  const highlights = articleHighlights.map((highlight) => {
-    return {
-      text: highlight.quote,
-      highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-      dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
-      note: highlight.annotation,
-      labels: highlight.labels?.map((l) => ({
-        name: l.name,
-      })),
-    };
-  });
+  const highlights: HighlightVariables[] = articleHighlights.map(
+    (highlight) => {
+      return {
+        text: highlight.quote,
+        highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
+        dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
+        note: highlight.annotation,
+        labels: renderLabels(highlight.labels),
+      };
+    }
+  );
   const dateSaved = formatDate(article.savedAt, dateSavedFormat);
   const siteName =
     article.siteName || siteNameFromUrl(article.originalArticleUrl);
   const publishedAt = article.publishedAt;
   const datePublished = publishedAt
     ? formatDate(publishedAt, dateSavedFormat)
-    : null;
+    : undefined;
   const articleNote = article.highlights?.find(
     (h) => h.type === HighlightType.Note
   );
-  // Build content string based on template
-  let content = Mustache.render(template, {
+  const dateRead = article.readAt
+    ? formatDate(article.readAt, dateSavedFormat)
+    : undefined;
+  const articleVariables: ArticleVariables = {
     id: article.id,
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -142,18 +181,14 @@ export const renderArticleContnet = async (
     highlights,
     content: article.content,
     datePublished,
-    pdfAttachment:
-      article.pageType === PageType.File
-        ? await downloadFileAsAttachment(
-            article,
-            attachmentFolder,
-            folderDateFormat
-          )
-        : undefined,
+    fileAttachment,
     description: article.description,
     note: articleNote?.annotation,
     type: article.pageType,
-  });
+    dateRead,
+  };
+  // Build content string based on template
+  let content = Mustache.render(template, articleVariables);
 
   const frontmatterRegex = /^(---[\s\S]*?---)/gm;
   // get the frontmatter from the content

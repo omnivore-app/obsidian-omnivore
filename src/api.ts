@@ -26,16 +26,16 @@ export interface Article {
   title: string;
   siteName: string;
   originalArticleUrl: string;
-  author: string;
-  description: string;
+  author?: string;
+  description?: string;
   slug: string;
   labels?: Label[];
   highlights?: Highlight[];
   updatedAt: string;
   savedAt: string;
   pageType: PageType;
-  content?: string;
-  publishedAt: string;
+  content: string;
+  publishedAt?: string;
   url: string;
   readAt?: string;
 }
