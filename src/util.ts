@@ -120,3 +120,17 @@ export const siteNameFromUrl = (originalArticleUrl: string): string => {
     return "";
   }
 };
+
+export const formatHighlightQuote = (
+  quote: string,
+  template: string
+): string => {
+  // if the template has highlights, we need to preserve paragraphs
+  const regex = /{{#highlights}}(\n)*>/gm;
+  if (regex.test(template)) {
+    // replace all empty lines with blockquote '>' to preserve paragraphs
+    quote = quote.replaceAll("&gt;", ">").replaceAll(/\n/gm, "\n> ");
+  }
+
+  return quote;
+};

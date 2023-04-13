@@ -5,6 +5,7 @@ import { Article, HighlightType, PageType } from "../api";
 import {
   compareHighlightsInFile,
   formatDate,
+  formatHighlightQuote,
   getHighlightLocation,
   siteNameFromUrl,
 } from "../util";
@@ -103,7 +104,7 @@ export const renderAttachmentFolder = (
 export const renderLabels = (labels?: LabelVariable[]) => {
   return labels?.map((l) => ({
     // replace spaces with underscores because Obsidian doesn't allow spaces in tags
-    name: l.name.replace(" ", "_"),
+    name: l.name.replaceAll(" ", "_"),
   }));
 };
 
@@ -144,7 +145,7 @@ export const renderArticleContnet = async (
   const highlights: HighlightVariables[] = articleHighlights.map(
     (highlight) => {
       return {
-        text: highlight.quote,
+        text: formatHighlightQuote(highlight.quote, template),
         highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
         dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
         note: highlight.annotation,
