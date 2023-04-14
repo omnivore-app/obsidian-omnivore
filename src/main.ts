@@ -386,13 +386,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             "Enter template to render articles with ",
             fragment.createEl("a", {
               text: "Reference",
-              href: "https://github.com/janl/mustache.js/#templates",
-            }),
-            fragment.createEl("p", {
-              text: "Available variables: id, title, omnivoreUrl, siteName, originalUrl, author, content, description, dateSaved, datePublished, pdfAttachment, note, labels.name, highlights.text, highlights.highlightUrl, highlights.note, highlights.dateHighlighted, highlights.labels.name",
-            }),
-            fragment.createEl("p", {
-              text: "Please note that id in the frontmatter is required for the plugin to work properly.",
+              href: "https://docs.omnivore.app/obsidian.html#customizing-which-data-is-synced-from-omnivore-to-obsidian",
             })
           );
         })
