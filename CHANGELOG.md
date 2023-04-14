@@ -1,3 +1,12 @@
+## [1.2.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.2.1...1.2.2) (2023-04-14)
+
+
+### Bug Fixes
+
+* add dateRead variable in the article template ([8141166](https://github.com/omnivore-app/obsidian-omnivore/commit/8141166de4353edae861b069bc5d7a925323725a))
+* add type to the template ([e04f7ab](https://github.com/omnivore-app/obsidian-omnivore/commit/e04f7ab2a32f2bed9ffc0d7f25f6798858ab1aec))
+* replace all empty lines with blockquote ">" to preserve paragraphs ([e02e5de](https://github.com/omnivore-app/obsidian-omnivore/commit/e02e5de9cbe8d0ef261b010ed08fbf39e47a95be))
+
 ## [1.2.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.2.0...1.2.1) (2023-04-10)
 
 
