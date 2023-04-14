@@ -1,11 +1,26 @@
-import { ILLEGAL_CHAR_REGEX, replaceIllegalChars, REPLACEMENT_CHAR } from "../util";
 import * as fs from "fs";
+import {
+  ILLEGAL_CHAR_REGEX,
+  replaceIllegalChars,
+  REPLACEMENT_CHAR,
+} from "../util";
 
-const expectedManualIllegalChars: string[] = ["/", "\\", "?", "%", "*", ":", "|", "\"", "<", ">"];
+const expectedManualIllegalChars: string[] = [
+  "/",
+  "\\",
+  "?",
+  "%",
+  "*",
+  ":",
+  "|",
+  '"',
+  "<",
+  ">",
+];
 
 describe("replaceIllegalChars() removes all expected characters", () => {
   test.each(expectedManualIllegalChars)(
-    "Illegal character \"%s\" is removed",
+    'Illegal character "%s" is removed',
     (character) => {
       const input = `this${character}string`;
       const output = replaceIllegalChars(input);

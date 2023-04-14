@@ -1,224 +1,17 @@
 import { diff_match_patch } from "diff-match-patch";
 import { DateTime } from "luxon";
 import escape from "markdown-escape";
-import { requestUrl } from "obsidian";
+import { Highlight } from "./api";
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm";
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`;
-
-export interface GetArticleResponse {
-  data: {
-    article: {
-      article: Article;
-    };
-  };
-}
-
-export interface SearchResponse {
-  data: {
-    search: {
-      edges: { node: Article }[];
-      pageInfo: {
-        hasNextPage: boolean;
-      };
-    };
-  };
-}
-
-export enum UpdateReason {
-  CREATED = "CREATED",
-  UPDATED = "UPDATED",
-  DELETED = "DELETED",
-}
-
-export interface UpdatesSinceResponse {
-  data: {
-    updatesSince: {
-      edges: { updateReason: UpdateReason; node: { slug: string } }[];
-      pageInfo: {
-        hasNextPage: boolean;
-      };
-    };
-  };
-}
-
-export enum PageType {
-  Article = "ARTICLE",
-  Book = "BOOK",
-  File = "FILE",
-  Profile = "PROFILE",
-  Unknown = "UNKNOWN",
-  Website = "WEBSITE",
-  Highlights = "HIGHLIGHTS",
-}
-
-export interface Article {
-  id: string;
-  title: string;
-  siteName: string;
-  originalArticleUrl: string;
-  author: string;
-  description: string;
-  slug: string;
-  labels?: Label[];
-  highlights?: Highlight[];
-  updatedAt: string;
-  savedAt: string;
-  pageType: PageType;
-  content?: string;
-  publishedAt: string;
-  url: string;
-}
-
-export interface Label {
-  name: string;
-}
-
-export enum HighlightType {
-  Highlight = "HIGHLIGHT",
-  Note = "NOTE",
-  Redaction = "REDACTION",
-}
-
-export interface Highlight {
-  id: string;
-  quote: string;
-  annotation: string;
-  patch: string;
-  updatedAt: string;
-  labels?: Label[];
-  type: HighlightType;
-  highlightPositionPercent?: number;
-}
+export const REPLACEMENT_CHAR = "-";
+export const ILLEGAL_CHAR_REGEX = /[/\\?%*:|"<>]/g;
 
 export interface HighlightPoint {
   left: number;
   top: number;
 }
-
-const ENDPOINT = "https://api-prod.omnivore.app/api/graphql";
-const requestHeaders = (apiKey: string) => ({
-  "Content-Type": "application/json",
-  authorization: apiKey,
-  "X-OmnivoreClient": "obsidian-plugin",
-});
-
-export const loadArticle = async (
-  slug: string,
-  apiKey: string
-): Promise<Article> => {
-  const res = await requestUrl({
-    url: ENDPOINT,
-    headers: requestHeaders(apiKey),
-    body: `{"query":"\\n  query GetArticle(\\n    $username: String!\\n    $slug: String!\\n  ) {\\n    article(username: $username, slug: $slug) {\\n      ... on ArticleSuccess {\\n        article {\\n          ...ArticleFields\\n          highlights {\\n            ...HighlightFields\\n          }\\n          labels {\\n            ...LabelFields\\n          }\\n        }\\n      }\\n      ... on ArticleError {\\n        errorCodes\\n      }\\n    }\\n  }\\n  \\n  fragment ArticleFields on Article {\\n    savedAt\\n  }\\n\\n  \\n  fragment HighlightFields on Highlight {\\n  id\\n  quote\\n  annotation\\n  }\\n\\n  \\n  fragment LabelFields on Label {\\n    name\\n  }\\n\\n","variables":{"username":"me","slug":"${slug}"}}`,
-    method: "POST",
-  });
-  const response = res.json as GetArticleResponse;
-
-  return response.data.article.article;
-};
-
-export const loadArticles = async (
-  endpoint: string,
-  apiKey: string,
-  after = 0,
-  first = 10,
-  updatedAt = "",
-  query = "",
-  includeContent = false,
-  format = "html"
-): Promise<[Article[], boolean]> => {
-  const res = await requestUrl({
-    url: endpoint,
-    headers: requestHeaders(apiKey),
-    body: JSON.stringify({
-      query: `
-        query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {
-          search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {
-            ... on SearchSuccess {
-              edges {
-                node {
-                  id
-                  title
-                  slug
-                  siteName
-                  originalArticleUrl
-                  url
-                  author
-                  updatedAt
-                  description
-                  savedAt
-                  pageType
-                  content
-                  publishedAt
-                  highlights {
-                    id
-                    quote
-                    annotation
-                    patch
-                    updatedAt
-                    type
-                    highlightPositionPercent
-                    labels {
-                      name
-                    }
-                  }
-                  labels {
-                    name
-                  }
-                }
-              }
-              pageInfo {
-                hasNextPage
-              }
-            }
-            ... on SearchError {
-              errorCodes
-            }
-          }
-        }`,
-      variables: {
-        after: `${after}`,
-        first,
-        query: `${
-          updatedAt ? "updated:" + updatedAt : ""
-        } sort:saved-asc ${query}`,
-        includeContent,
-        format,
-      },
-    }),
-    method: "POST",
-  });
-
-  const jsonRes = res.json as SearchResponse;
-  const articles = jsonRes.data.search.edges.map((e) => e.node);
-
-  return [articles, jsonRes.data.search.pageInfo.hasNextPage];
-};
-
-export const loadDeletedArticleSlugs = async (
-  endpoint: string,
-  apiKey: string,
-  after = 0,
-  first = 10,
-  updatedAt = ""
-): Promise<[string[], boolean]> => {
-  const res = await requestUrl({
-    url: endpoint,
-    headers: requestHeaders(apiKey),
-    body: `{"query":"\\n    query UpdatesSince($after: String, $first: Int, $since: Date!) {\\n      updatesSince(first: $first, after: $after, since: $since) {\\n        ... on UpdatesSinceSuccess {\\n          edges {\\n       updateReason\\n        node {\\n              slug\\n        }\\n          }\\n          pageInfo {\\n            hasNextPage\\n          }\\n        }\\n        ... on UpdatesSinceError {\\n          errorCodes\\n        }\\n      }\\n    }\\n  ","variables":{"after":"${after}","first":${first}, "since":"${
-      updatedAt || "2021-01-01"
-    }"}}`,
-    method: "POST",
-  });
-
-  const jsonRes = res.json as UpdatesSinceResponse;
-  const deletedArticleSlugs = jsonRes.data.updatesSince.edges
-    .filter((edge) => edge.updateReason === UpdateReason.DELETED)
-    .map((edge) => edge.node.slug);
-
-  return [deletedArticleSlugs, jsonRes.data.updatesSince.pageInfo.hasNextPage];
-};
 
 export const getHighlightLocation = (patch: string): number => {
   const dmp = new diff_match_patch();
@@ -293,9 +86,6 @@ export const unicodeSlug = (str: string, savedAt: string) => {
   );
 };
 
-export const REPLACEMENT_CHAR = "-";
-export const ILLEGAL_CHAR_REGEX = /[/\\?%*:|"<>]/g;
-
 export const replaceIllegalChars = (str: string): string => {
   return str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR);
 };
@@ -307,3 +97,40 @@ export function formatDate(date: string, format: string): string {
   return DateTime.fromJSDate(new Date(date)).toFormat(format);
 }
 
+export const getQueryFromFilter = (
+  filter: string,
+  customQuery: string
+): string => {
+  switch (filter) {
+    case "ALL":
+      return "";
+    case "HIGHLIGHTS":
+      return `has:highlights`;
+    case "ADVANCED":
+      return customQuery;
+    default:
+      return "";
+  }
+};
+
+export const siteNameFromUrl = (originalArticleUrl: string): string => {
+  try {
+    return new URL(originalArticleUrl).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+};
+
+export const formatHighlightQuote = (
+  quote: string,
+  template: string
+): string => {
+  // if the template has highlights, we need to preserve paragraphs
+  const regex = /{{#highlights}}(\n)*>/gm;
+  if (regex.test(template)) {
+    // replace all empty lines with blockquote '>' to preserve paragraphs
+    quote = quote.replaceAll("&gt;", ">").replaceAll(/\n/gm, "\n> ");
+  }
+
+  return quote;
+};
