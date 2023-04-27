@@ -386,7 +386,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             "Enter template to render articles with ",
             fragment.createEl("a", {
               text: "Reference",
-              href: "https://docs.omnivore.app/obsidian.html#customizing-which-data-is-synced-from-omnivore-to-obsidian",
+              href: "https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian",
             })
           );
         })
