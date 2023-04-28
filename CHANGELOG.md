@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.2.2...1.2.3) (2023-04-28)
+
+
+### Bug Fixes
+
+* wrap value in frontmatter with double quotes ([3f996fd](https://github.com/omnivore-app/obsidian-omnivore/commit/3f996fd04e38b1e6c2a116673d8599310230b76f))
+
 ## [1.2.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.2.1...1.2.2) (2023-04-14)
 
 
