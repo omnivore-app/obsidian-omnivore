@@ -1,7 +1,6 @@
 import Mustache from "mustache";
 import { stringifyYaml } from "obsidian";
 import { Article, HighlightType, PageType } from "../api";
-// import { downloadFileAsAttachment } from "../main";
 import {
   compareHighlightsInFile,
   formatDate,
@@ -11,19 +10,19 @@ import {
 } from "../util";
 
 export const DEFAULT_TEMPLATE = `---
-id: {{{id}}}
-title: {{{title}}}
+id: "{{{id}}}"
+title: "{{{title}}}"
 {{#author}}
-author: {{{author}}}
+author: "{{{author}}}"
 {{/author}}
 {{#labels.length}}
 tags:
-{{#labels}} - {{{name}}}
+{{#labels}} - "{{{name}}}"
 {{/labels}}
 {{/labels.length}}
-date_saved: {{{dateSaved}}}
+date_saved: "{{{dateSaved}}}"
 {{#datePublished}}
-date_published: {{{datePublished}}}
+date_published: "{{{datePublished}}}"
 {{/datePublished}}
 ---
 
