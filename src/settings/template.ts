@@ -47,28 +47,28 @@ date_published: {{{datePublished}}}
 {{/highlights}}
 {{/highlights.length}}`;
 
-export interface LabelVariable {
+export interface LabelView {
   name: string;
 }
 
-export interface HighlightVariables {
+export interface HighlightView {
   text: string;
   highlightUrl: string;
   dateHighlighted: string;
   note?: string;
-  labels?: LabelVariable[];
+  labels?: LabelView[];
 }
 
-export interface ArticleVariables {
+export interface ArticleView {
   id: string;
   title: string;
   omnivoreUrl: string;
   siteName: string;
   originalUrl: string;
   author?: string;
-  labels?: LabelVariable[];
+  labels?: LabelView[];
   dateSaved: string;
-  highlights: HighlightVariables[];
+  highlights: HighlightView[];
   content: string;
   datePublished?: string;
   fileAttachment?: string;
@@ -76,6 +76,8 @@ export interface ArticleVariables {
   note?: string;
   type: PageType;
   dateRead?: string;
+  wordsCount?: number;
+  readLength?: number;
 }
 
 export const renderFilename = (
@@ -102,7 +104,7 @@ export const renderAttachmentFolder = (
   });
 };
 
-export const renderLabels = (labels?: LabelVariable[]) => {
+export const renderLabels = (labels?: LabelView[]) => {
   return labels?.map((l) => ({
     // replace spaces with underscores because Obsidian doesn't allow spaces in tags
     name: l.name.replaceAll(" ", "_"),
@@ -143,17 +145,15 @@ export const renderArticleContnet = async (
       }
     });
   }
-  const highlights: HighlightVariables[] = articleHighlights.map(
-    (highlight) => {
-      return {
-        text: formatHighlightQuote(highlight.quote, template),
-        highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-        dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
-        note: highlight.annotation,
-        labels: renderLabels(highlight.labels),
-      };
-    }
-  );
+  const highlights: HighlightView[] = articleHighlights.map((highlight) => {
+    return {
+      text: formatHighlightQuote(highlight.quote, template),
+      highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
+      dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
+      note: highlight.annotation,
+      labels: renderLabels(highlight.labels),
+    };
+  });
   const dateSaved = formatDate(article.savedAt, dateSavedFormat);
   const siteName =
     article.siteName || siteNameFromUrl(article.originalArticleUrl);
@@ -167,7 +167,11 @@ export const renderArticleContnet = async (
   const dateRead = article.readAt
     ? formatDate(article.readAt, dateSavedFormat)
     : undefined;
-  const articleVariables: ArticleVariables = {
+  const wordsCount = article.wordsCount;
+  const readLength = wordsCount
+    ? Math.round(Math.max(1, wordsCount / 235))
+    : undefined;
+  const articleView: ArticleView = {
     id: article.id,
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -188,9 +192,11 @@ export const renderArticleContnet = async (
     note: articleNote?.annotation,
     type: article.pageType,
     dateRead,
+    wordsCount,
+    readLength,
   };
   // Build content string based on template
-  let content = Mustache.render(template, articleVariables);
+  let content = Mustache.render(template, articleView);
 
   const frontmatterRegex = /^(---[\s\S]*?---)/gm;
   // get the frontmatter from the content

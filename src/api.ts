@@ -38,6 +38,7 @@ export interface Article {
   publishedAt?: string;
   url: string;
   readAt?: string;
+  wordsCount?: number;
 }
 
 export interface Label {
@@ -101,6 +102,7 @@ export const loadArticles = async (
                   content
                   publishedAt
                   readAt
+                  wordsCount
                   highlights {
                     id
                     quote
