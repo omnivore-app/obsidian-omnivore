@@ -147,6 +147,7 @@ export default class OmnivorePlugin extends Plugin {
       folder,
       filename,
       folderDateFormat,
+      isSingleFile,
     } = this.settings;
 
     if (syncing) {
@@ -223,39 +224,80 @@ export default class OmnivorePlugin extends Plugin {
             this.app.vault.getAbstractFileByPath(normalizedPath);
           try {
             if (omnivoreFile instanceof TFile) {
-              await this.app.fileManager.processFrontMatter(
-                omnivoreFile,
-                async (frontMatter) => {
-                  const id = frontMatter.id;
-                  if (id && id !== article.id) {
-                    // this article has the same name but different id
-                    const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
-                    const newNormalizedPath = normalizePath(newPageName);
-                    const newOmnivoreFile =
-                      this.app.vault.getAbstractFileByPath(newNormalizedPath);
-                    if (newOmnivoreFile instanceof TFile) {
-                      // a file with the same name and id already exists, so we need to update it
+              // file exists, so we might need to update it
+              if (isSingleFile) {
+                // a single file is used to store all articles
+                // we need to check if the article already exists in the file
+                await this.app.fileManager.processFrontMatter(
+                  omnivoreFile,
+                  async (frontMatter) => {
+                    const id = frontMatter.id as string[];
+                    // we need to remove the front matter
+                    const contentWithoutFrontmatter = content.replace(
+                      /^---\n.*\n---\n/,
+                      ""
+                    );
+                    if (id && id.includes(article.id)) {
+                      // this article already exists in the file
+                      // we need to locate the article and update it
                       const existingContent = await this.app.vault.read(
-                        newOmnivoreFile
+                        omnivoreFile
                       );
-                      if (existingContent !== content) {
-                        await this.app.vault.modify(newOmnivoreFile, content);
-                      }
+                      const newContent = existingContent.replace(
+                        new RegExp(
+                          `^---\nid:\n- ${article.id}\n.*\n---\n`,
+                          "m"
+                        ),
+                        contentWithoutFrontmatter
+                      );
+                      await this.app.vault.modify(omnivoreFile, newContent);
                       return;
                     }
-                    // a file with the same name but different id already exists, so we need to create it
-                    await this.app.vault.create(newNormalizedPath, content);
-                    return;
+                    // this article doesn't exist in the file
+                    // append the article
+                    await this.app.vault.append(
+                      omnivoreFile,
+                      contentWithoutFrontmatter
+                    );
+                    // append id to front matter
+                    frontMatter.id = id ? [...id, article.id] : [article.id];
                   }
-                  // a file with the same id already exists, so we might need to update it
-                  const existingContent = await this.app.vault.read(
-                    omnivoreFile
-                  );
-                  if (existingContent !== content) {
-                    await this.app.vault.modify(omnivoreFile, content);
+                );
+              } else {
+                await this.app.fileManager.processFrontMatter(
+                  omnivoreFile,
+                  async (frontMatter) => {
+                    const id = frontMatter.id;
+                    if (id && id !== article.id) {
+                      // this article has the same name but different id
+                      const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
+                      const newNormalizedPath = normalizePath(newPageName);
+                      const newOmnivoreFile =
+                        this.app.vault.getAbstractFileByPath(newNormalizedPath);
+                      if (newOmnivoreFile instanceof TFile) {
+                        // a file with the same name and id already exists, so we need to update it
+                        const existingContent = await this.app.vault.read(
+                          newOmnivoreFile
+                        );
+                        if (existingContent !== content) {
+                          await this.app.vault.modify(newOmnivoreFile, content);
+                        }
+                        return;
+                      }
+                      // a file with the same name but different id already exists, so we need to create it
+                      await this.app.vault.create(newNormalizedPath, content);
+                      return;
+                    }
+                    // a file with the same id already exists, so we might need to update it
+                    const existingContent = await this.app.vault.read(
+                      omnivoreFile
+                    );
+                    if (existingContent !== content) {
+                      await this.app.vault.modify(omnivoreFile, content);
+                    }
                   }
-                }
-              );
+                );
+              }
             } else if (!omnivoreFile) {
               // file doesn't exist, so we need to create it
               await this.app.vault.create(normalizedPath, content);
@@ -456,6 +498,21 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
+
+    new Setting(generalSettings)
+      .setName("Is Single File")
+      .setDesc(
+        "Check this box if you want to save all articles in a single file"
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.isSingleFile)
+          .onChange(async (value) => {
+            this.plugin.settings.isSingleFile = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     new Setting(generalSettings)
       .setName("Filename")
       .setDesc(
