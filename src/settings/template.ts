@@ -281,3 +281,7 @@ export const renderFolderName = (folder: string, folderDate: string) => {
     date: folderDate,
   });
 };
+
+export const preParseTemplate = (template: string) => {
+  Mustache.parse(template);
+};

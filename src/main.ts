@@ -20,6 +20,7 @@ import {
 } from "./settings";
 import { FolderSuggest } from "./settings/file-suggest";
 import {
+  preParseTemplate,
   renderArticleContnet,
   renderAttachmentFolder,
   renderFilename,
@@ -151,6 +152,9 @@ export default class OmnivorePlugin extends Plugin {
       console.log(`obsidian-omnivore starting sync since: '${syncAt}'`);
 
       new Notice("🚀 Fetching articles ...");
+
+      // pre-parse template
+      preParseTemplate(template);
 
       const size = 50;
       for (
