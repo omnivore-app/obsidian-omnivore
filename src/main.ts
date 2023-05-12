@@ -40,6 +40,21 @@ export default class OmnivorePlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     await this.resetSyncingStateSetting();
+
+    // update version if needed
+    const latestVersion = this.manifest.version;
+    const currentVersion = this.settings.version;
+    if (latestVersion !== currentVersion) {
+      this.settings.version = latestVersion;
+      this.saveSettings();
+      // show release notes
+      const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.
+    
+    What's new: https://github.com/omnivore-app/obsidian-omnivore/blob/main/CHANGELOG.md
+    `;
+      new Notice(releaseNotes, 10000);
+    }
+
     this.addCommand({
       id: "sync",
       name: "Sync",

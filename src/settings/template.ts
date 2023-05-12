@@ -68,24 +68,24 @@ export interface HighlightView {
 
 export type ArticleView =
   | {
-  id: string;
-  title: string;
-  omnivoreUrl: string;
-  siteName: string;
-  originalUrl: string;
-  author?: string;
-  labels?: LabelView[];
-  dateSaved: string;
-  highlights: HighlightView[];
-  content: string;
-  datePublished?: string;
-  fileAttachment?: string;
-  description?: string;
-  note?: string;
-  type: PageType;
-  dateRead?: string;
-  wordsCount?: number;
-  readLength?: number;
+      id: string;
+      title: string;
+      omnivoreUrl: string;
+      siteName: string;
+      originalUrl: string;
+      author?: string;
+      labels?: LabelView[];
+      dateSaved: string;
+      highlights: HighlightView[];
+      content: string;
+      datePublished?: string;
+      fileAttachment?: string;
+      description?: string;
+      note?: string;
+      type: PageType;
+      dateRead?: string;
+      wordsCount?: number;
+      readLength?: number;
       state: string;
     }
   | FunctionMap;
@@ -100,7 +100,7 @@ enum ArticleState {
 const getArticleState = (article: Article): string => {
   if (article.isArchived) {
     return ArticleState.Archived;
-}
+  }
   if (article.readingProgressPercent > 0) {
     return article.readingProgressPercent === 100
       ? ArticleState.Completed

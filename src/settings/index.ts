@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   endpoint: "https://api-prod.omnivore.app/api/graphql",
   filename: "{{{title}}}",
   attachmentFolder: "Omnivore/attachments",
+  version: "0.0.0",
 };
 
 export enum Filter {
@@ -43,4 +44,5 @@ export interface OmnivoreSettings {
   dateSavedFormat: string;
   filename: string;
   attachmentFolder: string;
+  version: string;
 }
