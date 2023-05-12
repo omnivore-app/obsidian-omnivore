@@ -9,6 +9,13 @@ import {
   siteNameFromUrl,
 } from "../util";
 
+type FunctionMap = {
+  [key: string]: () => (
+    text: string,
+    render: (text: string) => string
+  ) => string;
+};
+
 export const DEFAULT_TEMPLATE = `---
 id: {{{id}}}
 title: >
@@ -59,7 +66,8 @@ export interface HighlightView {
   labels?: LabelView[];
 }
 
-export interface ArticleView {
+export type ArticleView =
+  | {
   id: string;
   title: string;
   omnivoreUrl: string;
@@ -79,6 +87,9 @@ export interface ArticleView {
   wordsCount?: number;
   readLength?: number;
       state: string;
+    }
+  | FunctionMap;
+
 enum ArticleState {
   Inbox = "INBOX",
   Reading = "READING",
@@ -97,6 +108,31 @@ const getArticleState = (article: Article): string => {
   }
 
   return ArticleState.Inbox;
+};
+
+function lowerCase() {
+  return function (text: string, render: (text: string) => string) {
+    return render(text).toLowerCase();
+  };
+}
+
+function upperCase() {
+  return function (text: string, render: (text: string) => string) {
+    return render(text).toUpperCase();
+  };
+}
+
+function upperCaseFirst() {
+  return function (text: string, render: (text: string) => string) {
+    const str = render(text);
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+}
+
+const functionMap: FunctionMap = {
+  lowerCase,
+  upperCase,
+  upperCaseFirst,
 };
 
 export const renderFilename = (
@@ -214,6 +250,7 @@ export const renderArticleContnet = async (
     wordsCount,
     readLength,
     state: getArticleState(article),
+    ...functionMap,
   };
   // Build content string based on template
   let content = Mustache.render(template, articleView);
