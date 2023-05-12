@@ -78,7 +78,26 @@ export interface ArticleView {
   dateRead?: string;
   wordsCount?: number;
   readLength?: number;
+      state: string;
+enum ArticleState {
+  Inbox = "INBOX",
+  Reading = "READING",
+  Completed = "COMPLETED",
+  Archived = "ARCHIVED",
 }
+
+const getArticleState = (article: Article): string => {
+  if (article.isArchived) {
+    return ArticleState.Archived;
+}
+  if (article.readingProgressPercent > 0) {
+    return article.readingProgressPercent === 100
+      ? ArticleState.Completed
+      : ArticleState.Reading;
+  }
+
+  return ArticleState.Inbox;
+};
 
 export const renderFilename = (
   article: Article,
@@ -194,6 +213,7 @@ export const renderArticleContnet = async (
     dateRead,
     wordsCount,
     readLength,
+    state: getArticleState(article),
   };
   // Build content string based on template
   let content = Mustache.render(template, articleView);
