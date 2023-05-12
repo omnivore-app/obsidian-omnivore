@@ -18,7 +18,9 @@ export enum PageType {
   Profile = "PROFILE",
   Unknown = "UNKNOWN",
   Website = "WEBSITE",
-  Highlights = "HIGHLIGHTS",
+  Tweet = "TWEET",
+  Video = "VIDEO",
+  Image = "IMAGE",
 }
 
 export interface Article {
