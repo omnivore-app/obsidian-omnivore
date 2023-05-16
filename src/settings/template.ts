@@ -172,6 +172,7 @@ export const renderArticleContnet = async (
   highlightOrder: string,
   dateHighlightedFormat: string,
   dateSavedFormat: string,
+  isSingleFile: boolean,
   fileAttachment?: string
 ) => {
   // filter out notes and redactions
@@ -255,20 +256,23 @@ export const renderArticleContnet = async (
   // Build content string based on template
   let content = Mustache.render(template, articleView);
 
-  const frontmatterRegex = /^(---[\s\S]*?---)/gm;
   // get the frontmatter from the content
-  const frontmatter = content.match(frontmatterRegex);
+  const frontmatter = getFrontMatterStr(content);
   if (frontmatter) {
+    // frontmatter is an array for single file notes
+    const replacement = `${isSingleFile ? "- " : ""}id: ${article.id}`;
     // replace the id in the frontmatter
     content = content.replace(
-      frontmatter[0],
-      frontmatter[0].replace('id: ""', `id: ${article.id}`)
+      frontmatter,
+      frontmatter.replace(/id:\s*\S+/, replacement)
     );
   } else {
     // if the content doesn't have frontmatter, add it
-    const frontmatter = {
-      id: article.id,
-    };
+    const frontmatter = isSingleFile
+      ? [{ id: article.id }]
+      : {
+          id: article.id,
+        };
     const frontmatterYaml = stringifyYaml(frontmatter);
     const frontmatterString = `---\n${frontmatterYaml}---`;
     content = `${frontmatterString}\n\n${content}`;
@@ -284,4 +288,13 @@ export const renderFolderName = (folder: string, folderDate: string) => {
 
 export const preParseTemplate = (template: string) => {
   Mustache.parse(template);
+};
+
+export const getFrontMatterStr = (content: string) => {
+  const frontmatterRegex = /^(---[\s\S]*?---)/gm;
+  const frontmatter = content.match(frontmatterRegex);
+  if (frontmatter) {
+    return frontmatter[0];
+  }
+  return undefined;
 };

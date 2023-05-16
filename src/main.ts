@@ -4,6 +4,7 @@ import {
   App,
   normalizePath,
   Notice,
+  parseYaml,
   Plugin,
   PluginSettingTab,
   requestUrl,
@@ -135,6 +136,25 @@ export default class OmnivorePlugin extends Plugin {
     return file.path;
   }
 
+  isArticleInFile(frontMatter: unknown, id: string): boolean {
+    // check if frontMatter is an array
+    if (!Array.isArray(frontMatter)) {
+      return false;
+    }
+    // check if id is in frontMatter
+    return frontMatter.some((f: { id: string }) => f.id === id);
+  }
+
+  getFrontMatterFromContent(content: string): unknown | undefined {
+    // get front matter yaml from content
+    const frontMatter = content.match(/^---\n(.*)\n---\n/);
+    if (!frontMatter) {
+      return undefined;
+    }
+    // parse yaml
+    return parseYaml(frontMatter[1]);
+  }
+
   async fetchOmnivore() {
     const {
       syncAt,
@@ -212,6 +232,7 @@ export default class OmnivorePlugin extends Plugin {
             highlightOrder,
             this.settings.dateHighlightedFormat,
             this.settings.dateSavedFormat,
+            isSingleFile,
             fileAttachment
           );
           // use the custom filename
@@ -231,13 +252,12 @@ export default class OmnivorePlugin extends Plugin {
                 await this.app.fileManager.processFrontMatter(
                   omnivoreFile,
                   async (frontMatter) => {
-                    const id = frontMatter.id as string[];
                     // we need to remove the front matter
                     const contentWithoutFrontmatter = content.replace(
                       /^---\n.*\n---\n/,
                       ""
                     );
-                    if (id && id.includes(article.id)) {
+                    if (this.isArticleInFile(frontMatter, article.id)) {
                       // this article already exists in the file
                       // we need to locate the article and update it
                       const existingContent = await this.app.vault.read(
@@ -259,8 +279,15 @@ export default class OmnivorePlugin extends Plugin {
                       omnivoreFile,
                       contentWithoutFrontmatter
                     );
-                    // append id to front matter
-                    frontMatter.id = id ? [...id, article.id] : [article.id];
+                    // append generated front matter
+                    const newFrontMatter =
+                      this.getFrontMatterFromContent(content);
+                    frontMatter.push(
+                      Array.isArray(newFrontMatter)
+                        ? newFrontMatter[0]
+                        : newFrontMatter
+                    );
+                    console.log(frontMatter);
                   }
                 );
               } else {
@@ -587,7 +614,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .setPlaceholder("API endpoint")
           .setValue(this.plugin.settings.endpoint)
           .onChange(async (value) => {
-            console.log("endpoint: " + value);
             this.plugin.settings.endpoint = value;
             await this.plugin.saveSettings();
           })
