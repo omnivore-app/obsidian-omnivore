@@ -87,6 +87,7 @@ export type ArticleView =
       wordsCount?: number;
       readLength?: number;
       state: string;
+      dateArchived?: string;
     }
   | FunctionMap;
 
@@ -251,6 +252,7 @@ export const renderArticleContnet = async (
     wordsCount,
     readLength,
     state: getArticleState(article),
+    dateArchived: article.archivedAt,
     ...functionMap,
   };
   // Build content string based on template

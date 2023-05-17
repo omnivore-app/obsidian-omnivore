@@ -43,6 +43,7 @@ export interface Article {
   wordsCount?: number;
   readingProgressPercent: number;
   isArchived: boolean;
+  archivedAt?: string;
 }
 
 export interface Label {
@@ -109,6 +110,7 @@ export const loadArticles = async (
                   wordsCount
                   isArchived
                   readingProgressPercent
+                  archivedAt
                   highlights {
                     id
                     quote
