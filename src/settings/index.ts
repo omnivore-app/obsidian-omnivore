@@ -17,6 +17,8 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   attachmentFolder: "Omnivore/attachments",
   version: "0.0.0",
   isSingleFile: false,
+  frequency: 0,
+  intervalId: 0,
 };
 
 export enum Filter {
@@ -47,4 +49,6 @@ export interface OmnivoreSettings {
   attachmentFolder: string;
   version: string;
   isSingleFile: boolean;
+  frequency: number;
+  intervalId: number;
 }

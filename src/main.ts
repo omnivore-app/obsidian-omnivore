@@ -94,6 +94,8 @@ export default class OmnivorePlugin extends Plugin {
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new OmnivoreSettingTab(this.app, this));
+
+    this.scheduleSync();
   }
 
   onunload() {}
@@ -104,6 +106,25 @@ export default class OmnivorePlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  scheduleSync() {
+    const frequency = this.settings.frequency;
+    if (frequency > 0) {
+      // clear previous interval
+      if (this.settings.intervalId > 0) {
+        window.clearInterval(this.settings.intervalId);
+      }
+      // schedule new interval
+      const intervalId = window.setInterval(async () => {
+        await this.fetchOmnivore(false);
+      }, frequency * 60 * 1000);
+      // save new interval id
+      this.settings.intervalId = intervalId;
+      this.saveSettings();
+      // clear interval when plugin is unloaded
+      this.registerInterval(intervalId);
+    }
   }
 
   async downloadFileAsAttachment(article: Article): Promise<string> {
@@ -155,7 +176,7 @@ export default class OmnivorePlugin extends Plugin {
     return parseYaml(frontMatter[1]);
   }
 
-  async fetchOmnivore() {
+  async fetchOmnivore(manualSync = true) {
     const {
       syncAt,
       apiKey,
@@ -177,7 +198,6 @@ export default class OmnivorePlugin extends Plugin {
 
     if (!apiKey) {
       new Notice("Missing Omnivore api key");
-
       return;
     }
 
@@ -187,7 +207,7 @@ export default class OmnivorePlugin extends Plugin {
     try {
       console.log(`obsidian-omnivore starting sync since: '${syncAt}'`);
 
-      new Notice("🚀 Fetching articles ...");
+      manualSync && new Notice("🚀 Fetching articles ...");
 
       // pre-parse template
       preParseTemplate(template);
@@ -335,7 +355,7 @@ export default class OmnivorePlugin extends Plugin {
         }
       }
 
-      new Notice("🔖 Articles fetched");
+      manualSync && new Notice("🔖 Articles fetched");
       this.settings.syncAt = DateTime.local().toFormat(DATE_FORMAT);
     } catch (e) {
       new Notice("Failed to fetch articles");
@@ -348,6 +368,7 @@ export default class OmnivorePlugin extends Plugin {
 
   private async resetSyncingStateSetting() {
     this.settings.syncing = false;
+    this.settings.intervalId = 0;
     await this.saveSettings();
   }
 }
@@ -494,6 +515,30 @@ class OmnivoreSettingTab extends PluginSettingTab {
         text.inputEl.setAttr("rows", 30);
         text.inputEl.setAttr("cols", 60);
       });
+
+    new Setting(generalSettings)
+      .setName("Frequency")
+      .setDesc(
+        "Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("Enter the frequency")
+          .setValue(this.plugin.settings.frequency.toString())
+          .onChange(async (value) => {
+            // validate frequency
+            const frequency = parseInt(value);
+            if (isNaN(frequency)) {
+              new Notice("Frequency must be a positive integer");
+              return;
+            }
+            // save frequency
+            this.plugin.settings.frequency = frequency;
+            await this.plugin.saveSettings();
+
+            this.plugin.scheduleSync();
+          })
+      );
 
     new Setting(generalSettings)
       .setName("Folder")
