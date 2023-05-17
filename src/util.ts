@@ -1,6 +1,7 @@
 import { diff_match_patch } from "diff-match-patch";
 import { DateTime } from "luxon";
 import escape from "markdown-escape";
+import { parseYaml } from "obsidian";
 import { Highlight } from "./api";
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm";
@@ -133,4 +134,31 @@ export const formatHighlightQuote = (
   }
 
   return quote;
+};
+
+export const isArticleInFile = (frontMatter: unknown, id: string): boolean => {
+  // check if frontMatter is an array
+  if (!Array.isArray(frontMatter)) {
+    return false;
+  }
+  // check if id is in frontMatter
+  return frontMatter.some((f: { id: string }) => f.id === id);
+};
+
+export const parseFrontMatterFromContent = (
+  content: string
+): unknown | undefined => {
+  // get front matter yaml from content
+  const frontMatter = content.match(/^---\n(.*?)\n---\n/s);
+  if (!frontMatter) {
+    return undefined;
+  }
+  // parse yaml
+  return parseYaml(frontMatter[1]);
+};
+
+export const removeFrontMatterFromContent = (content: string): string => {
+  const frontMatterRegex = /^---.*?---\n/s;
+
+  return content.replace(frontMatterRegex, "");
 };

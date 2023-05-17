@@ -6,6 +6,8 @@ import {
   formatDate,
   formatHighlightQuote,
   getHighlightLocation,
+  parseFrontMatterFromContent,
+  removeFrontMatterFromContent,
   siteNameFromUrl,
 } from "../util";
 
@@ -256,30 +258,31 @@ export const renderArticleContnet = async (
     ...functionMap,
   };
   // Build content string based on template
-  let content = Mustache.render(template, articleView);
+  const content = Mustache.render(template, articleView);
 
-  // get the frontmatter from the content
-  const frontmatter = getFrontMatterStr(content);
-  if (frontmatter) {
-    // frontmatter is an array for single file notes
-    const replacement = `${isSingleFile ? "- " : ""}id: ${article.id}`;
-    // replace the id in the frontmatter
-    content = content.replace(
-      frontmatter,
-      frontmatter.replace(/id:\s*\S+/, replacement)
-    );
-  } else {
-    // if the content doesn't have frontmatter, add it
-    const frontmatter = isSingleFile
-      ? [{ id: article.id }]
-      : {
-          id: article.id,
-        };
-    const frontmatterYaml = stringifyYaml(frontmatter);
-    const frontmatterString = `---\n${frontmatterYaml}---`;
-    content = `${frontmatterString}\n\n${content}`;
+  // get the front matter from the content
+  let frontMatter = parseFrontMatterFromContent(content);
+  const contentWithoutFrontMatter = removeFrontMatterFromContent(content);
+  if (!frontMatter) {
+    // if no front matter, add the id
+    frontMatter = {
+      id: article.id,
+    };
   }
-  return content;
+
+  if (isSingleFile) {
+    // if single file, wrap the front matter in an array
+    frontMatter = [frontMatter];
+  }
+
+  const frontMatterYaml = stringifyYaml(frontMatter);
+  const frontMatterStr = `---\n${frontMatterYaml}---`;
+
+  // wrap the content without front matter in comments
+  const sectionStart = `%%${article.id}_start%%`;
+  const sectionEnd = `%%${article.id}_end%%`;
+
+  return `${frontMatterStr}\n\n${sectionStart}\n${contentWithoutFrontMatter}\n${sectionEnd}`;
 };
 
 export const renderFolderName = (folder: string, folderDate: string) => {
@@ -292,11 +295,3 @@ export const preParseTemplate = (template: string) => {
   Mustache.parse(template);
 };
 
-export const getFrontMatterStr = (content: string) => {
-  const frontmatterRegex = /^(---[\s\S]*?---)/gm;
-  const frontmatter = content.match(frontmatterRegex);
-  if (frontmatter) {
-    return frontmatter[0];
-  }
-  return undefined;
-};

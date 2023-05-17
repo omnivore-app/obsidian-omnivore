@@ -4,11 +4,11 @@ import {
   App,
   normalizePath,
   Notice,
-  parseYaml,
   Plugin,
   PluginSettingTab,
   requestUrl,
   Setting,
+  stringifyYaml,
   TFile,
   TFolder,
 } from "obsidian";
@@ -31,7 +31,10 @@ import {
   DATE_FORMAT,
   formatDate,
   getQueryFromFilter,
+  isArticleInFile,
   parseDateTime,
+  parseFrontMatterFromContent,
+  removeFrontMatterFromContent,
   replaceIllegalChars,
 } from "./util";
 
@@ -109,12 +112,12 @@ export default class OmnivorePlugin extends Plugin {
   }
 
   scheduleSync() {
+    // clear previous interval
+    if (this.settings.intervalId > 0) {
+      window.clearInterval(this.settings.intervalId);
+    }
     const frequency = this.settings.frequency;
     if (frequency > 0) {
-      // clear previous interval
-      if (this.settings.intervalId > 0) {
-        window.clearInterval(this.settings.intervalId);
-      }
       // schedule new interval
       const intervalId = window.setInterval(async () => {
         await this.fetchOmnivore(false);
@@ -155,25 +158,6 @@ export default class OmnivorePlugin extends Plugin {
       return newFile.path;
     }
     return file.path;
-  }
-
-  isArticleInFile(frontMatter: unknown, id: string): boolean {
-    // check if frontMatter is an array
-    if (!Array.isArray(frontMatter)) {
-      return false;
-    }
-    // check if id is in frontMatter
-    return frontMatter.some((f: { id: string }) => f.id === id);
-  }
-
-  getFrontMatterFromContent(content: string): unknown | undefined {
-    // get front matter yaml from content
-    const frontMatter = content.match(/^---\n(.*)\n---\n/);
-    if (!frontMatter) {
-      return undefined;
-    }
-    // parse yaml
-    return parseYaml(frontMatter[1]);
   }
 
   async fetchOmnivore(manualSync = true) {
@@ -263,94 +247,86 @@ export default class OmnivorePlugin extends Plugin {
           const normalizedPath = normalizePath(pageName);
           const omnivoreFile =
             this.app.vault.getAbstractFileByPath(normalizedPath);
-          try {
-            if (omnivoreFile instanceof TFile) {
-              // file exists, so we might need to update it
-              if (isSingleFile) {
-                // a single file is used to store all articles
-                // we need to check if the article already exists in the file
-                await this.app.fileManager.processFrontMatter(
-                  omnivoreFile,
-                  async (frontMatter) => {
-                    // we need to remove the front matter
-                    const contentWithoutFrontmatter = content.replace(
-                      /^---\n.*\n---\n/,
-                      ""
-                    );
-                    if (this.isArticleInFile(frontMatter, article.id)) {
-                      // this article already exists in the file
-                      // we need to locate the article and update it
-                      const existingContent = await this.app.vault.read(
-                        omnivoreFile
-                      );
-                      const newContent = existingContent.replace(
-                        new RegExp(
-                          `^---\nid:\n- ${article.id}\n.*\n---\n`,
-                          "m"
-                        ),
-                        contentWithoutFrontmatter
-                      );
-                      await this.app.vault.modify(omnivoreFile, newContent);
-                      return;
-                    }
-                    // this article doesn't exist in the file
-                    // append the article
-                    await this.app.vault.append(
-                      omnivoreFile,
-                      contentWithoutFrontmatter
-                    );
-                    // append generated front matter
-                    const newFrontMatter =
-                      this.getFrontMatterFromContent(content);
-                    frontMatter.push(
-                      Array.isArray(newFrontMatter)
-                        ? newFrontMatter[0]
-                        : newFrontMatter
-                    );
-                    console.log(frontMatter);
-                  }
+          if (omnivoreFile instanceof TFile) {
+            // file exists, so we might need to update it
+            if (isSingleFile) {
+              const existingContent = await this.app.vault.read(omnivoreFile);
+              const frontMatter = parseFrontMatterFromContent(
+                existingContent
+              ) as unknown[];
+              // we need to remove the front matter
+              const contentWithoutFrontmatter =
+                removeFrontMatterFromContent(content);
+              if (isArticleInFile(frontMatter, article.id)) {
+                // this article already exists in the file
+                // we need to locate the article which is wrapped in comments
+                // and replace the content
+                const sectionStart = `%%${article.id}_start%%`;
+                const sectionEnd = `%%${article.id}_end%%`;
+                const existingContentRegex = new RegExp(
+                  `${sectionStart}.*?${sectionEnd}`,
+                  "s"
                 );
-              } else {
-                await this.app.fileManager.processFrontMatter(
-                  omnivoreFile,
-                  async (frontMatter) => {
-                    const id = frontMatter.id;
-                    if (id && id !== article.id) {
-                      // this article has the same name but different id
-                      const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
-                      const newNormalizedPath = normalizePath(newPageName);
-                      const newOmnivoreFile =
-                        this.app.vault.getAbstractFileByPath(newNormalizedPath);
-                      if (newOmnivoreFile instanceof TFile) {
-                        // a file with the same name and id already exists, so we need to update it
-                        const existingContent = await this.app.vault.read(
-                          newOmnivoreFile
-                        );
-                        if (existingContent !== content) {
-                          await this.app.vault.modify(newOmnivoreFile, content);
-                        }
-                        return;
-                      }
-                      // a file with the same name but different id already exists, so we need to create it
-                      await this.app.vault.create(newNormalizedPath, content);
-                      return;
-                    }
-                    // a file with the same id already exists, so we might need to update it
-                    const existingContent = await this.app.vault.read(
-                      omnivoreFile
-                    );
-                    if (existingContent !== content) {
-                      await this.app.vault.modify(omnivoreFile, content);
-                    }
-                  }
+                const newContent = existingContent.replace(
+                  existingContentRegex,
+                  contentWithoutFrontmatter
                 );
+                await this.app.vault.modify(omnivoreFile, newContent);
+                return;
               }
-            } else if (!omnivoreFile) {
-              // file doesn't exist, so we need to create it
-              await this.app.vault.create(normalizedPath, content);
+              // this article doesn't exist in the file
+              // prepend the article
+              const existingContentWithoutFrontmatter =
+                removeFrontMatterFromContent(existingContent);
+              const newContentWithoutFrontMatter = `${contentWithoutFrontmatter}\n\n${existingContentWithoutFrontmatter}`;
+              // prepend generated front matter which is an array
+              const newFrontMatter = parseFrontMatterFromContent(
+                content
+              ) as unknown[];
+              frontMatter.unshift(...newFrontMatter);
+              const newFrontMatterStr = `---\n${stringifyYaml(frontMatter)}---`;
+              await this.app.vault.modify(
+                omnivoreFile,
+                `${newFrontMatterStr}\n\n${newContentWithoutFrontMatter}`
+              );
+            } else {
+              await this.app.fileManager.processFrontMatter(
+                omnivoreFile,
+                async (frontMatter) => {
+                  const id = frontMatter.id;
+                  if (id && id !== article.id) {
+                    // this article has the same name but different id
+                    const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
+                    const newNormalizedPath = normalizePath(newPageName);
+                    const newOmnivoreFile =
+                      this.app.vault.getAbstractFileByPath(newNormalizedPath);
+                    if (newOmnivoreFile instanceof TFile) {
+                      // a file with the same name and id already exists, so we need to update it
+                      const existingContent = await this.app.vault.read(
+                        newOmnivoreFile
+                      );
+                      if (existingContent !== content) {
+                        await this.app.vault.modify(newOmnivoreFile, content);
+                      }
+                      return;
+                    }
+                    // a file with the same name but different id already exists, so we need to create it
+                    await this.app.vault.create(newNormalizedPath, content);
+                    return;
+                  }
+                  // a file with the same id already exists, so we might need to update it
+                  const existingContent = await this.app.vault.read(
+                    omnivoreFile
+                  );
+                  if (existingContent !== content) {
+                    await this.app.vault.modify(omnivoreFile, content);
+                  }
+                }
+              );
             }
-          } catch (e) {
-            console.error(e);
+          } else if (!omnivoreFile) {
+            // file doesn't exist, so we need to create it
+            await this.app.vault.create(normalizedPath, content);
           }
         }
       }
