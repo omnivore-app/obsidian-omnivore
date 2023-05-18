@@ -1,3 +1,25 @@
+# [1.3.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.2.3...1.3.0) (2023-05-18)
+
+
+### Bug Fixes
+
+* add dateArchived to the exposed variable in the template ([1a67d16](https://github.com/omnivore-app/obsidian-omnivore/commit/1a67d16888f907307dca675f1f80511064414ce5))
+* add lowercase, uppercase and uppercasefirst to the function map in the template ([957bbca](https://github.com/omnivore-app/obsidian-omnivore/commit/957bbca049011e250c2f692e2b1db7d44c730d76))
+* add state to the exposed variable in the template ([26572b6](https://github.com/omnivore-app/obsidian-omnivore/commit/26572b6385ab44b610e2490229adb86d25e53160))
+* add tweet, video and image page type ([ffdcd92](https://github.com/omnivore-app/obsidian-omnivore/commit/ffdcd924787ece94796de57e66f77aa666de07f4))
+* add wordsCount and readLength to the exposed variables in the article template ([56813b7](https://github.com/omnivore-app/obsidian-omnivore/commit/56813b7c3c332746ff49efdf3844727a0ba35726))
+* allow articles to be synced into a single file and add a toggle in the settings ([4c04f8e](https://github.com/omnivore-app/obsidian-omnivore/commit/4c04f8eee960e263046a5e5ed94dc281c689498b))
+* allow frontmatter to be an array ([2b3b0f3](https://github.com/omnivore-app/obsidian-omnivore/commit/2b3b0f34d29ce84e3e35e7ace2a8871314d7a13d))
+* allow scheduled sync and set a frequency in minutes ([8800d38](https://github.com/omnivore-app/obsidian-omnivore/commit/8800d3882326add57621400ea0e7aa100828ab6c))
+* preparse template before rendering ([c41bc8f](https://github.com/omnivore-app/obsidian-omnivore/commit/c41bc8f1b4b8c70b36989860d3257ad6ae792979))
+* show release notes after upgrade ([37382a2](https://github.com/omnivore-app/obsidian-omnivore/commit/37382a2cf594cac10c7b05120dc0742980a4ff84))
+* use multiline string for title and author in default template ([c7e5daf](https://github.com/omnivore-app/obsidian-omnivore/commit/c7e5dafa3b692c9d2d958b46ede1783a597f616e))
+
+
+### Features
+
+* highlight highlights in the exported content in markdown ([6cc1b04](https://github.com/omnivore-app/obsidian-omnivore/commit/6cc1b042bc96db6605ffa5d804159a478abbac45))
+
 ## [1.2.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.2.2...1.2.3) (2023-04-28)
 
 
