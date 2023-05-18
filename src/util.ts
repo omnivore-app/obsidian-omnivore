@@ -136,20 +136,19 @@ export const formatHighlightQuote = (
   return quote;
 };
 
-export const isArticleInFile = (frontMatter: unknown, id: string): boolean => {
-  // check if frontMatter is an array
-  if (!Array.isArray(frontMatter)) {
-    return false;
-  }
-  // check if id is in frontMatter
-  return frontMatter.some((f: { id: string }) => f.id === id);
+export const findFrontMatterIndex = (
+  frontMatter: { id: string }[],
+  id: string
+): number => {
+  // find index of front matter with matching id
+  return frontMatter.findIndex((fm) => fm.id == id);
 };
 
 export const parseFrontMatterFromContent = (
   content: string
 ): unknown | undefined => {
   // get front matter yaml from content
-  const frontMatter = content.match(/^---\n(.*?)\n---\n/s);
+  const frontMatter = content.match(/^---\n(.*?)\n---/s);
   if (!frontMatter) {
     return undefined;
   }
@@ -158,7 +157,7 @@ export const parseFrontMatterFromContent = (
 };
 
 export const removeFrontMatterFromContent = (content: string): string => {
-  const frontMatterRegex = /^---.*?---\n/s;
+  const frontMatterRegex = /^---.*?---\n*/s;
 
   return content.replace(frontMatterRegex, "");
 };

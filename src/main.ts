@@ -29,9 +29,9 @@ import {
 } from "./settings/template";
 import {
   DATE_FORMAT,
+  findFrontMatterIndex,
   formatDate,
   getQueryFromFilter,
-  isArticleInFile,
   parseDateTime,
   parseFrontMatterFromContent,
   removeFrontMatterFromContent,
@@ -250,14 +250,35 @@ export default class OmnivorePlugin extends Plugin {
           if (omnivoreFile instanceof TFile) {
             // file exists, so we might need to update it
             if (isSingleFile) {
+              // sync into a single file
               const existingContent = await this.app.vault.read(omnivoreFile);
-              const frontMatter = parseFrontMatterFromContent(
-                existingContent
-              ) as unknown[];
               // we need to remove the front matter
               const contentWithoutFrontmatter =
                 removeFrontMatterFromContent(content);
-              if (isArticleInFile(frontMatter, article.id)) {
+              const existingContentWithoutFrontmatter =
+                removeFrontMatterFromContent(existingContent);
+              // get front matter from content
+              const existingFrontMatter =
+                parseFrontMatterFromContent(existingContent);
+              if (!existingFrontMatter || !Array.isArray(existingFrontMatter)) {
+                throw new Error("Front matter does not exist in the note");
+              }
+              const newFrontMatter = parseFrontMatterFromContent(content);
+              if (
+                !newFrontMatter ||
+                !Array.isArray(newFrontMatter) ||
+                newFrontMatter.length === 0
+              ) {
+                throw new Error("Front matter does not exist in the template");
+              }
+              let newContentWithoutFrontMatter: string;
+
+              // find the front matter with the same id
+              const frontMatterIdx = findFrontMatterIndex(
+                existingFrontMatter,
+                article.id
+              );
+              if (frontMatterIdx >= 0) {
                 // this article already exists in the file
                 // we need to locate the article which is wrapped in comments
                 // and replace the content
@@ -267,67 +288,67 @@ export default class OmnivorePlugin extends Plugin {
                   `${sectionStart}.*?${sectionEnd}`,
                   "s"
                 );
-                const newContent = existingContent.replace(
-                  existingContentRegex,
-                  contentWithoutFrontmatter
-                );
-                await this.app.vault.modify(omnivoreFile, newContent);
-                return;
+                newContentWithoutFrontMatter =
+                  existingContentWithoutFrontmatter.replace(
+                    existingContentRegex,
+                    contentWithoutFrontmatter
+                  );
+
+                existingFrontMatter[frontMatterIdx] = newFrontMatter[0];
+              } else {
+                // this article doesn't exist in the file
+                // prepend the article
+                newContentWithoutFrontMatter = `${contentWithoutFrontmatter}\n\n${existingContentWithoutFrontmatter}`;
+                // prepend new front matter which is an array
+                existingFrontMatter.unshift(newFrontMatter[0]);
               }
-              // this article doesn't exist in the file
-              // prepend the article
-              const existingContentWithoutFrontmatter =
-                removeFrontMatterFromContent(existingContent);
-              const newContentWithoutFrontMatter = `${contentWithoutFrontmatter}\n\n${existingContentWithoutFrontmatter}`;
-              // prepend generated front matter which is an array
-              const newFrontMatter = parseFrontMatterFromContent(
-                content
-              ) as unknown[];
-              frontMatter.unshift(...newFrontMatter);
-              const newFrontMatterStr = `---\n${stringifyYaml(frontMatter)}---`;
+
+              const newFrontMatterStr = `---\n${stringifyYaml(
+                existingFrontMatter
+              )}---`;
+
               await this.app.vault.modify(
                 omnivoreFile,
                 `${newFrontMatterStr}\n\n${newContentWithoutFrontMatter}`
               );
-            } else {
-              await this.app.fileManager.processFrontMatter(
-                omnivoreFile,
-                async (frontMatter) => {
-                  const id = frontMatter.id;
-                  if (id && id !== article.id) {
-                    // this article has the same name but different id
-                    const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
-                    const newNormalizedPath = normalizePath(newPageName);
-                    const newOmnivoreFile =
-                      this.app.vault.getAbstractFileByPath(newNormalizedPath);
-                    if (newOmnivoreFile instanceof TFile) {
-                      // a file with the same name and id already exists, so we need to update it
-                      const existingContent = await this.app.vault.read(
-                        newOmnivoreFile
-                      );
-                      if (existingContent !== content) {
-                        await this.app.vault.modify(newOmnivoreFile, content);
-                      }
-                      return;
+              continue;
+            }
+            // sync into separate files
+            await this.app.fileManager.processFrontMatter(
+              omnivoreFile,
+              async (frontMatter) => {
+                const id = frontMatter.id;
+                if (id && id !== article.id) {
+                  // this article has the same name but different id
+                  const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
+                  const newNormalizedPath = normalizePath(newPageName);
+                  const newOmnivoreFile =
+                    this.app.vault.getAbstractFileByPath(newNormalizedPath);
+                  if (newOmnivoreFile instanceof TFile) {
+                    // a file with the same name and id already exists, so we need to update it
+                    const existingContent = await this.app.vault.read(
+                      newOmnivoreFile
+                    );
+                    if (existingContent !== content) {
+                      await this.app.vault.modify(newOmnivoreFile, content);
                     }
-                    // a file with the same name but different id already exists, so we need to create it
-                    await this.app.vault.create(newNormalizedPath, content);
                     return;
                   }
-                  // a file with the same id already exists, so we might need to update it
-                  const existingContent = await this.app.vault.read(
-                    omnivoreFile
-                  );
-                  if (existingContent !== content) {
-                    await this.app.vault.modify(omnivoreFile, content);
-                  }
+                  // a file with the same name but different id already exists, so we need to create it
+                  await this.app.vault.create(newNormalizedPath, content);
+                  return;
                 }
-              );
-            }
-          } else if (!omnivoreFile) {
-            // file doesn't exist, so we need to create it
-            await this.app.vault.create(normalizedPath, content);
+                // a file with the same id already exists, so we might need to update it
+                const existingContent = await this.app.vault.read(omnivoreFile);
+                if (existingContent !== content) {
+                  await this.app.vault.modify(omnivoreFile, content);
+                }
+              }
+            );
+            continue;
           }
+          // file doesn't exist, so we need to create it
+          await this.app.vault.create(normalizedPath, content);
         }
       }
 
