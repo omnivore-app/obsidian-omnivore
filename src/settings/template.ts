@@ -6,23 +6,34 @@ import {
   formatDate,
   formatHighlightQuote,
   getHighlightLocation,
+  parseFrontMatterFromContent,
+  removeFrontMatterFromContent,
   siteNameFromUrl,
 } from "../util";
 
+type FunctionMap = {
+  [key: string]: () => (
+    text: string,
+    render: (text: string) => string
+  ) => string;
+};
+
 export const DEFAULT_TEMPLATE = `---
-id: "{{{id}}}"
-title: "{{{title}}}"
+id: {{{id}}}
+title: >
+  {{{title}}}
 {{#author}}
-author: "{{{author}}}"
+author: >
+  {{{author}}}
 {{/author}}
 {{#labels.length}}
 tags:
-{{#labels}} - "{{{name}}}"
+{{#labels}} - {{{name}}}
 {{/labels}}
 {{/labels.length}}
-date_saved: "{{{dateSaved}}}"
+date_saved: {{{dateSaved}}}
 {{#datePublished}}
-date_published: "{{{datePublished}}}"
+date_published: {{{datePublished}}}
 {{/datePublished}}
 ---
 
@@ -45,36 +56,87 @@ date_published: "{{{datePublished}}}"
 {{/highlights}}
 {{/highlights.length}}`;
 
-export interface LabelVariable {
+export interface LabelView {
   name: string;
 }
 
-export interface HighlightVariables {
+export interface HighlightView {
   text: string;
   highlightUrl: string;
   dateHighlighted: string;
   note?: string;
-  labels?: LabelVariable[];
+  labels?: LabelView[];
 }
 
-export interface ArticleVariables {
-  id: string;
-  title: string;
-  omnivoreUrl: string;
-  siteName: string;
-  originalUrl: string;
-  author?: string;
-  labels?: LabelVariable[];
-  dateSaved: string;
-  highlights: HighlightVariables[];
-  content: string;
-  datePublished?: string;
-  fileAttachment?: string;
-  description?: string;
-  note?: string;
-  type: PageType;
-  dateRead?: string;
+export type ArticleView =
+  | {
+      id: string;
+      title: string;
+      omnivoreUrl: string;
+      siteName: string;
+      originalUrl: string;
+      author?: string;
+      labels?: LabelView[];
+      dateSaved: string;
+      highlights: HighlightView[];
+      content: string;
+      datePublished?: string;
+      fileAttachment?: string;
+      description?: string;
+      note?: string;
+      type: PageType;
+      dateRead?: string;
+      wordsCount?: number;
+      readLength?: number;
+      state: string;
+      dateArchived?: string;
+    }
+  | FunctionMap;
+
+enum ArticleState {
+  Inbox = "INBOX",
+  Reading = "READING",
+  Completed = "COMPLETED",
+  Archived = "ARCHIVED",
 }
+
+const getArticleState = (article: Article): string => {
+  if (article.isArchived) {
+    return ArticleState.Archived;
+  }
+  if (article.readingProgressPercent > 0) {
+    return article.readingProgressPercent === 100
+      ? ArticleState.Completed
+      : ArticleState.Reading;
+  }
+
+  return ArticleState.Inbox;
+};
+
+function lowerCase() {
+  return function (text: string, render: (text: string) => string) {
+    return render(text).toLowerCase();
+  };
+}
+
+function upperCase() {
+  return function (text: string, render: (text: string) => string) {
+    return render(text).toUpperCase();
+  };
+}
+
+function upperCaseFirst() {
+  return function (text: string, render: (text: string) => string) {
+    const str = render(text);
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+}
+
+const functionMap: FunctionMap = {
+  lowerCase,
+  upperCase,
+  upperCaseFirst,
+};
 
 export const renderFilename = (
   article: Article,
@@ -100,7 +162,7 @@ export const renderAttachmentFolder = (
   });
 };
 
-export const renderLabels = (labels?: LabelVariable[]) => {
+export const renderLabels = (labels?: LabelView[]) => {
   return labels?.map((l) => ({
     // replace spaces with underscores because Obsidian doesn't allow spaces in tags
     name: l.name.replaceAll(" ", "_"),
@@ -113,6 +175,7 @@ export const renderArticleContnet = async (
   highlightOrder: string,
   dateHighlightedFormat: string,
   dateSavedFormat: string,
+  isSingleFile: boolean,
   fileAttachment?: string
 ) => {
   // filter out notes and redactions
@@ -141,17 +204,15 @@ export const renderArticleContnet = async (
       }
     });
   }
-  const highlights: HighlightVariables[] = articleHighlights.map(
-    (highlight) => {
-      return {
-        text: formatHighlightQuote(highlight.quote, template),
-        highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-        dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
-        note: highlight.annotation,
-        labels: renderLabels(highlight.labels),
-      };
-    }
-  );
+  const highlights: HighlightView[] = articleHighlights.map((highlight) => {
+    return {
+      text: formatHighlightQuote(highlight.quote, template),
+      highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
+      dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
+      note: highlight.annotation,
+      labels: renderLabels(highlight.labels),
+    };
+  });
   const dateSaved = formatDate(article.savedAt, dateSavedFormat);
   const siteName =
     article.siteName || siteNameFromUrl(article.originalArticleUrl);
@@ -165,7 +226,11 @@ export const renderArticleContnet = async (
   const dateRead = article.readAt
     ? formatDate(article.readAt, dateSavedFormat)
     : undefined;
-  const articleVariables: ArticleVariables = {
+  const wordsCount = article.wordsCount;
+  const readLength = wordsCount
+    ? Math.round(Math.max(1, wordsCount / 235))
+    : undefined;
+  const articleView: ArticleView = {
     id: article.id,
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
@@ -186,29 +251,39 @@ export const renderArticleContnet = async (
     note: articleNote?.annotation,
     type: article.pageType,
     dateRead,
+    wordsCount,
+    readLength,
+    state: getArticleState(article),
+    dateArchived: article.archivedAt,
+    ...functionMap,
   };
   // Build content string based on template
-  let content = Mustache.render(template, articleVariables);
+  const content = Mustache.render(template, articleView);
 
-  const frontmatterRegex = /^(---[\s\S]*?---)/gm;
-  // get the frontmatter from the content
-  const frontmatter = content.match(frontmatterRegex);
-  if (frontmatter) {
-    // replace the id in the frontmatter
-    content = content.replace(
-      frontmatter[0],
-      frontmatter[0].replace('id: ""', `id: ${article.id}`)
-    );
-  } else {
-    // if the content doesn't have frontmatter, add it
-    const frontmatter = {
+  // get the front matter from the content
+  let frontMatter = parseFrontMatterFromContent(content);
+  if (!frontMatter) {
+    // if no front matter, add the id
+    frontMatter = {
       id: article.id,
     };
-    const frontmatterYaml = stringifyYaml(frontmatter);
-    const frontmatterString = `---\n${frontmatterYaml}---`;
-    content = `${frontmatterString}\n\n${content}`;
   }
-  return content;
+
+  let contentWithoutFrontMatter = removeFrontMatterFromContent(content);
+  if (isSingleFile) {
+    // wrap the content without front matter in comments
+    const sectionStart = `%%${article.id}_start%%`;
+    const sectionEnd = `%%${article.id}_end%%`;
+    contentWithoutFrontMatter = `${sectionStart}\n${contentWithoutFrontMatter}\n${sectionEnd}`;
+
+    // if single file, wrap the front matter in an array
+    frontMatter = [frontMatter];
+  }
+
+  const frontMatterYaml = stringifyYaml(frontMatter);
+  const frontMatterStr = `---\n${frontMatterYaml}---`;
+
+  return `${frontMatterStr}\n\n${contentWithoutFrontMatter}`;
 };
 
 export const renderFolderName = (folder: string, folderDate: string) => {
@@ -216,3 +291,8 @@ export const renderFolderName = (folder: string, folderDate: string) => {
     date: folderDate,
   });
 };
+
+export const preParseTemplate = (template: string) => {
+  Mustache.parse(template);
+};
+

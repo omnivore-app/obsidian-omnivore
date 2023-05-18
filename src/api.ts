@@ -18,7 +18,9 @@ export enum PageType {
   Profile = "PROFILE",
   Unknown = "UNKNOWN",
   Website = "WEBSITE",
-  Highlights = "HIGHLIGHTS",
+  Tweet = "TWEET",
+  Video = "VIDEO",
+  Image = "IMAGE",
 }
 
 export interface Article {
@@ -38,6 +40,10 @@ export interface Article {
   publishedAt?: string;
   url: string;
   readAt?: string;
+  wordsCount?: number;
+  readingProgressPercent: number;
+  isArchived: boolean;
+  archivedAt?: string;
 }
 
 export interface Label {
@@ -101,6 +107,10 @@ export const loadArticles = async (
                   content
                   publishedAt
                   readAt
+                  wordsCount
+                  isArchived
+                  readingProgressPercent
+                  archivedAt
                   highlights {
                     id
                     quote

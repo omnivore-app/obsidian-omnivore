@@ -8,6 +8,7 @@ import {
   PluginSettingTab,
   requestUrl,
   Setting,
+  stringifyYaml,
   TFile,
   TFolder,
 } from "obsidian";
@@ -20,6 +21,7 @@ import {
 } from "./settings";
 import { FolderSuggest } from "./settings/file-suggest";
 import {
+  preParseTemplate,
   renderArticleContnet,
   renderAttachmentFolder,
   renderFilename,
@@ -27,9 +29,12 @@ import {
 } from "./settings/template";
 import {
   DATE_FORMAT,
+  findFrontMatterIndex,
   formatDate,
   getQueryFromFilter,
   parseDateTime,
+  parseFrontMatterFromContent,
+  removeFrontMatterFromContent,
   replaceIllegalChars,
 } from "./util";
 
@@ -39,6 +44,21 @@ export default class OmnivorePlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     await this.resetSyncingStateSetting();
+
+    // update version if needed
+    const latestVersion = this.manifest.version;
+    const currentVersion = this.settings.version;
+    if (latestVersion !== currentVersion) {
+      this.settings.version = latestVersion;
+      this.saveSettings();
+      // show release notes
+      const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.
+    
+    What's new: https://github.com/omnivore-app/obsidian-omnivore/blob/main/CHANGELOG.md
+    `;
+      new Notice(releaseNotes, 10000);
+    }
+
     this.addCommand({
       id: "sync",
       name: "Sync",
@@ -77,6 +97,8 @@ export default class OmnivorePlugin extends Plugin {
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new OmnivoreSettingTab(this.app, this));
+
+    this.scheduleSync();
   }
 
   onunload() {}
@@ -87,6 +109,25 @@ export default class OmnivorePlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  scheduleSync() {
+    // clear previous interval
+    if (this.settings.intervalId > 0) {
+      window.clearInterval(this.settings.intervalId);
+    }
+    const frequency = this.settings.frequency;
+    if (frequency > 0) {
+      // schedule new interval
+      const intervalId = window.setInterval(async () => {
+        await this.fetchOmnivore(false);
+      }, frequency * 60 * 1000);
+      // save new interval id
+      this.settings.intervalId = intervalId;
+      this.saveSettings();
+      // clear interval when plugin is unloaded
+      this.registerInterval(intervalId);
+    }
   }
 
   async downloadFileAsAttachment(article: Article): Promise<string> {
@@ -119,7 +160,7 @@ export default class OmnivorePlugin extends Plugin {
     return file.path;
   }
 
-  async fetchOmnivore() {
+  async fetchOmnivore(manualSync = true) {
     const {
       syncAt,
       apiKey,
@@ -131,6 +172,7 @@ export default class OmnivorePlugin extends Plugin {
       folder,
       filename,
       folderDateFormat,
+      isSingleFile,
     } = this.settings;
 
     if (syncing) {
@@ -140,7 +182,6 @@ export default class OmnivorePlugin extends Plugin {
 
     if (!apiKey) {
       new Notice("Missing Omnivore api key");
-
       return;
     }
 
@@ -150,7 +191,10 @@ export default class OmnivorePlugin extends Plugin {
     try {
       console.log(`obsidian-omnivore starting sync since: '${syncAt}'`);
 
-      new Notice("🚀 Fetching articles ...");
+      manualSync && new Notice("🚀 Fetching articles ...");
+
+      // pre-parse template
+      preParseTemplate(template);
 
       const size = 50;
       for (
@@ -166,7 +210,7 @@ export default class OmnivorePlugin extends Plugin {
           parseDateTime(syncAt).toISO(),
           getQueryFromFilter(filter, customQuery),
           true,
-          "markdown"
+          "highlightedMarkdown"
         );
 
         for (const article of articles) {
@@ -192,6 +236,7 @@ export default class OmnivorePlugin extends Plugin {
             highlightOrder,
             this.settings.dateHighlightedFormat,
             this.settings.dateSavedFormat,
+            isSingleFile,
             fileAttachment
           );
           // use the custom filename
@@ -202,52 +247,112 @@ export default class OmnivorePlugin extends Plugin {
           const normalizedPath = normalizePath(pageName);
           const omnivoreFile =
             this.app.vault.getAbstractFileByPath(normalizedPath);
-          try {
-            if (omnivoreFile instanceof TFile) {
-              await this.app.fileManager.processFrontMatter(
+          if (omnivoreFile instanceof TFile) {
+            // file exists, so we might need to update it
+            if (isSingleFile) {
+              // sync into a single file
+              const existingContent = await this.app.vault.read(omnivoreFile);
+              // we need to remove the front matter
+              const contentWithoutFrontmatter =
+                removeFrontMatterFromContent(content);
+              const existingContentWithoutFrontmatter =
+                removeFrontMatterFromContent(existingContent);
+              // get front matter from content
+              const existingFrontMatter =
+                parseFrontMatterFromContent(existingContent);
+              if (!existingFrontMatter || !Array.isArray(existingFrontMatter)) {
+                throw new Error("Front matter does not exist in the note");
+              }
+              const newFrontMatter = parseFrontMatterFromContent(content);
+              if (
+                !newFrontMatter ||
+                !Array.isArray(newFrontMatter) ||
+                newFrontMatter.length === 0
+              ) {
+                throw new Error("Front matter does not exist in the template");
+              }
+              let newContentWithoutFrontMatter: string;
+
+              // find the front matter with the same id
+              const frontMatterIdx = findFrontMatterIndex(
+                existingFrontMatter,
+                article.id
+              );
+              if (frontMatterIdx >= 0) {
+                // this article already exists in the file
+                // we need to locate the article which is wrapped in comments
+                // and replace the content
+                const sectionStart = `%%${article.id}_start%%`;
+                const sectionEnd = `%%${article.id}_end%%`;
+                const existingContentRegex = new RegExp(
+                  `${sectionStart}.*?${sectionEnd}`,
+                  "s"
+                );
+                newContentWithoutFrontMatter =
+                  existingContentWithoutFrontmatter.replace(
+                    existingContentRegex,
+                    contentWithoutFrontmatter
+                  );
+
+                existingFrontMatter[frontMatterIdx] = newFrontMatter[0];
+              } else {
+                // this article doesn't exist in the file
+                // prepend the article
+                newContentWithoutFrontMatter = `${contentWithoutFrontmatter}\n\n${existingContentWithoutFrontmatter}`;
+                // prepend new front matter which is an array
+                existingFrontMatter.unshift(newFrontMatter[0]);
+              }
+
+              const newFrontMatterStr = `---\n${stringifyYaml(
+                existingFrontMatter
+              )}---`;
+
+              await this.app.vault.modify(
                 omnivoreFile,
-                async (frontMatter) => {
-                  const id = frontMatter.id;
-                  if (id && id !== article.id) {
-                    // this article has the same name but different id
-                    const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
-                    const newNormalizedPath = normalizePath(newPageName);
-                    const newOmnivoreFile =
-                      this.app.vault.getAbstractFileByPath(newNormalizedPath);
-                    if (newOmnivoreFile instanceof TFile) {
-                      // a file with the same name and id already exists, so we need to update it
-                      const existingContent = await this.app.vault.read(
-                        newOmnivoreFile
-                      );
-                      if (existingContent !== content) {
-                        await this.app.vault.modify(newOmnivoreFile, content);
-                      }
-                      return;
+                `${newFrontMatterStr}\n\n${newContentWithoutFrontMatter}`
+              );
+              continue;
+            }
+            // sync into separate files
+            await this.app.fileManager.processFrontMatter(
+              omnivoreFile,
+              async (frontMatter) => {
+                const id = frontMatter.id;
+                if (id && id !== article.id) {
+                  // this article has the same name but different id
+                  const newPageName = `${folderName}/${customFilename}-${article.id}.md`;
+                  const newNormalizedPath = normalizePath(newPageName);
+                  const newOmnivoreFile =
+                    this.app.vault.getAbstractFileByPath(newNormalizedPath);
+                  if (newOmnivoreFile instanceof TFile) {
+                    // a file with the same name and id already exists, so we need to update it
+                    const existingContent = await this.app.vault.read(
+                      newOmnivoreFile
+                    );
+                    if (existingContent !== content) {
+                      await this.app.vault.modify(newOmnivoreFile, content);
                     }
-                    // a file with the same name but different id already exists, so we need to create it
-                    await this.app.vault.create(newNormalizedPath, content);
                     return;
                   }
-                  // a file with the same id already exists, so we might need to update it
-                  const existingContent = await this.app.vault.read(
-                    omnivoreFile
-                  );
-                  if (existingContent !== content) {
-                    await this.app.vault.modify(omnivoreFile, content);
-                  }
+                  // a file with the same name but different id already exists, so we need to create it
+                  await this.app.vault.create(newNormalizedPath, content);
+                  return;
                 }
-              );
-            } else if (!omnivoreFile) {
-              // file doesn't exist, so we need to create it
-              await this.app.vault.create(normalizedPath, content);
-            }
-          } catch (e) {
-            console.error(e);
+                // a file with the same id already exists, so we might need to update it
+                const existingContent = await this.app.vault.read(omnivoreFile);
+                if (existingContent !== content) {
+                  await this.app.vault.modify(omnivoreFile, content);
+                }
+              }
+            );
+            continue;
           }
+          // file doesn't exist, so we need to create it
+          await this.app.vault.create(normalizedPath, content);
         }
       }
 
-      new Notice("🔖 Articles fetched");
+      manualSync && new Notice("🔖 Articles fetched");
       this.settings.syncAt = DateTime.local().toFormat(DATE_FORMAT);
     } catch (e) {
       new Notice("Failed to fetch articles");
@@ -260,6 +365,7 @@ export default class OmnivorePlugin extends Plugin {
 
   private async resetSyncingStateSetting() {
     this.settings.syncing = false;
+    this.settings.intervalId = 0;
     await this.saveSettings();
   }
 }
@@ -408,6 +514,30 @@ class OmnivoreSettingTab extends PluginSettingTab {
       });
 
     new Setting(generalSettings)
+      .setName("Frequency")
+      .setDesc(
+        "Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync"
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("Enter the frequency")
+          .setValue(this.plugin.settings.frequency.toString())
+          .onChange(async (value) => {
+            // validate frequency
+            const frequency = parseInt(value);
+            if (isNaN(frequency)) {
+              new Notice("Frequency must be a positive integer");
+              return;
+            }
+            // save frequency
+            this.plugin.settings.frequency = frequency;
+            await this.plugin.saveSettings();
+
+            this.plugin.scheduleSync();
+          })
+      );
+
+    new Setting(generalSettings)
       .setName("Folder")
       .setDesc(
         "Enter the folder where the data will be stored. {{{date}}} could be used in the folder name"
@@ -437,6 +567,21 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
+
+    new Setting(generalSettings)
+      .setName("Is Single File")
+      .setDesc(
+        "Check this box if you want to save all articles in a single file"
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.isSingleFile)
+          .onChange(async (value) => {
+            this.plugin.settings.isSingleFile = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     new Setting(generalSettings)
       .setName("Filename")
       .setDesc(
@@ -511,7 +656,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .setPlaceholder("API endpoint")
           .setValue(this.plugin.settings.endpoint)
           .onChange(async (value) => {
-            console.log("endpoint: " + value);
             this.plugin.settings.endpoint = value;
             await this.plugin.saveSettings();
           })
