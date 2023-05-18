@@ -210,7 +210,7 @@ export default class OmnivorePlugin extends Plugin {
           parseDateTime(syncAt).toISO(),
           getQueryFromFilter(filter, customQuery),
           true,
-          "markdown"
+          "highlightedMarkdown"
         );
 
         for (const article of articles) {
