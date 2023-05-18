@@ -262,7 +262,6 @@ export const renderArticleContnet = async (
 
   // get the front matter from the content
   let frontMatter = parseFrontMatterFromContent(content);
-  const contentWithoutFrontMatter = removeFrontMatterFromContent(content);
   if (!frontMatter) {
     // if no front matter, add the id
     frontMatter = {
@@ -270,7 +269,13 @@ export const renderArticleContnet = async (
     };
   }
 
+  let contentWithoutFrontMatter = removeFrontMatterFromContent(content);
   if (isSingleFile) {
+    // wrap the content without front matter in comments
+    const sectionStart = `%%${article.id}_start%%`;
+    const sectionEnd = `%%${article.id}_end%%`;
+    contentWithoutFrontMatter = `${sectionStart}\n${contentWithoutFrontMatter}\n${sectionEnd}`;
+
     // if single file, wrap the front matter in an array
     frontMatter = [frontMatter];
   }
@@ -278,11 +283,7 @@ export const renderArticleContnet = async (
   const frontMatterYaml = stringifyYaml(frontMatter);
   const frontMatterStr = `---\n${frontMatterYaml}---`;
 
-  // wrap the content without front matter in comments
-  const sectionStart = `%%${article.id}_start%%`;
-  const sectionEnd = `%%${article.id}_end%%`;
-
-  return `${frontMatterStr}\n\n${sectionStart}\n${contentWithoutFrontMatter}\n${sectionEnd}`;
+  return `${frontMatterStr}\n\n${contentWithoutFrontMatter}`;
 };
 
 export const renderFolderName = (folder: string, folderDate: string) => {
