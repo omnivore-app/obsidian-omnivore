@@ -10,6 +10,7 @@ import {
   removeFrontMatterFromContent,
   siteNameFromUrl,
 } from "../util";
+import YAML from "yaml";
 
 type FunctionMap = {
   [key: string]: () => (
@@ -19,22 +20,7 @@ type FunctionMap = {
 };
 
 export const DEFAULT_TEMPLATE = `---
-id: {{{id}}}
-title: >
-  {{{title}}}
-{{#author}}
-author: >
-  {{{author}}}
-{{/author}}
-{{#labels.length}}
-tags:
-{{#labels}} - {{{name}}}
-{{/labels}}
-{{/labels.length}}
-date_saved: {{{dateSaved}}}
-{{#datePublished}}
-date_published: {{{datePublished}}}
-{{/datePublished}}
+{{frontMatter}}
 ---
 
 # {{{title}}}
@@ -90,6 +76,7 @@ export type ArticleView =
       readLength?: number;
       state: string;
       dateArchived?: string;
+      frontMatter: string;
     }
   | FunctionMap;
 
@@ -173,6 +160,7 @@ export const renderArticleContnet = async (
   article: Article,
   template: string,
   highlightOrder: string,
+  frontMatterItems: string[],
   dateHighlightedFormat: string,
   dateSavedFormat: string,
   isSingleFile: boolean,
@@ -230,9 +218,37 @@ export const renderArticleContnet = async (
   const readLength = wordsCount
     ? Math.round(Math.max(1, wordsCount / 235))
     : undefined;
+  let frontMatterDict: { [id: string]: any } = {};
+
+  for (const item of frontMatterItems) {
+    switch (item) {
+      case "title":
+        frontMatterDict["title"] = article.title;
+        break;
+      case "author":
+        frontMatterDict["author"] = article.author;
+        break;
+      case "labels":
+        frontMatterDict["labels"] = article.labels?.map((l) => {
+          return {
+            name: l.name.replace(" ", "_"),
+          };
+        });
+        break;
+      case "date_saved":
+        frontMatterDict["date_saved"] = dateSaved;
+        break;
+      case "date_published":
+        frontMatterDict["date_published"] = datePublished;
+        break;
+    }
+  }
+
+  const frontMatterVars = YAML.stringify(frontMatterDict);
   const articleView: ArticleView = {
     id: article.id,
     title: article.title,
+    frontMatter: frontMatterVars,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
     siteName,
     originalUrl: article.originalArticleUrl,
@@ -257,6 +273,7 @@ export const renderArticleContnet = async (
     dateArchived: article.archivedAt,
     ...functionMap,
   };
+  console.log("article view:", articleView);
   // Build content string based on template
   const content = Mustache.render(template, articleView);
 
@@ -295,4 +312,3 @@ export const renderFolderName = (folder: string, folderDate: string) => {
 export const preParseTemplate = (template: string) => {
   Mustache.parse(template);
 };
-

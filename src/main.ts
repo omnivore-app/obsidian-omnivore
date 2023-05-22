@@ -230,10 +230,18 @@ export default class OmnivorePlugin extends Plugin {
             article.pageType === PageType.File
               ? await this.downloadFileAsAttachment(article)
               : undefined;
+          const frontMatterItems = [
+            "title",
+            "author",
+            "tags",
+            "date_saved",
+            "date_published",
+          ];
           const content = await renderArticleContnet(
             article,
             template,
             highlightOrder,
+            frontMatterItems,
             this.settings.dateHighlightedFormat,
             this.settings.dateSavedFormat,
             isSingleFile,
