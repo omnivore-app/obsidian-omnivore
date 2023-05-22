@@ -249,16 +249,22 @@ export const renderArticleContnet = async (
         frontMatter[item] = articleView.title;
         break;
       case "author":
-        frontMatter[item] = articleView.author;
+        if (articleView.author) {
+          frontMatter[item] = articleView.author;
+        }
         break;
       case "tags":
-        frontMatter[item] = articleView.labels;
+        if (articleView.labels && articleView.labels.length > 0) {
+          frontMatter[item] = articleView.labels;
+        }
         break;
       case "date_saved":
         frontMatter[item] = dateSaved;
         break;
       case "date_published":
-        frontMatter[item] = datePublished;
+        if (datePublished) {
+          frontMatter[item] = datePublished;
+        }
         break;
     }
   }
