@@ -6,7 +6,6 @@ import {
   formatDate,
   formatHighlightQuote,
   getHighlightLocation,
-  parseFrontMatterFromContent,
   removeFrontMatterFromContent,
   siteNameFromUrl,
 } from "../util";
@@ -18,26 +17,7 @@ type FunctionMap = {
   ) => string;
 };
 
-export const DEFAULT_TEMPLATE = `---
-id: {{{id}}}
-title: >
-  {{{title}}}
-{{#author}}
-author: >
-  {{{author}}}
-{{/author}}
-{{#labels.length}}
-tags:
-{{#labels}} - {{{name}}}
-{{/labels}}
-{{/labels.length}}
-date_saved: {{{dateSaved}}}
-{{#datePublished}}
-date_published: {{{datePublished}}}
-{{/datePublished}}
----
-
-# {{{title}}}
+export const DEFAULT_TEMPLATE = `# {{{title}}}
 #Omnivore
 
 [Read on Omnivore]({{{omnivoreUrl}}})
@@ -176,6 +156,7 @@ export const renderArticleContnet = async (
   dateHighlightedFormat: string,
   dateSavedFormat: string,
   isSingleFile: boolean,
+  frontMatterVariables: string[],
   fileAttachment?: string
 ) => {
   // filter out notes and redactions
@@ -257,19 +238,35 @@ export const renderArticleContnet = async (
     dateArchived: article.archivedAt,
     ...functionMap,
   };
-  // Build content string based on template
-  const content = Mustache.render(template, articleView);
 
-  // get the front matter from the content
-  let frontMatter = parseFrontMatterFromContent(content);
-  if (!frontMatter) {
-    // if no front matter, add the id
-    frontMatter = {
-      id: article.id,
-    };
+  const frontMatter: { [id: string]: unknown } = {
+    id: article.id, // id is required for deduplication
+  };
+
+  for (const item of frontMatterVariables) {
+    switch (item) {
+      case "title":
+        frontMatter[item] = articleView.title;
+        break;
+      case "author":
+        frontMatter[item] = articleView.author;
+        break;
+      case "tags":
+        frontMatter[item] = articleView.labels;
+        break;
+      case "date_saved":
+        frontMatter[item] = dateSaved;
+        break;
+      case "date_published":
+        frontMatter[item] = datePublished;
+        break;
+    }
   }
 
+  // Build content string based on template
+  const content = Mustache.render(template, articleView);
   let contentWithoutFrontMatter = removeFrontMatterFromContent(content);
+  let frontMatterYaml = stringifyYaml(frontMatter);
   if (isSingleFile) {
     // wrap the content without front matter in comments
     const sectionStart = `%%${article.id}_start%%`;
@@ -277,10 +274,9 @@ export const renderArticleContnet = async (
     contentWithoutFrontMatter = `${sectionStart}\n${contentWithoutFrontMatter}\n${sectionEnd}`;
 
     // if single file, wrap the front matter in an array
-    frontMatter = [frontMatter];
+    frontMatterYaml = stringifyYaml([frontMatter]);
   }
 
-  const frontMatterYaml = stringifyYaml(frontMatter);
   const frontMatterStr = `---\n${frontMatterYaml}---`;
 
   return `${frontMatterStr}\n\n${contentWithoutFrontMatter}`;

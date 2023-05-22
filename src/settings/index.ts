@@ -1,5 +1,13 @@
 import { DEFAULT_TEMPLATE } from "./template";
 
+export const FRONT_MATTER_VARIABLES = [
+  "title",
+  "author",
+  "tags",
+  "date_saved",
+  "date_published",
+];
+
 export const DEFAULT_SETTINGS: OmnivoreSettings = {
   dateHighlightedFormat: "yyyy-MM-dd HH:mm:ss",
   dateSavedFormat: "yyyy-MM-dd HH:mm:ss",
@@ -19,6 +27,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   isSingleFile: false,
   frequency: 0,
   intervalId: 0,
+  frontMatterVariables: FRONT_MATTER_VARIABLES,
 };
 
 export enum Filter {
@@ -51,4 +60,5 @@ export interface OmnivoreSettings {
   isSingleFile: boolean;
   frequency: number;
   intervalId: number;
+  frontMatterVariables: string[];
 }

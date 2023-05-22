@@ -173,6 +173,7 @@ export default class OmnivorePlugin extends Plugin {
       filename,
       folderDateFormat,
       isSingleFile,
+      frontMatterVariables,
     } = this.settings;
 
     if (syncing) {
@@ -237,6 +238,7 @@ export default class OmnivorePlugin extends Plugin {
             this.settings.dateHighlightedFormat,
             this.settings.dateSavedFormat,
             isSingleFile,
+            frontMatterVariables,
             fileAttachment
           );
           // use the custom filename
@@ -482,6 +484,23 @@ class OmnivoreSettingTab extends PluginSettingTab {
             this.plugin.settings.highlightOrder = value;
             await this.plugin.saveSettings();
           });
+      });
+
+    new Setting(generalSettings)
+      .setName("Front Matter Variables")
+      .setDesc(
+        "Enter the front matter variables to be used in the template separated by commas. Available variables are title, author, tags, date_saved, date_published"
+      )
+      .addTextArea((text) => {
+        text
+          .setPlaceholder("Enter the front matter variables")
+          .setValue(this.plugin.settings.frontMatterVariables.join(","))
+          .onChange(async (value) => {
+            this.plugin.settings.frontMatterVariables = JSON.parse(value);
+            await this.plugin.saveSettings();
+          });
+        text.inputEl.setAttr("rows", 5);
+        text.inputEl.setAttr("cols", 60);
       });
 
     new Setting(generalSettings)
