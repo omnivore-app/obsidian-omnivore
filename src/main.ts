@@ -387,17 +387,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "Settings for Omnivore plugin" });
 
-    // create a group of general settings
-    containerEl.createEl("h3", {
-      cls: "omnivore-collapsible",
-      text: "General Settings",
-    });
-
-    const generalSettings = containerEl.createEl("div", {
-      cls: "omnivore-content",
-    });
-
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("API Key")
       .setDesc(
         createFragment((fragment) => {
@@ -420,7 +410,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Filter")
       .setDesc("Select an Omnivore search filter type")
       .addDropdown((dropdown) => {
@@ -433,7 +423,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Custom query")
       .setDesc(
         createFragment((fragment) => {
@@ -459,7 +449,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Last Sync")
       .setDesc("Last time the plugin synced with Omnivore")
       .addMomentFormat((momentFormat) =>
@@ -473,7 +463,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Highlight Order")
       .setDesc("Select the order in which highlights are applied")
       .addDropdown((dropdown) => {
@@ -486,7 +476,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Front Matter Variables")
       .setDesc(
         "Enter the front matter variables to be used in the template separated by commas. Available variables are title, author, tags, date_saved, date_published"
@@ -503,7 +493,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
         text.inputEl.setAttr("cols", 40);
       });
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Template")
       .setDesc(
         createFragment((fragment) => {
@@ -529,7 +519,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
         text.inputEl.setAttr("rows", 30);
         text.inputEl.setAttr("cols", 60);
-      }).addExtraButton((button) => {
+      })
+      .addExtraButton((button) => {
         // add a button to reset template
         button
           .setIcon("reset")
@@ -542,7 +533,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Frequency")
       .setDesc(
         "Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync"
@@ -566,7 +557,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Folder")
       .setDesc(
         "Enter the folder where the data will be stored. {{{date}}} could be used in the folder name"
@@ -581,7 +572,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Attachment Folder")
       .setDesc(
         "Enter the folder where the attachment will be downloaded to. {{{date}}} could be used in the folder name"
@@ -597,7 +588,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Is Single File")
       .setDesc(
         "Check this box if you want to save all articles in a single file"
@@ -611,7 +602,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Filename")
       .setDesc(
         "Enter the filename where the data will be stored. {{{title}}} and {{{date}}} could be used in the filename"
@@ -625,7 +616,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
-    new Setting(generalSettings)
+    new Setting(containerEl)
       .setName("Folder Date Format")
       .setDesc(
         createFragment((fragment) => {
@@ -647,16 +638,24 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
-    new Setting(generalSettings).setName("Date Saved Format").addText((text) =>
-      text
-        .setPlaceholder("yyyy-MM-dd'T'HH:mm:ss")
-        .setValue(this.plugin.settings.dateSavedFormat)
-        .onChange(async (value) => {
-          this.plugin.settings.dateSavedFormat = value;
-          await this.plugin.saveSettings();
-        })
-    );
-    new Setting(generalSettings)
+    new Setting(containerEl)
+      .setName(
+        "Enter the date format for dateSaved variable in rendered template"
+      )
+      .setDesc("Date Saved Format")
+      .addText((text) =>
+        text
+          .setPlaceholder("yyyy-MM-dd'T'HH:mm:ss")
+          .setValue(this.plugin.settings.dateSavedFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.dateSavedFormat = value;
+            await this.plugin.saveSettings();
+          })
+      );
+    new Setting(containerEl)
+      .setName(
+        "Enter the date format for dateHighlighted variable in rendered template"
+      )
       .setName("Date Highlighted Format")
       .addText((text) =>
         text
