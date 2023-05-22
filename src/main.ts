@@ -521,7 +521,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .setPlaceholder("Enter the template")
           .setValue(this.plugin.settings.template)
           .onChange(async (value) => {
-            // TODO: validate template
             // if template is empty, use default template
             this.plugin.settings.template = value
               ? value
@@ -530,6 +529,17 @@ class OmnivoreSettingTab extends PluginSettingTab {
           });
         text.inputEl.setAttr("rows", 30);
         text.inputEl.setAttr("cols", 60);
+      }).addExtraButton((button) => {
+        // add a button to reset template
+        button
+          .setIcon("reset")
+          .setTooltip("Reset template")
+          .onClick(async () => {
+            this.plugin.settings.template = DEFAULT_SETTINGS.template;
+            await this.plugin.saveSettings();
+            this.display();
+            new Notice("Template reset");
+          });
       });
 
     new Setting(generalSettings)
