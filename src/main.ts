@@ -499,8 +499,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
             this.plugin.settings.frontMatterVariables = JSON.parse(value);
             await this.plugin.saveSettings();
           });
-        text.inputEl.setAttr("rows", 5);
-        text.inputEl.setAttr("cols", 60);
+        text.inputEl.setAttr("rows", 2);
+        text.inputEl.setAttr("cols", 40);
       });
 
     new Setting(generalSettings)
