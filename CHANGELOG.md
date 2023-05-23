@@ -1,3 +1,11 @@
+## [1.3.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.3.0...1.3.1) (2023-05-23)
+
+
+### Bug Fixes
+
+* add a reset template button to reset the template to default template ([06df987](https://github.com/omnivore-app/obsidian-omnivore/commit/06df987b539cf892bdab6e205cefcf529ffc26f0))
+* invalid yaml error when generating the front matter ([10a9b96](https://github.com/omnivore-app/obsidian-omnivore/commit/10a9b9676b2c57e6dcbecb87e2e7530874be8c70))
+
 # [1.3.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.2.3...1.3.0) (2023-05-18)
 
 
