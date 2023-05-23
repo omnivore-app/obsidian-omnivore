@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.3.2...1.3.3) (2023-05-23)
+
+
+### Bug Fixes
+
+* truncate filename length to 100 ([12ebcf7](https://github.com/omnivore-app/obsidian-omnivore/commit/12ebcf76638ce336511705b6b433ea989e6a0895))
+
 ## [1.3.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.3.1...1.3.2) (2023-05-23)
 
 
