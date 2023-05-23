@@ -639,10 +639,10 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
     new Setting(containerEl)
-      .setName(
+      .setName("Date Saved Format")
+      .setDesc(
         "Enter the date format for dateSaved variable in rendered template"
       )
-      .setDesc("Date Saved Format")
       .addText((text) =>
         text
           .setPlaceholder("yyyy-MM-dd'T'HH:mm:ss")
@@ -653,10 +653,10 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
     new Setting(containerEl)
-      .setName(
+      .setName("Date Highlighted Format")
+      .setDesc(
         "Enter the date format for dateHighlighted variable in rendered template"
       )
-      .setName("Date Highlighted Format")
       .addText((text) =>
         text
           .setPlaceholder("Date Highlighted Format")
