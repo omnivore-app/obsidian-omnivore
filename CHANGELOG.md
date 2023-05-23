@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.3.1...1.3.2) (2023-05-23)
+
+
+### Bug Fixes
+
+* use labels names as tags in the front matter ([0341a4e](https://github.com/omnivore-app/obsidian-omnivore/commit/0341a4ed36c4aef507784dc6ceb1862b2e1dd8d6))
+
 ## [1.3.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.3.0...1.3.1) (2023-05-23)
 
 
