@@ -218,11 +218,7 @@ export const renderArticleContnet = async (
     siteName,
     originalUrl: article.originalArticleUrl,
     author: article.author,
-    labels: article.labels?.map((l) => {
-      return {
-        name: l.name.replaceAll(" ", "_"),
-      };
-    }),
+    labels: renderLabels(article.labels),
     dateSaved,
     highlights,
     content: article.content,
@@ -255,7 +251,8 @@ export const renderArticleContnet = async (
         break;
       case "tags":
         if (articleView.labels && articleView.labels.length > 0) {
-          frontMatter[item] = articleView.labels;
+          // use label names as tags
+          frontMatter[item] = articleView.labels.map((l) => l.name);
         }
         break;
       case "date_saved":
