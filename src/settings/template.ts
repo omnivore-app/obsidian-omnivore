@@ -220,7 +220,7 @@ export const renderArticleContnet = async (
     author: article.author,
     labels: article.labels?.map((l) => {
       return {
-        name: l.name.replace(" ", "_"),
+        name: l.name.replaceAll(" ", "_"),
       };
     }),
     dateSaved,

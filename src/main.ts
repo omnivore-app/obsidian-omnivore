@@ -16,6 +16,7 @@ import { Article, loadArticles, PageType } from "./api";
 import {
   DEFAULT_SETTINGS,
   Filter,
+  FRONT_MATTER_VARIABLES,
   HighlightOrder,
   OmnivoreSettings,
 } from "./settings";
@@ -486,7 +487,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .setPlaceholder("Enter the front matter variables")
           .setValue(this.plugin.settings.frontMatterVariables.join(","))
           .onChange(async (value) => {
-            this.plugin.settings.frontMatterVariables = JSON.parse(value);
+            // validate front matter variables and deduplicate
+            this.plugin.settings.frontMatterVariables = value
+              .split(",")
+              .map((v) => v.trim())
+              .filter(
+                (v, i, a) =>
+                  FRONT_MATTER_VARIABLES.includes(v) && a.indexOf(v) === i
+              );
             await this.plugin.saveSettings();
           });
         text.inputEl.setAttr("rows", 2);
