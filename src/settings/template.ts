@@ -1,3 +1,4 @@
+import { truncate } from "lodash";
 import Mustache from "mustache";
 import { stringifyYaml } from "obsidian";
 import { Article, HighlightType, PageType } from "../api";
@@ -124,9 +125,14 @@ export const renderFilename = (
   folderDateFormat: string
 ) => {
   const date = formatDate(article.savedAt, folderDateFormat);
-  return Mustache.render(filename, {
+  const renderedFilename = Mustache.render(filename, {
     ...article,
     date,
+  });
+
+  // truncate the filename to 100 characters
+  return truncate(renderedFilename, {
+    length: 100,
   });
 };
 
@@ -294,4 +300,3 @@ export const renderFolderName = (folder: string, folderDate: string) => {
 export const preParseTemplate = (template: string) => {
   Mustache.parse(template);
 };
-
