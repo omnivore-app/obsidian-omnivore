@@ -6,6 +6,17 @@ export const FRONT_MATTER_VARIABLES = [
   "tags",
   "date_saved",
   "date_published",
+  "omnivore_url",
+  "site_name",
+  "original_url",
+  "description",
+  "note",
+  "type",
+  "date_read",
+  "words_count",
+  "read_length",
+  "state",
+  "date_archived",
 ];
 
 export const DEFAULT_SETTINGS: OmnivoreSettings = {
@@ -27,7 +38,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   isSingleFile: false,
   frequency: 0,
   intervalId: 0,
-  frontMatterVariables: FRONT_MATTER_VARIABLES,
+  frontMatterVariables: [],
 };
 
 export enum Filter {

@@ -161,3 +161,6 @@ export const removeFrontMatterFromContent = (content: string): string => {
 
   return content.replace(frontMatterRegex, "");
 };
+
+export const snakeToCamelCase = (str: string) =>
+  str.replace(/(_[a-z])/g, (group) => group.toUpperCase().replace("_", ""));

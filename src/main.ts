@@ -486,7 +486,15 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Front Matter Variables")
       .setDesc(
-        "Enter the front matter variables to be used in the template separated by commas. Available variables are title, author, tags, date_saved, date_published. You can also use custom aliases in the format of variable::alias, e.g. date_saved::date"
+        createFragment((fragment) => {
+          fragment.append(
+            "Enter the front matter variables separated by commas. You can also use custom aliases in the format of variable::alias, e.g. date_saved::date. ",
+            fragment.createEl("a", {
+              text: "Reference",
+              href: "https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian",
+            })
+          );
+        })
       )
       .addTextArea((text) => {
         text

@@ -9,6 +9,7 @@ import {
   getHighlightLocation,
   removeFrontMatterFromContent,
   siteNameFromUrl,
+  snakeToCamelCase,
 } from "../util";
 
 type FunctionMap = {
@@ -246,32 +247,28 @@ export const renderArticleContnet = async (
   };
 
   for (const item of frontMatterVariables) {
+    // split the item into variable and alias
     const aliasedVariables = item.split("::");
     const variable = aliasedVariables[0];
+    // we use snake case for variables in the front matter
+    const articleVariable = snakeToCamelCase(variable);
+    // use alias if available, otherwise use variable
     const key = aliasedVariables[1] || variable;
-    switch (variable) {
-      case "title":
-        frontMatter[key] = articleView.title;
-        break;
-      case "author":
-        if (articleView.author) {
-          frontMatter[key] = articleView.author;
-        }
-        break;
-      case "tags":
-        if (articleView.labels && articleView.labels.length > 0) {
-          // use label names as tags
-          frontMatter[key] = articleView.labels.map((l) => l.name);
-        }
-        break;
-      case "date_saved":
-        frontMatter[key] = dateSaved;
-        break;
-      case "date_published":
-        if (datePublished) {
-          frontMatter[key] = datePublished;
-        }
-        break;
+    if (
+      variable === "tags" &&
+      articleView.labels &&
+      articleView.labels.length > 0
+    ) {
+      // tags are handled separately
+      // use label names as tags
+      frontMatter[key] = articleView.labels.map((l) => l.name);
+      continue;
+    }
+
+    const value = (articleView as any)[articleVariable];
+    if (value) {
+      // if variable is in article, use it
+      frontMatter[key] = value;
     }
   }
 
