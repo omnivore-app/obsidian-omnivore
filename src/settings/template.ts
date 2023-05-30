@@ -298,5 +298,5 @@ export const renderFolderName = (folder: string, folderDate: string) => {
 };
 
 export const preParseTemplate = (template: string) => {
-  Mustache.parse(template);
+  return Mustache.parse(template);
 };

@@ -196,7 +196,13 @@ export default class OmnivorePlugin extends Plugin {
       manualSync && new Notice("🚀 Fetching articles ...");
 
       // pre-parse template
-      preParseTemplate(template);
+      const templateSpans = preParseTemplate(template);
+      const includeContent = templateSpans.some(
+        (templateSpan) => templateSpan[1] === "content"
+      );
+      const includeFileAttachment = templateSpans.some(
+        (templateSpan) => templateSpan[1] === "fileAttachment"
+      );
 
       const size = 50;
       for (
@@ -211,7 +217,7 @@ export default class OmnivorePlugin extends Plugin {
           size,
           parseDateTime(syncAt).toISO(),
           getQueryFromFilter(filter, customQuery),
-          true,
+          includeContent,
           "highlightedMarkdown"
         );
 
@@ -229,7 +235,7 @@ export default class OmnivorePlugin extends Plugin {
             await this.app.vault.createFolder(folderName);
           }
           const fileAttachment =
-            article.pageType === PageType.File
+            article.pageType === PageType.File && includeFileAttachment
               ? await this.downloadFileAsAttachment(article)
               : undefined;
           const content = await renderArticleContnet(
