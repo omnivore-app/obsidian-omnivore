@@ -758,7 +758,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
       });
 
     const help = containerEl.createEl("p");
-    help.innerHTML = `For more information, please visit the <a href="https://github.com/omnivore-app/obsidian-omnivore/blob/master/README.md">plugin's GitHub page</a> or email us at <a href="mailto:feedback@omnivore.app">feedback@omnivore.app</a>.`;
+    help.innerHTML = `For more information, please visit our <a href="https://github.com/omnivore-app/obsidian-omnivore">GitHub page</a>, email us at <a href="mailto:feedback@omnivore.app">feedback@omnivore.app</a> or join our <a href="https://discord.gg/h2z5rppzz9">Discord server</a>.`;
 
     // script to make collapsible sections
     const coll = document.getElementsByClassName("omnivore-collapsible");
