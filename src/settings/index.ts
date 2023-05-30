@@ -39,6 +39,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   frequency: 0,
   intervalId: 0,
   frontMatterVariables: [],
+  frontMatterTemplate: "",
 };
 
 export enum Filter {
@@ -72,4 +73,5 @@ export interface OmnivoreSettings {
   frequency: number;
   intervalId: number;
   frontMatterVariables: string[];
+  frontMatterTemplate: string;
 }

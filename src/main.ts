@@ -175,6 +175,7 @@ export default class OmnivorePlugin extends Plugin {
       folderDateFormat,
       isSingleFile,
       frontMatterVariables,
+      frontMatterTemplate,
     } = this.settings;
 
     if (syncing) {
@@ -196,7 +197,9 @@ export default class OmnivorePlugin extends Plugin {
       manualSync && new Notice("🚀 Fetching articles ...");
 
       // pre-parse template
+      frontMatterTemplate && preParseTemplate(frontMatterTemplate);
       const templateSpans = preParseTemplate(template);
+      // check if we need to include content or file attachment
       const includeContent = templateSpans.some(
         (templateSpan) => templateSpan[1] === "content"
       );
@@ -246,6 +249,7 @@ export default class OmnivorePlugin extends Plugin {
             this.settings.dateSavedFormat,
             isSingleFile,
             frontMatterVariables,
+            frontMatterTemplate,
             fileAttachment
           );
           // use the custom filename
@@ -690,7 +694,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", {
+    containerEl.createEl("h5", {
       cls: "omnivore-collapsible",
       text: "Advanced Settings",
     });
@@ -711,6 +715,47 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    new Setting(advancedSettings)
+      .setName("Front Matter Template")
+      .setDesc(
+        createFragment((fragment) => {
+          fragment.append(
+            "Enter template to render the front matter with ",
+            fragment.createEl("a", {
+              text: "Reference",
+              href: "https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian",
+            }),
+            fragment.createEl("br"),
+            "If this is empty, the front matter will be rendered with the front matter variables."
+          );
+        })
+      )
+      .addTextArea((text) => {
+        text
+          .setPlaceholder("Enter the template")
+          .setValue(this.plugin.settings.frontMatterTemplate)
+          .onChange(async (value) => {
+            this.plugin.settings.frontMatterTemplate = value;
+            await this.plugin.saveSettings();
+          });
+
+        text.inputEl.setAttr("rows", 10);
+        text.inputEl.setAttr("cols", 30);
+      })
+      .addExtraButton((button) => {
+        // add a button to reset template
+        button
+          .setIcon("reset")
+          .setTooltip("Reset front matter template")
+          .onClick(async () => {
+            this.plugin.settings.frontMatterTemplate =
+              DEFAULT_SETTINGS.frontMatterTemplate;
+            await this.plugin.saveSettings();
+            this.display();
+            new Notice("Front matter template reset");
+          });
+      });
 
     const help = containerEl.createEl("p");
     help.innerHTML = `For more information, please visit the <a href="https://github.com/omnivore-app/obsidian-omnivore/blob/master/README.md">plugin's GitHub page</a> or email us at <a href="mailto:feedback@omnivore.app">feedback@omnivore.app</a>.`;
