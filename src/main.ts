@@ -495,7 +495,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             "Enter the front matter variables separated by commas. You can also use custom aliases in the format of variable::alias, e.g. date_saved::date. ",
             fragment.createEl("a", {
               text: "Reference",
-              href: "https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian",
+              href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter-variables",
             })
           );
         })
@@ -724,7 +724,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             "Enter template to render the front matter with ",
             fragment.createEl("a", {
               text: "Reference",
-              href: "https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian",
+              href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter-template",
             }),
             fragment.createEl("br"),
             "If this is empty, the front matter will be rendered with the front matter variables."
