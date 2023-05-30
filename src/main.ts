@@ -486,7 +486,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Front Matter Variables")
       .setDesc(
-        "Enter the front matter variables to be used in the template separated by commas. Available variables are title, author, tags, date_saved, date_published"
+        "Enter the front matter variables to be used in the template separated by commas. Available variables are title, author, tags, date_saved, date_published. You can also use custom aliases in the format of variable::alias, e.g. date_saved::date"
       )
       .addTextArea((text) => {
         text
@@ -499,7 +499,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
               .map((v) => v.trim())
               .filter(
                 (v, i, a) =>
-                  FRONT_MATTER_VARIABLES.includes(v) && a.indexOf(v) === i
+                  FRONT_MATTER_VARIABLES.includes(v.split("::")[0]) &&
+                  a.indexOf(v) === i
               );
             await this.plugin.saveSettings();
           });

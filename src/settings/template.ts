@@ -246,27 +246,30 @@ export const renderArticleContnet = async (
   };
 
   for (const item of frontMatterVariables) {
-    switch (item) {
+    const aliasedVariables = item.split("::");
+    const variable = aliasedVariables[0];
+    const key = aliasedVariables[1] || variable;
+    switch (variable) {
       case "title":
-        frontMatter[item] = articleView.title;
+        frontMatter[key] = articleView.title;
         break;
       case "author":
         if (articleView.author) {
-          frontMatter[item] = articleView.author;
+          frontMatter[key] = articleView.author;
         }
         break;
       case "tags":
         if (articleView.labels && articleView.labels.length > 0) {
           // use label names as tags
-          frontMatter[item] = articleView.labels.map((l) => l.name);
+          frontMatter[key] = articleView.labels.map((l) => l.name);
         }
         break;
       case "date_saved":
-        frontMatter[item] = dateSaved;
+        frontMatter[key] = dateSaved;
         break;
       case "date_published":
         if (datePublished) {
-          frontMatter[item] = datePublished;
+          frontMatter[key] = datePublished;
         }
         break;
     }
