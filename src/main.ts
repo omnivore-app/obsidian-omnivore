@@ -488,21 +488,27 @@ class OmnivoreSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Front Matter Variables")
+      .setName("Front Matter")
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter the front matter variables separated by commas. You can also use custom aliases in the format of variable::alias, e.g. date_saved::date. ",
+            "Enter the metadata to be used in your note separated by commas. You can also use custom aliases in the format of metatdata::alias, e.g. date_saved::date. ",
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "Available metadata can be found at ",
             fragment.createEl("a", {
               text: "Reference",
-              href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter-variables",
-            })
+              href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter",
+            }),
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "If you want to use a custom front matter template, you can enter it below under the advanced settings"
           );
         })
       )
       .addTextArea((text) => {
         text
-          .setPlaceholder("Enter the front matter variables")
+          .setPlaceholder("Enter the metadata")
           .setValue(this.plugin.settings.frontMatterVariables.join(","))
           .onChange(async (value) => {
             // validate front matter variables and deduplicate
@@ -516,12 +522,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
               );
             await this.plugin.saveSettings();
           });
-        text.inputEl.setAttr("rows", 2);
-        text.inputEl.setAttr("cols", 40);
+        text.inputEl.setAttr("rows", 4);
+        text.inputEl.setAttr("cols", 30);
       });
 
     new Setting(containerEl)
-      .setName("Template")
+      .setName("Article Template")
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
@@ -529,7 +535,10 @@ class OmnivoreSettingTab extends PluginSettingTab {
             fragment.createEl("a", {
               text: "Reference",
               href: "https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian",
-            })
+            }),
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "If you want to use a custom front matter template, you can enter it below under the advanced settings"
           );
         })
       )
@@ -544,8 +553,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
               : DEFAULT_SETTINGS.template;
             await this.plugin.saveSettings();
           });
-        text.inputEl.setAttr("rows", 30);
-        text.inputEl.setAttr("cols", 60);
+        text.inputEl.setAttr("rows", 25);
+        text.inputEl.setAttr("cols", 50);
       })
       .addExtraButton((button) => {
         // add a button to reset template
@@ -721,13 +730,17 @@ class OmnivoreSettingTab extends PluginSettingTab {
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter template to render the front matter with ",
+            "Enter YAML template to render the front matter with ",
             fragment.createEl("a", {
               text: "Reference",
               href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter-template",
             }),
             fragment.createEl("br"),
-            "If this is empty, the front matter will be rendered with the front matter variables."
+            fragment.createEl("br"),
+            "We recommend you to use Front Matter section under the basic settings to define the metadata.",
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "If this template is set, it will override the Front Matter so please make sure your template is a valid YAML."
           );
         })
       )
