@@ -1,3 +1,18 @@
+# [1.4.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.3.3...1.4.0) (2023-05-31)
+
+
+### Bug Fixes
+
+* allow adding aliases to the variables in the front matter ([be1d7e5](https://github.com/omnivore-app/obsidian-omnivore/commit/be1d7e5316871e8c740afc8e2c19dbff4f1eeef8))
+* download content and file attachment only if included in the template ([dc92a38](https://github.com/omnivore-app/obsidian-omnivore/commit/dc92a38ef1da4cecfc8ad951c7cf1d068b75e6b3))
+
+
+### Features
+
+* add a optional front matter template under advanced settings ([afde987](https://github.com/omnivore-app/obsidian-omnivore/commit/afde98718d06f021804bfa3232a6b4148eaf10b4))
+* add link to our discord server in the settings ([5c3df3d](https://github.com/omnivore-app/obsidian-omnivore/commit/5c3df3d88dee710e542d4e9c64b1fee582a88b29))
+* add more variables in the front matter setting ([942b93e](https://github.com/omnivore-app/obsidian-omnivore/commit/942b93e604c65042b3d540896e0579773a8e98e4))
+
 ## [1.3.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.3.2...1.3.3) (2023-05-23)
 
 
