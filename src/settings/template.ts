@@ -1,6 +1,6 @@
 import { truncate } from "lodash";
 import Mustache from "mustache";
-import { stringifyYaml } from "obsidian";
+import { parseYaml, stringifyYaml } from "obsidian";
 import { Article, HighlightType, PageType } from "../api";
 import {
   compareHighlightsInFile,
@@ -9,6 +9,7 @@ import {
   getHighlightLocation,
   removeFrontMatterFromContent,
   siteNameFromUrl,
+  snakeToCamelCase,
 } from "../util";
 
 type FunctionMap = {
@@ -163,6 +164,7 @@ export const renderArticleContnet = async (
   dateSavedFormat: string,
   isSingleFile: boolean,
   frontMatterVariables: string[],
+  frontMatterTemplate: string,
   fileAttachment?: string
 ) => {
   // filter out notes and redactions
@@ -241,34 +243,60 @@ export const renderArticleContnet = async (
     ...functionMap,
   };
 
-  const frontMatter: { [id: string]: unknown } = {
+  let frontMatter: { [id: string]: unknown } = {
     id: article.id, // id is required for deduplication
   };
 
-  for (const item of frontMatterVariables) {
-    switch (item) {
-      case "title":
-        frontMatter[item] = articleView.title;
-        break;
-      case "author":
-        if (articleView.author) {
-          frontMatter[item] = articleView.author;
-        }
-        break;
-      case "tags":
-        if (articleView.labels && articleView.labels.length > 0) {
-          // use label names as tags
-          frontMatter[item] = articleView.labels.map((l) => l.name);
-        }
-        break;
-      case "date_saved":
-        frontMatter[item] = dateSaved;
-        break;
-      case "date_published":
-        if (datePublished) {
-          frontMatter[item] = datePublished;
-        }
-        break;
+  // if the front matter template is set, use it
+  if (frontMatterTemplate) {
+    const frontMatterTemplateRendered = Mustache.render(
+      frontMatterTemplate,
+      articleView
+    );
+    try {
+      // parse the front matter template as yaml
+      const frontMatterParsed = parseYaml(frontMatterTemplateRendered);
+
+      frontMatter = {
+        ...frontMatterParsed,
+        ...frontMatter,
+      };
+    } catch (error) {
+      // if there's an error parsing the front matter template, log it
+      console.error("Error parsing front matter template", error);
+      // and add the error to the front matter
+      frontMatter = {
+        ...frontMatter,
+        omnivore_error:
+          "There was an error parsing the front matter template. See console for details.",
+      };
+    }
+  } else {
+    // otherwise, use the front matter variables
+    for (const item of frontMatterVariables) {
+      // split the item into variable and alias
+      const aliasedVariables = item.split("::");
+      const variable = aliasedVariables[0];
+      // we use snake case for variables in the front matter
+      const articleVariable = snakeToCamelCase(variable);
+      // use alias if available, otherwise use variable
+      const key = aliasedVariables[1] || variable;
+      if (
+        variable === "tags" &&
+        articleView.labels &&
+        articleView.labels.length > 0
+      ) {
+        // tags are handled separately
+        // use label names as tags
+        frontMatter[key] = articleView.labels.map((l) => l.name);
+        continue;
+      }
+
+      const value = (articleView as any)[articleVariable];
+      if (value) {
+        // if variable is in article, use it
+        frontMatter[key] = value;
+      }
     }
   }
 
@@ -298,5 +326,5 @@ export const renderFolderName = (folder: string, folderDate: string) => {
 };
 
 export const preParseTemplate = (template: string) => {
-  Mustache.parse(template);
+  return Mustache.parse(template);
 };

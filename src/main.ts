@@ -175,6 +175,7 @@ export default class OmnivorePlugin extends Plugin {
       folderDateFormat,
       isSingleFile,
       frontMatterVariables,
+      frontMatterTemplate,
     } = this.settings;
 
     if (syncing) {
@@ -196,7 +197,15 @@ export default class OmnivorePlugin extends Plugin {
       manualSync && new Notice("🚀 Fetching articles ...");
 
       // pre-parse template
-      preParseTemplate(template);
+      frontMatterTemplate && preParseTemplate(frontMatterTemplate);
+      const templateSpans = preParseTemplate(template);
+      // check if we need to include content or file attachment
+      const includeContent = templateSpans.some(
+        (templateSpan) => templateSpan[1] === "content"
+      );
+      const includeFileAttachment = templateSpans.some(
+        (templateSpan) => templateSpan[1] === "fileAttachment"
+      );
 
       const size = 50;
       for (
@@ -211,7 +220,7 @@ export default class OmnivorePlugin extends Plugin {
           size,
           parseDateTime(syncAt).toISO(),
           getQueryFromFilter(filter, customQuery),
-          true,
+          includeContent,
           "highlightedMarkdown"
         );
 
@@ -229,7 +238,7 @@ export default class OmnivorePlugin extends Plugin {
             await this.app.vault.createFolder(folderName);
           }
           const fileAttachment =
-            article.pageType === PageType.File
+            article.pageType === PageType.File && includeFileAttachment
               ? await this.downloadFileAsAttachment(article)
               : undefined;
           const content = await renderArticleContnet(
@@ -240,6 +249,7 @@ export default class OmnivorePlugin extends Plugin {
             this.settings.dateSavedFormat,
             isSingleFile,
             frontMatterVariables,
+            frontMatterTemplate,
             fileAttachment
           );
           // use the custom filename
@@ -478,13 +488,27 @@ class OmnivoreSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Front Matter Variables")
+      .setName("Front Matter")
       .setDesc(
-        "Enter the front matter variables to be used in the template separated by commas. Available variables are title, author, tags, date_saved, date_published"
+        createFragment((fragment) => {
+          fragment.append(
+            "Enter the metadata to be used in your note separated by commas. You can also use custom aliases in the format of metatdata::alias, e.g. date_saved::date. ",
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "Available metadata can be found at ",
+            fragment.createEl("a", {
+              text: "Reference",
+              href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter",
+            }),
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "If you want to use a custom front matter template, you can enter it below under the advanced settings"
+          );
+        })
       )
       .addTextArea((text) => {
         text
-          .setPlaceholder("Enter the front matter variables")
+          .setPlaceholder("Enter the metadata")
           .setValue(this.plugin.settings.frontMatterVariables.join(","))
           .onChange(async (value) => {
             // validate front matter variables and deduplicate
@@ -493,16 +517,17 @@ class OmnivoreSettingTab extends PluginSettingTab {
               .map((v) => v.trim())
               .filter(
                 (v, i, a) =>
-                  FRONT_MATTER_VARIABLES.includes(v) && a.indexOf(v) === i
+                  FRONT_MATTER_VARIABLES.includes(v.split("::")[0]) &&
+                  a.indexOf(v) === i
               );
             await this.plugin.saveSettings();
           });
-        text.inputEl.setAttr("rows", 2);
-        text.inputEl.setAttr("cols", 40);
+        text.inputEl.setAttr("rows", 4);
+        text.inputEl.setAttr("cols", 30);
       });
 
     new Setting(containerEl)
-      .setName("Template")
+      .setName("Article Template")
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
@@ -510,7 +535,10 @@ class OmnivoreSettingTab extends PluginSettingTab {
             fragment.createEl("a", {
               text: "Reference",
               href: "https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian",
-            })
+            }),
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "If you want to use a custom front matter template, you can enter it below under the advanced settings"
           );
         })
       )
@@ -525,8 +553,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
               : DEFAULT_SETTINGS.template;
             await this.plugin.saveSettings();
           });
-        text.inputEl.setAttr("rows", 30);
-        text.inputEl.setAttr("cols", 60);
+        text.inputEl.setAttr("rows", 25);
+        text.inputEl.setAttr("cols", 50);
       })
       .addExtraButton((button) => {
         // add a button to reset template
@@ -675,7 +703,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", {
+    containerEl.createEl("h5", {
       cls: "omnivore-collapsible",
       text: "Advanced Settings",
     });
@@ -697,8 +725,53 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       );
 
+    new Setting(advancedSettings)
+      .setName("Front Matter Template")
+      .setDesc(
+        createFragment((fragment) => {
+          fragment.append(
+            "Enter YAML template to render the front matter with ",
+            fragment.createEl("a", {
+              text: "Reference",
+              href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter-template",
+            }),
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "We recommend you to use Front Matter section under the basic settings to define the metadata.",
+            fragment.createEl("br"),
+            fragment.createEl("br"),
+            "If this template is set, it will override the Front Matter so please make sure your template is a valid YAML."
+          );
+        })
+      )
+      .addTextArea((text) => {
+        text
+          .setPlaceholder("Enter the template")
+          .setValue(this.plugin.settings.frontMatterTemplate)
+          .onChange(async (value) => {
+            this.plugin.settings.frontMatterTemplate = value;
+            await this.plugin.saveSettings();
+          });
+
+        text.inputEl.setAttr("rows", 10);
+        text.inputEl.setAttr("cols", 30);
+      })
+      .addExtraButton((button) => {
+        // add a button to reset template
+        button
+          .setIcon("reset")
+          .setTooltip("Reset front matter template")
+          .onClick(async () => {
+            this.plugin.settings.frontMatterTemplate =
+              DEFAULT_SETTINGS.frontMatterTemplate;
+            await this.plugin.saveSettings();
+            this.display();
+            new Notice("Front matter template reset");
+          });
+      });
+
     const help = containerEl.createEl("p");
-    help.innerHTML = `For more information, please visit the <a href="https://github.com/omnivore-app/obsidian-omnivore/blob/master/README.md">plugin's GitHub page</a> or email us at <a href="mailto:feedback@omnivore.app">feedback@omnivore.app</a>.`;
+    help.innerHTML = `For more information, please visit our <a href="https://github.com/omnivore-app/obsidian-omnivore">GitHub page</a>, email us at <a href="mailto:feedback@omnivore.app">feedback@omnivore.app</a> or join our <a href="https://discord.gg/h2z5rppzz9">Discord server</a>.`;
 
     // script to make collapsible sections
     const coll = document.getElementsByClassName("omnivore-collapsible");
