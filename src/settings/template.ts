@@ -45,6 +45,7 @@ export interface LabelView {
 export interface HighlightView {
   text: string;
   highlightUrl: string;
+  highlightID: string;
   dateHighlighted: string;
   note?: string;
   labels?: LabelView[];
@@ -197,6 +198,7 @@ export const renderArticleContnet = async (
     return {
       text: formatHighlightQuote(highlight.quote, template),
       highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
+      highlightID: highlight.id,
       dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
       note: highlight.annotation,
       labels: renderLabels(highlight.labels),
