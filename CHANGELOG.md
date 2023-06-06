@@ -1,3 +1,11 @@
+## [1.4.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.4.0...1.4.1) (2023-06-06)
+
+
+### Bug Fixes
+
+* replace all reserved characters in filename with - ([582beb3](https://github.com/omnivore-app/obsidian-omnivore/commit/582beb35635ae52e89a8d4edc60efcc3e1dba337))
+* test ([815238c](https://github.com/omnivore-app/obsidian-omnivore/commit/815238cca248ff5899b8941fea6410757145d19c))
+
 # [1.4.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.3.3...1.4.0) (2023-05-31)
 
 
