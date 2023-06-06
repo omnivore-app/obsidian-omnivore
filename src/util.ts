@@ -7,7 +7,10 @@ import { Highlight } from "./api";
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm";
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`;
 export const REPLACEMENT_CHAR = "-";
-export const ILLEGAL_CHAR_REGEX = /[/\\?%*:|"<>]/g;
+// On Unix-like systems / is reserved and <>:"/\|?* as well as non-printable characters \u0000-\u001F on Windows
+// credit: https://github.com/sindresorhus/filename-reserved-regex
+// eslint-disable-next-line no-control-regex
+export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g;
 
 export interface HighlightPoint {
   left: number;
