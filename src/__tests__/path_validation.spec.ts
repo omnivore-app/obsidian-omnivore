@@ -9,13 +9,13 @@ const expectedManualIllegalChars: string[] = [
   "/",
   "\\",
   "?",
-  "%",
   "*",
   ":",
   "|",
   '"',
   "<",
   ">",
+  "\u0000",
 ];
 
 describe("replaceIllegalChars() removes all expected characters", () => {

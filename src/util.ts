@@ -91,7 +91,7 @@ export const unicodeSlug = (str: string, savedAt: string) => {
 };
 
 export const replaceIllegalChars = (str: string): string => {
-  return str.replaceAll(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR);
+  return str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR);
 };
 
 export function formatDate(date: string, format: string): string {
