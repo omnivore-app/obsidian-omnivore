@@ -16,6 +16,7 @@ const expectedManualIllegalChars: string[] = [
   "<",
   ">",
   "\u0000",
+  "\u001F",
 ];
 
 describe("replaceIllegalChars() removes all expected characters", () => {
