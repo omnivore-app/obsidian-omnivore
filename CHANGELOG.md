@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.4.1...1.4.2) (2023-06-07)
+
+
+### Bug Fixes
+
+* failed to sync articles to an existing file without front matter ([58dbf98](https://github.com/omnivore-app/obsidian-omnivore/commit/58dbf98cc929ab2feb79623ab8693a7974f1ea6f))
+
 ## [1.4.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.4.0...1.4.1) (2023-06-06)
 
 
