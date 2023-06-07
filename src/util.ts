@@ -140,16 +140,14 @@ export const formatHighlightQuote = (
 };
 
 export const findFrontMatterIndex = (
-  frontMatter: { id: string }[],
+  frontMatter: any[],
   id: string
 ): number => {
   // find index of front matter with matching id
   return frontMatter.findIndex((fm) => fm.id == id);
 };
 
-export const parseFrontMatterFromContent = (
-  content: string
-): unknown | undefined => {
+export const parseFrontMatterFromContent = (content: string) => {
   // get front matter yaml from content
   const frontMatter = content.match(/^---\n(.*?)\n---/s);
   if (!frontMatter) {
