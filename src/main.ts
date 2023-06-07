@@ -273,7 +273,7 @@ export default class OmnivorePlugin extends Plugin {
               // get front matter from content
               let existingFrontMatter =
                 parseFrontMatterFromContent(existingContent) || [];
-              if (!existingFrontMatter || !Array.isArray(existingFrontMatter)) {
+              if (!Array.isArray(existingFrontMatter)) {
                 // convert front matter to array
                 existingFrontMatter = [existingFrontMatter];
               }
