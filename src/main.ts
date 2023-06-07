@@ -271,10 +271,11 @@ export default class OmnivorePlugin extends Plugin {
               const existingContentWithoutFrontmatter =
                 removeFrontMatterFromContent(existingContent);
               // get front matter from content
-              const existingFrontMatter =
-                parseFrontMatterFromContent(existingContent);
-              if (!existingFrontMatter || !Array.isArray(existingFrontMatter)) {
-                throw new Error("Front matter does not exist in the note");
+              let existingFrontMatter =
+                parseFrontMatterFromContent(existingContent) || [];
+              if (!Array.isArray(existingFrontMatter)) {
+                // convert front matter to array
+                existingFrontMatter = [existingFrontMatter];
               }
               const newFrontMatter = parseFrontMatterFromContent(content);
               if (
