@@ -29,7 +29,7 @@ export const DEFAULT_TEMPLATE = `# {{{title}}}
 ## Highlights
 
 {{#highlights}}
-> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #{{name}} {{/labels}}
+> {{{text}}} [⤴️]({{{highlightUrl}}}) {{#labels}} #{{name}} {{/labels}} ^{{{highlightID}}}
 {{#note}}
 
 {{{note}}}
@@ -198,7 +198,7 @@ export const renderArticleContnet = async (
     return {
       text: formatHighlightQuote(highlight.quote, template),
       highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
-      highlightID: highlight.id,
+      highlightID: highlight.id.slice(0, 8),
       dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
       note: highlight.annotation,
       labels: renderLabels(highlight.labels),
