@@ -209,13 +209,13 @@ export const renderArticleContnet = async (
     article.siteName || siteNameFromUrl(article.originalArticleUrl);
   const publishedAt = article.publishedAt;
   const datePublished = publishedAt
-    ? formatDate(publishedAt, dateSavedFormat)
+    ? formatDate(publishedAt, dateSavedFormat).trim()
     : undefined;
   const articleNote = article.highlights?.find(
     (h) => h.type === HighlightType.Note
   );
   const dateRead = article.readAt
-    ? formatDate(article.readAt, dateSavedFormat)
+    ? formatDate(article.readAt, dateSavedFormat).trim()
     : undefined;
   const wordsCount = article.wordsCount;
   const readLength = wordsCount
