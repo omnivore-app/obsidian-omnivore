@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.4.2...1.4.3) (2023-06-19)
+
+
+### Bug Fixes
+
+* failed to save note in windows by removing invisible characters in the filename ([cf99fc5](https://github.com/omnivore-app/obsidian-omnivore/commit/cf99fc5c26c12b9164ea689ab220d01c9d6d8810))
+
 ## [1.4.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.4.1...1.4.2) (2023-06-07)
 
 
