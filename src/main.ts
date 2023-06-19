@@ -24,14 +24,12 @@ import { FolderSuggest } from "./settings/file-suggest";
 import {
   preParseTemplate,
   renderArticleContnet,
-  renderAttachmentFolder,
   renderFilename,
   renderFolderName,
 } from "./settings/template";
 import {
   DATE_FORMAT,
   findFrontMatterIndex,
-  formatDate,
   getQueryFromFilter,
   parseDateTime,
   parseFrontMatterFromContent,
@@ -139,7 +137,7 @@ export default class OmnivorePlugin extends Plugin {
       contentType: "application/pdf",
     });
     const folderName = normalizePath(
-      renderAttachmentFolder(
+      renderFolderName(
         article,
         this.settings.attachmentFolder,
         this.settings.folderDateFormat
@@ -172,7 +170,6 @@ export default class OmnivorePlugin extends Plugin {
       template,
       folder,
       filename,
-      folderDateFormat,
       isSingleFile,
       frontMatterVariables,
       frontMatterTemplate,
@@ -225,12 +222,8 @@ export default class OmnivorePlugin extends Plugin {
         );
 
         for (const article of articles) {
-          const folderDate = formatDate(
-            article.savedAt,
-            this.settings.folderDateFormat
-          );
           const folderName = normalizePath(
-            renderFolderName(folder, folderDate)
+            renderFolderName(article, folder, this.settings.folderDateFormat)
           );
           const omnivoreFolder =
             this.app.vault.getAbstractFileByPath(folderName);
@@ -254,7 +247,7 @@ export default class OmnivorePlugin extends Plugin {
           );
           // use the custom filename
           const customFilename = replaceIllegalChars(
-            renderFilename(article, filename, folderDateFormat)
+            renderFilename(article, filename, this.settings.filenameDateFormat)
           );
           const pageName = `${folderName}/${customFilename}.md`;
           const normalizedPath = normalizePath(pageName);
@@ -597,7 +590,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Folder")
       .setDesc(
-        "Enter the folder where the data will be stored. {{{date}}} could be used in the folder name"
+        "Enter the folder where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name"
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl);
@@ -612,7 +605,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Attachment Folder")
       .setDesc(
-        "Enter the folder where the attachment will be downloaded to. {{{date}}} could be used in the folder name"
+        "Enter the folder where the attachment will be downloaded to. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name"
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl);
@@ -642,7 +635,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Filename")
       .setDesc(
-        "Enter the filename where the data will be stored. {{{title}}} and {{{date}}} could be used in the filename"
+        "Enter the filename where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename"
       )
       .addText((text) =>
         text
@@ -653,12 +646,36 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    new Setting(containerEl)
+      .setName("Filename Date Format")
+      .setDesc(
+        createFragment((fragment) => {
+          fragment.append(
+            "Enter the format date for use in rendered filename. Format ",
+            fragment.createEl("a", {
+              text: "reference",
+              href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",
+            })
+          );
+        })
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("yyyy-MM-dd")
+          .setValue(this.plugin.settings.filenameDateFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.filenameDateFormat = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     new Setting(containerEl)
       .setName("Folder Date Format")
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter the format date for use in rendered template. Format ",
+            "Enter the format date for use in rendered folder name. Format ",
             fragment.createEl("a", {
               text: "reference",
               href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",

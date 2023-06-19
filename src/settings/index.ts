@@ -33,6 +33,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   folderDateFormat: "yyyy-MM-dd",
   endpoint: "https://api-prod.omnivore.app/api/graphql",
   filename: "{{{title}}}",
+  filenameDateFormat: "yyyy-MM-dd",
   attachmentFolder: "Omnivore/attachments",
   version: "0.0.0",
   isSingleFile: false,
@@ -74,4 +75,5 @@ export interface OmnivoreSettings {
   intervalId: number;
   frontMatterVariables: string[];
   frontMatterTemplate: string;
+  filenameDateFormat: string;
 }

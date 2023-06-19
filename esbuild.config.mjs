@@ -31,7 +31,6 @@ esbuild.build({
 		'@lezer/common',
 		'@lezer/highlight',
 		'@lezer/lr',
-		'out-of-character',
 		...builtins],
 	format: 'cjs',
 	watch: !prod,
