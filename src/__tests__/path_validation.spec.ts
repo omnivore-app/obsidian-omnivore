@@ -19,6 +19,8 @@ const expectedManualIllegalChars: string[] = [
   "\u001F",
 ];
 
+const expectedInvisibleChars: string[] = ["­", "‍"];
+
 describe("replaceIllegalChars() removes all expected characters", () => {
   test.each(expectedManualIllegalChars)(
     'Illegal character "%s" is removed',
@@ -94,6 +96,19 @@ describe("file system behavior with non-alphanumeric characters not in the illeg
       fs.unlinkSync(input);
       // verify the file has been deleted
       expect(fs.existsSync(input)).toBe(false);
+    }
+  );
+});
+
+describe("replaceIllegalChars() function removes all occurrences of invisible characters", () => {
+  test.each(expectedInvisibleChars)(
+    "Invisible character '%s' is replaced",
+    (char) => {
+      const input = `${char}foo${char}bar`;
+      const expectedOutput = "foobar";
+      const output = replaceIllegalChars(input);
+      expect(output).toEqual(expectedOutput);
+      expect(output.match(ILLEGAL_CHAR_REGEX)).toBeNull();
     }
   );
 });
