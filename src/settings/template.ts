@@ -143,18 +143,6 @@ export const renderFilename = (
   });
 };
 
-export const renderAttachmentFolder = (
-  article: Article,
-  attachmentFolder: string,
-  folderDateFormat: string
-) => {
-  const date = formatDate(article.savedAt, folderDateFormat);
-  return Mustache.render(attachmentFolder, {
-    ...article,
-    date,
-  });
-};
-
 export const renderLabels = (labels?: LabelView[]) => {
   return labels?.map((l) => ({
     // replace spaces with underscores because Obsidian doesn't allow spaces in tags
@@ -326,9 +314,19 @@ export const renderArticleContnet = async (
   return `${frontMatterStr}\n\n${contentWithoutFrontMatter}`;
 };
 
-export const renderFolderName = (folder: string, folderDate: string) => {
-  return Mustache.render(folder, {
-    date: folderDate,
+export const renderFolderName = (
+  article: Article,
+  template: string,
+  dateFormat: string
+) => {
+  const date = formatDate(article.savedAt, dateFormat);
+  const datePublished = article.publishedAt
+    ? formatDate(article.publishedAt, dateFormat).trim()
+    : undefined;
+  return Mustache.render(template, {
+    date,
+    dateSaved: date,
+    datePublished,
   });
 };
 
