@@ -653,12 +653,36 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+      
+    new Setting(containerEl)
+      .setName("Filename Date Format")
+      .setDesc(
+        createFragment((fragment) => {
+          fragment.append(
+            "Enter the format date for use in rendered filename. Format ",
+            fragment.createEl("a", {
+              text: "reference",
+              href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",
+            })
+          );
+        })
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("yyyy-MM-dd")
+          .setValue(this.plugin.settings.filenameDateFormat)
+          .onChange(async (value) => {
+            this.plugin.settings.filenameDateFormat = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
     new Setting(containerEl)
       .setName("Folder Date Format")
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter the format date for use in rendered template. Format ",
+            "Enter the format date for use in rendered folder name. Format ",
             fragment.createEl("a", {
               text: "reference",
               href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",
