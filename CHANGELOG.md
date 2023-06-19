@@ -1,3 +1,12 @@
+# [1.5.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.4.3...1.5.0) (2023-06-19)
+
+
+### Features
+
+* add date format configuration for filename variable ([f1f0a2d](https://github.com/omnivore-app/obsidian-omnivore/commit/f1f0a2d36a119012b07f4d40271e3f09fe3486ce))
+* allow dataPublished and dateSaved to be used as filename ([22046e3](https://github.com/omnivore-app/obsidian-omnivore/commit/22046e35326bf7e51ddd193b33949a9c85eea869))
+* allow dataPublished and dateSaved to be used as folder name with folder date format ([3f8fb56](https://github.com/omnivore-app/obsidian-omnivore/commit/3f8fb565804db5fb81500b3cfffe32bff736e62a))
+
 ## [1.4.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.4.2...1.4.3) (2023-06-19)
 
 
