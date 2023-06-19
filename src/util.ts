@@ -2,6 +2,7 @@ import { diff_match_patch } from "diff-match-patch";
 import { DateTime } from "luxon";
 import escape from "markdown-escape";
 import { parseYaml } from "obsidian";
+import { replace } from "out-of-character";
 import { Highlight } from "./api";
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm";
@@ -91,7 +92,8 @@ export const unicodeSlug = (str: string, savedAt: string) => {
 };
 
 export const replaceIllegalChars = (str: string): string => {
-  return str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR);
+  // remove invisible characters
+  return replace(str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR));
 };
 
 export function formatDate(date: string, format: string): string {
