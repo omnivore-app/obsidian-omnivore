@@ -19,6 +19,7 @@ const expectedManualIllegalChars: string[] = [
   "\u001F",
 ];
 
+// ZERO WIDTH JOINER and SOFT HYPHEN
 const expectedInvisibleChars: string[] = ["­", "‍"];
 
 describe("replaceIllegalChars() removes all expected characters", () => {
