@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from 'builtin-modules'
+import builtins from 'builtin-modules';
 
 const banner =
 `/*
@@ -31,6 +31,7 @@ esbuild.build({
 		'@lezer/common',
 		'@lezer/highlight',
 		'@lezer/lr',
+		'out-of-character',
 		...builtins],
 	format: 'cjs',
 	watch: !prod,
