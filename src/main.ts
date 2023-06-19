@@ -172,7 +172,6 @@ export default class OmnivorePlugin extends Plugin {
       template,
       folder,
       filename,
-      folderDateFormat,
       isSingleFile,
       frontMatterVariables,
       frontMatterTemplate,
@@ -254,7 +253,7 @@ export default class OmnivorePlugin extends Plugin {
           );
           // use the custom filename
           const customFilename = replaceIllegalChars(
-            renderFilename(article, filename, folderDateFormat)
+            renderFilename(article, filename, this.settings.filenameDateFormat)
           );
           const pageName = `${folderName}/${customFilename}.md`;
           const normalizedPath = normalizePath(pageName);
@@ -642,7 +641,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Filename")
       .setDesc(
-        "Enter the filename where the data will be stored. {{{title}}} and {{{date}}} could be used in the filename"
+        "Enter the filename where the data will be stored. {{{title}}}, {{{date}}} and {{{datePublished}}} could be used in the filename"
       )
       .addText((text) =>
         text

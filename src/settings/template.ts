@@ -124,12 +124,17 @@ const functionMap: FunctionMap = {
 export const renderFilename = (
   article: Article,
   filename: string,
-  folderDateFormat: string
+  dateFormat: string
 ) => {
-  const date = formatDate(article.savedAt, folderDateFormat);
+  const date = formatDate(article.savedAt, dateFormat);
+  const datePublished = article.publishedAt
+    ? formatDate(article.publishedAt, dateFormat).trim()
+    : undefined;
   const renderedFilename = Mustache.render(filename, {
     ...article,
     date,
+    dateSaved: date,
+    datePublished,
   });
 
   // truncate the filename to 100 characters
