@@ -10,6 +10,7 @@ import {
   removeFrontMatterFromContent,
   siteNameFromUrl,
   snakeToCamelCase,
+  replaceIllegalChars,
 } from "../util";
 
 type FunctionMap = {
@@ -214,9 +215,10 @@ export const renderArticleContnet = async (
   const readLength = wordsCount
     ? Math.round(Math.max(1, wordsCount / 235))
     : undefined;
+  const cleanTitle = replaceIllegalChars(article.title);
   const articleView: ArticleView = {
     id: article.id,
-    title: article.title,
+    title: cleanTitle,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
     siteName,
     originalUrl: article.originalArticleUrl,
