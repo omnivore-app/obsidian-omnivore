@@ -2,6 +2,7 @@ import { diff_match_patch } from "diff-match-patch";
 import { DateTime } from "luxon";
 import escape from "markdown-escape";
 import { parseYaml } from "obsidian";
+import outOfCharacter from "out-of-character";
 import { Highlight } from "./api";
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm";
@@ -169,6 +170,5 @@ export const snakeToCamelCase = (str: string) =>
   str.replace(/(_[a-z])/g, (group) => group.toUpperCase().replace("_", ""));
 
 const removeInvisibleChars = (str: string): string => {
-  // eslint-disable-next-line no-control-regex
-  return str.replace(/[^\u0000-\u007E]/g, "");
+  return outOfCharacter.replace(str);
 };
