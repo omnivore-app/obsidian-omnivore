@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.5.0...1.5.1) (2023-06-21)
+
+
+### Bug Fixes
+
+* unicode in filename is deleted ([1c7458a](https://github.com/omnivore-app/obsidian-omnivore/commit/1c7458a9eccc9ee4e86de1ff5c75a56835113ce3))
+
 # [1.5.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.4.3...1.5.0) (2023-06-19)
 
 
