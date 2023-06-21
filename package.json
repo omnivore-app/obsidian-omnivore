@@ -49,9 +49,11 @@
 		"luxon": "^3.1.1",
 		"markdown-escape": "^2.0.0",
 		"mustache": "^4.2.0",
+		"out-of-character": "^1.2.1",
 		"process": "^0.11.10"
 	},
 	"volta": {
-		"node": "16.15.1"
+		"node": "16.15.1",
+		"yarn": "1.22.19"
 	}
 }

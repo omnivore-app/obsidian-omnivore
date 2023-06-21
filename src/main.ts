@@ -215,7 +215,7 @@ export default class OmnivorePlugin extends Plugin {
           apiKey,
           after,
           size,
-          parseDateTime(syncAt).toISO(),
+          parseDateTime(syncAt).toISO() || undefined,
           getQueryFromFilter(filter, customQuery),
           includeContent,
           "highlightedMarkdown"

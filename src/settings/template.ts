@@ -131,7 +131,7 @@ export const renderFilename = (
     ? formatDate(article.publishedAt, dateFormat).trim()
     : undefined;
   const renderedFilename = Mustache.render(filename, {
-    ...article,
+    title: article.title,
     date,
     dateSaved: date,
     datePublished,
