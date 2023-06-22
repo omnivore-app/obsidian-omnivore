@@ -18,13 +18,19 @@ export interface HighlightPoint {
   top: number;
 }
 
-export const getHighlightLocation = (patch: string): number => {
+export const getHighlightLocation = (patch: string | null): number => {
+  if (!patch) {
+    return 0;
+  }
   const dmp = new diff_match_patch();
   const patches = dmp.patch_fromText(patch);
   return patches[0].start1 || 0;
 };
 
-export const getHighlightPoint = (patch: string): HighlightPoint => {
+export const getHighlightPoint = (patch: string | null): HighlightPoint => {
+  if (!patch) {
+    return { left: 0, top: 0 };
+  }
   const { bbox } = JSON.parse(patch) as { bbox: number[] };
   if (!bbox || bbox.length !== 4) {
     return { left: 0, top: 0 };
@@ -129,9 +135,12 @@ export const siteNameFromUrl = (originalArticleUrl: string): string => {
 };
 
 export const formatHighlightQuote = (
-  quote: string,
+  quote: string | null,
   template: string
 ): string => {
+  if (!quote) {
+    return "";
+  }
   // if the template has highlights, we need to preserve paragraphs
   const regex = /{{#highlights}}(\n)*>/gm;
   if (regex.test(template)) {
