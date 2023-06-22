@@ -58,9 +58,9 @@ export enum HighlightType {
 
 export interface Highlight {
   id: string;
-  quote: string;
-  annotation: string;
-  patch: string;
+  quote: string | null;
+  annotation: string | null;
+  patch: string | null;
   updatedAt: string;
   labels?: Label[];
   type: HighlightType;

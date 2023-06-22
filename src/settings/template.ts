@@ -193,7 +193,7 @@ export const renderArticleContnet = async (
       highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
       highlightID: highlight.id.slice(0, 8),
       dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
-      note: highlight.annotation,
+      note: highlight.annotation ?? undefined,
       labels: renderLabels(highlight.labels),
     };
   });
@@ -228,7 +228,7 @@ export const renderArticleContnet = async (
     datePublished,
     fileAttachment,
     description: article.description,
-    note: articleNote?.annotation,
+    note: articleNote?.annotation ?? undefined,
     type: article.pageType,
     dateRead,
     wordsCount,
