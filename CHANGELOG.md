@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.5.1...1.5.2) (2023-06-22)
+
+
+### Bug Fixes
+
+* failed to fetch highlight when quote is null ([2dc2fcc](https://github.com/omnivore-app/obsidian-omnivore/commit/2dc2fcc8361f3fec81093ac2febc7fce047515f5))
+
 ## [1.5.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.5.0...1.5.1) (2023-06-21)
 
 
