@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.5.2...1.5.3) (2023-06-23)
+
+
+### Bug Fixes
+
+* incorrect highlight position by incorrectly using highlight position percentage which old highlights do not have it ([76a120f](https://github.com/omnivore-app/obsidian-omnivore/commit/76a120f6c8c19d7bbb25093027a8ae2315241ed5))
+
 ## [1.5.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.5.1...1.5.2) (2023-06-22)
 
 
