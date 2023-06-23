@@ -168,13 +168,6 @@ export const renderArticleContnet = async (
   if (highlightOrder === "LOCATION") {
     articleHighlights.sort((a, b) => {
       try {
-        // sort by highlight position percent if available
-        if (
-          a.highlightPositionPercent !== undefined &&
-          b.highlightPositionPercent !== undefined
-        ) {
-          return a.highlightPositionPercent - b.highlightPositionPercent;
-        }
         if (article.pageType === PageType.File) {
           // sort by location in file
           return compareHighlightsInFile(a, b);
