@@ -11,6 +11,16 @@ export interface SearchResponse {
   };
 }
 
+export interface DeleteArticleResponse {
+    "data": {
+        "setBookmarkArticle": {
+            "bookmarkedArticle": {
+                "id": string
+            }
+        }
+    }
+}
+
 export enum PageType {
   Article = "ARTICLE",
   Book = "BOOK",
@@ -140,8 +150,7 @@ export const loadArticles = async (
       variables: {
         after: `${after}`,
         first,
-        query: `${
-          updatedAt ? "updated:" + updatedAt : ""
+       query: `${updatedAt ? "updated:" + updatedAt : ""
         } sort:saved-asc ${query}`,
         includeContent,
         format,
@@ -155,3 +164,40 @@ export const loadArticles = async (
 
   return [articles, jsonRes.data.search.pageInfo.hasNextPage];
 };
+
+
+export const deleteArticleById = async (endpoint: string, apiKey: string, articleId: string) => {
+  const res = await requestUrl({
+      url: endpoint,
+      headers: requestHeaders(apiKey),
+      body: JSON.stringify({
+          query: `
+              mutation SetBookmarkArticle($input: SetBookmarkArticleInput!) {
+                  setBookmarkArticle(input: $input) {
+                      ... on SetBookmarkArticleSuccess {
+                          bookmarkedArticle {
+                              id
+                          }
+                      }
+                      ... on SetBookmarkArticleError {
+                          errorCodes
+                      }
+                  }
+              }`,
+          variables: {
+              input: {
+                  "articleID": articleId,
+                  "bookmark": false
+              }
+          },
+      }),
+      method: "POST",
+  });
+
+  const jsonRes = res.json as DeleteArticleResponse;
+  if (jsonRes.data.setBookmarkArticle.bookmarkedArticle.id === articleId) {
+      return true;
+  }
+
+  return false
+}
