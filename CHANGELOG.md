@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.5.3...1.6.0) (2023-08-03)
+
+
+### Features
+
+* Now I can delete article from omnivore!!! ([3715beb](https://github.com/omnivore-app/obsidian-omnivore/commit/3715beba7d1ee407315a9a7439c6ffce7f1676a2))
+
 ## [1.5.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.5.2...1.5.3) (2023-06-23)
 
 
