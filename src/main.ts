@@ -70,7 +70,7 @@ export default class OmnivorePlugin extends Plugin {
         id: "deleteArticle",
         name: "Delete Current Article from Omnivore",
         callback: () => {
-            this.deleteCurrentArticle(this.app.workspace.getActiveFile());
+          this.deleteCurrentArticle(this.app.workspace.getActiveFile());
         }
     })
 
@@ -378,7 +378,7 @@ export default class OmnivorePlugin extends Plugin {
     }
   }
 
-  private deleteCurrentArticle(file: TFile | null) {
+  private async deleteCurrentArticle(file: TFile | null) {
     if(!file) {
         return
     }
@@ -389,13 +389,16 @@ export default class OmnivorePlugin extends Plugin {
     }
 
     try{
-        deleteArticleById(this.settings.endpoint, this.settings.apiKey, articleId)
+        const isDeleted = deleteArticleById(this.settings.endpoint, this.settings.apiKey, articleId)
+        if(!isDeleted) {
+            new Notice("Failed to delete article in Omnivore");
+        }
     } catch (e) {
         new Notice("Failed to delete article in Omnivore");
         console.error(e);
     }
 
-    this.app.vault.delete(file)
+    await this.app.vault.delete(file)
   }
 
   private async resetSyncingStateSetting() {
