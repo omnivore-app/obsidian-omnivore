@@ -12,7 +12,7 @@ import {
   TFile,
   TFolder,
 } from "obsidian";
-import { Article, loadArticles, PageType } from "./api";
+import { Article, deleteArticleById, loadArticles, PageType } from "./api";
 import {
   DEFAULT_SETTINGS,
   Filter,
@@ -65,6 +65,14 @@ export default class OmnivorePlugin extends Plugin {
         this.fetchOmnivore();
       },
     });
+
+    this.addCommand({
+        id: "deleteArticle",
+        name: "Delete Current Article from Omnivore",
+        callback: () => {
+            this.deleteCurrentArticle(this.app.workspace.getActiveFile());
+        }
+    })
 
     this.addCommand({
       id: "resync",
@@ -368,6 +376,26 @@ export default class OmnivorePlugin extends Plugin {
       this.settings.syncing = false;
       await this.saveSettings();
     }
+  }
+
+  private deleteCurrentArticle(file: TFile | null) {
+    if(!file) {
+        return
+    }
+    //use frontmatter id to find the file
+    const articleId = this.app.metadataCache.getFileCache(file)?.frontmatter?.id
+    if (!articleId) {
+        new Notice("Failed to delete article: article id not found");
+    }
+
+    try{
+        deleteArticleById(this.settings.endpoint, this.settings.apiKey, articleId)
+    } catch (e) {
+        new Notice("Failed to delete article in Omnivore");
+        console.error(e);
+    }
+
+    this.app.vault.delete(file)
   }
 
   private async resetSyncingStateSetting() {
