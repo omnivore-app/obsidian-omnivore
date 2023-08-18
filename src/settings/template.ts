@@ -135,6 +135,7 @@ export const renderFilename = (
     date,
     dateSaved: date,
     datePublished,
+    labels: article.labels || [],
   });
 
   // truncate the filename to 100 characters
@@ -320,6 +321,8 @@ export const renderFolderName = (
     date,
     dateSaved: date,
     datePublished,
+    labels: article.labels || [],
+    title: article.title,
   });
 };
 
