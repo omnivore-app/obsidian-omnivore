@@ -1,4 +1,4 @@
-import { truncate } from "lodash";
+import { truncate, unescape } from "lodash";
 import Mustache from "mustache";
 import { parseYaml, stringifyYaml } from "obsidian";
 import { Article, HighlightType, PageType } from "../api";
@@ -183,6 +183,7 @@ export const renderArticleContnet = async (
   const highlights: HighlightView[] = articleHighlights.map((highlight) => {
     return {
       text: formatHighlightQuote(highlight.quote, template),
+      unescapeText: unescape(highlight.quote),
       highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
       highlightID: highlight.id.slice(0, 8),
       dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
