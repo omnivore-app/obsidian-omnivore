@@ -469,7 +469,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
               text: "https://omnivore.app/help/search",
               href: "https://omnivore.app/help/search",
             }),
-            " for more info on search query syntax"
+            " for more info on search query syntax. Make sure your Filter (in the section above) is set to advanced when using a custom query."
           );
         })
       )
