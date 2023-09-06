@@ -132,6 +132,7 @@ export const renderFilename = (
     : undefined;
   const renderedFilename = Mustache.render(filename, {
     title: article.title,
+    author: article.author ?? "unknown-author",
     date,
     dateSaved: date,
     datePublished,
@@ -320,6 +321,7 @@ export const renderFolderName = (
     date,
     dateSaved: date,
     datePublished,
+    author: article.author ?? "unknown-author",
   });
 };
 
