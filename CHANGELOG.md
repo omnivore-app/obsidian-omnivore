@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.6.0...1.6.1) (2023-09-07)
+
+
+### Bug Fixes
+
+* Update link to search in docs ([558cdc4](https://github.com/omnivore-app/obsidian-omnivore/commit/558cdc46ff2f9cf075c68d6e998b947a9bffec87))
+
 # [1.6.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.5.3...1.6.0) (2023-08-03)
 
 
