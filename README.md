@@ -6,7 +6,7 @@ This plugin imports your saved [Omnivore](https://omnivore.app/) articles and hi
 
 * Import your highlights and saved article
 * Create graphs based on Omnivore data
-* Filter imported data using Omnivores [advanced search syntax](https://omnivore.app/help/search)
+* Filter imported data using Omnivores [advanced search syntax](https://docs.omnivore.app/using/search.html)
 * Custom templates for imported data
 
 ## Installation
