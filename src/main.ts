@@ -466,8 +466,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
           fragment.append(
             "See ",
             fragment.createEl("a", {
-              text: "https://omnivore.app/help/search",
-              href: "https://omnivore.app/help/search",
+              text: "https://docs.omnivore.app/using/search.html",
+              href: "https://docs.omnivore.app/using/search.html",
             }),
             " for more info on search query syntax. Make sure your Filter (in the section above) is set to advanced when using a custom query."
           );
