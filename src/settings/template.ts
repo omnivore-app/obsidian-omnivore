@@ -189,6 +189,7 @@ export const renderArticleContnet = async (
       dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
       note: highlight.annotation ?? undefined,
       labels: renderLabels(highlight.labels),
+      color: highlight.color ?? 'yellow',
     };
   });
   const dateSaved = formatDate(article.savedAt, dateSavedFormat);

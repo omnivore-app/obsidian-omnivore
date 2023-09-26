@@ -75,6 +75,7 @@ export interface Highlight {
   labels?: Label[];
   type: HighlightType;
   highlightPositionPercent?: number;
+  color?: string;
 }
 
 const requestHeaders = (apiKey: string) => ({
@@ -132,6 +133,7 @@ export const loadArticles = async (
                     labels {
                       name
                     }
+                    color
                   }
                   labels {
                     name
