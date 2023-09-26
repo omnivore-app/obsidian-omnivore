@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.6.1...1.6.2) (2023-09-26)
+
+
+### Bug Fixes
+
+* highlight color not available in the template ([e90807d](https://github.com/omnivore-app/obsidian-omnivore/commit/e90807d8ea43a0f0699856f4ea6281839a2c9c64))
+
 ## [1.6.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.6.0...1.6.1) (2023-09-07)
 
 
