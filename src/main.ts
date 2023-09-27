@@ -363,7 +363,17 @@ export default class OmnivorePlugin extends Plugin {
             continue;
           }
           // file doesn't exist, so we need to create it
-          await this.app.vault.create(normalizedPath, content);
+          try {
+            await this.app.vault.create(normalizedPath, content);
+          } catch (error) {
+            if (error.toString().includes("File already exists")) {
+              new Notice(
+                `Skipping file creation: ${normalizedPath}. Please check if you have duplicated article titles and delete the file if needed.`
+              );
+            } else {
+              throw error;
+            }
+          }
         }
       }
 
