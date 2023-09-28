@@ -11,7 +11,7 @@ This plugin imports your saved [Omnivore](https://omnivore.app/) articles and hi
 
 ## Installation
 
-1. Install the plugin from the commnunity or build it from source and load unpacked plugin
+1. Install the plugin from the community or build it from source and load unpacked plugin
 2. Sign up for an [Omnivore account](https://omnivore.app)
 3. Go to [Omnivore](https://omnivore.app/settings/api) and Create an API key
 4. Open settings and add your api key
