@@ -123,6 +123,9 @@ function formatDateFunc() {
     // get the date and format from the text
     const [dateVariable, format] = text.split(",", 2);
     const date = render(dateVariable);
+    if (!date) {
+      return "";
+    }
     // format the date
     return formatDate(date, format);
   };
