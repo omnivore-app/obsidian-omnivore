@@ -54,6 +54,7 @@ export interface Article {
   readingProgressPercent: number;
   isArchived: boolean;
   archivedAt?: string;
+  contentReader?: string;
 }
 
 export interface Label {
@@ -122,6 +123,7 @@ export const loadArticles = async (
                   isArchived
                   readingProgressPercent
                   archivedAt
+                  contentReader
                   highlights {
                     id
                     quote

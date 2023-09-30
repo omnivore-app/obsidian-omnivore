@@ -62,7 +62,7 @@ export type ArticleView =
       labels?: LabelView[];
       dateSaved: string;
       highlights: HighlightView[];
-      content: string;
+      content?: string;
       datePublished?: string;
       fileAttachment?: string;
       description?: string;
@@ -219,7 +219,7 @@ export const renderArticleContnet = async (
     labels: renderLabels(article.labels),
     dateSaved,
     highlights,
-    content: article.content,
+    content: article.contentReader === 'WEB' ? article.content : undefined,
     datePublished,
     fileAttachment,
     description: article.description,
