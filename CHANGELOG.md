@@ -1,3 +1,12 @@
+## [1.6.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.6.2...1.6.3) (2023-09-30)
+
+
+### Bug Fixes
+
+* file already exists error caused by having duplicate article titles ([8dec30f](https://github.com/omnivore-app/obsidian-omnivore/commit/8dec30fae3d62428d176a524b9f2e4d91fe14b8c))
+* ribbon icon stroke color does not match the theme color ([dbe46a8](https://github.com/omnivore-app/obsidian-omnivore/commit/dbe46a835ab96f628823a9dca1d77d845a943549))
+* search content was returned if we are syncing a pdf ([3c10e1a](https://github.com/omnivore-app/obsidian-omnivore/commit/3c10e1a1c4183892e82301bf85ab4e1244c22a06))
+
 ## [1.6.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.6.1...1.6.2) (2023-09-26)
 
 
