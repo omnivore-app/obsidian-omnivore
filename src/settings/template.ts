@@ -49,6 +49,9 @@ export interface HighlightView {
   dateHighlighted: string;
   note?: string;
   labels?: LabelView[];
+  color: string;
+  positionPercent: number;
+  positionAnchorIndex: number;
 }
 
 export type ArticleView =
@@ -190,6 +193,8 @@ export const renderArticleContnet = async (
       note: highlight.annotation ?? undefined,
       labels: renderLabels(highlight.labels),
       color: highlight.color ?? 'yellow',
+      positionPercent: highlight.highlightPositionPercent,
+      positionAnchorIndex: highlight.highlightPositionAnchorIndex,
     };
   });
   const dateSaved = formatDate(article.savedAt, dateSavedFormat);
