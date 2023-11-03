@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.6.3...1.7.0) (2023-11-03)
+
+
+### Features
+
+* expose positionPercent and positionAnchorIndex variables in highlight template ([#150](https://github.com/omnivore-app/obsidian-omnivore/issues/150)) ([fa3bd32](https://github.com/omnivore-app/obsidian-omnivore/commit/fa3bd3251a520e9cfd0c0cee85b7077632449fd1))
+
 ## [1.6.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.6.2...1.6.3) (2023-09-30)
 
 
