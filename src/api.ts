@@ -75,8 +75,9 @@ export interface Highlight {
   updatedAt: string;
   labels?: Label[];
   type: HighlightType;
-  highlightPositionPercent?: number;
+  highlightPositionPercent: number;
   color?: string;
+  highlightPositionAnchorIndex: number;
 }
 
 const requestHeaders = (apiKey: string) => ({
@@ -132,6 +133,7 @@ export const loadArticles = async (
                     updatedAt
                     type
                     highlightPositionPercent
+                    highlightPositionAnchorIndex
                     labels {
                       name
                     }
