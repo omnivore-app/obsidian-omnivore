@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.7.0...1.7.1) (2023-11-06)
+
+
+### Bug Fixes
+
+* add a lambda function in the template to allow users to format date ([#136](https://github.com/omnivore-app/obsidian-omnivore/issues/136)) ([fb961e7](https://github.com/omnivore-app/obsidian-omnivore/commit/fb961e7de69118eb2dab6512f7b3fcc13c494e1c))
+
 # [1.7.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.6.3...1.7.0) (2023-11-03)
 
 
