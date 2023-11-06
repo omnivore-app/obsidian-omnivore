@@ -118,10 +118,24 @@ function upperCaseFirst() {
   };
 }
 
+function formatDateFunc() {
+  return function (text: string, render: (text: string) => string) {
+    // get the date and format from the text
+    const [dateVariable, format] = text.split(",", 2);
+    const date = render(dateVariable);
+    if (!date) {
+      return "";
+    }
+    // format the date
+    return formatDate(date, format);
+  };
+}
+
 const functionMap: FunctionMap = {
   lowerCase,
   upperCase,
   upperCaseFirst,
+  formatDate: formatDateFunc,
 };
 
 export const renderFilename = (
