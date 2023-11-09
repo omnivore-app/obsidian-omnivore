@@ -153,6 +153,7 @@ export const renderFilename = (
     date,
     dateSaved: date,
     datePublished,
+    id: article.id,
   });
 
   // truncate the filename to 100 characters
