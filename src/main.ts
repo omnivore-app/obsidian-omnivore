@@ -672,7 +672,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Filename")
       .setDesc(
-        "Enter the filename where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename"
+        "Enter the filename where the data will be stored. {{id}}, {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename"
       )
       .addText((text) =>
         text
