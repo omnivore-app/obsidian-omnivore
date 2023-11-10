@@ -1,3 +1,15 @@
+# [1.8.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.7.1...1.8.0) (2023-11-10)
+
+
+### Bug Fixes
+
+* PDF page numbers start at 1 ([#155](https://github.com/omnivore-app/obsidian-omnivore/issues/155)) ([c69459c](https://github.com/omnivore-app/obsidian-omnivore/commit/c69459cc4ad5c696742dbb2fbf49ffba3bc1c5b5))
+
+
+### Features
+
+* use id as filename ([#154](https://github.com/omnivore-app/obsidian-omnivore/issues/154)) ([74e255a](https://github.com/omnivore-app/obsidian-omnivore/commit/74e255ab51a389f5c4f8ab25b5f14b0b17be3999))
+
 ## [1.7.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.7.0...1.7.1) (2023-11-06)
 
 
