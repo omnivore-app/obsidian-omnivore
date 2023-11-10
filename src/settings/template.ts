@@ -209,7 +209,7 @@ export const renderArticleContnet = async (
       labels: renderLabels(highlight.labels),
       color: highlight.color ?? 'yellow',
       positionPercent: highlight.highlightPositionPercent,
-      positionAnchorIndex: highlight.highlightPositionAnchorIndex,
+      positionAnchorIndex: highlight.highlightPositionAnchorIndex + 1, // PDF page numbers start at 1
     };
   });
   const dateSaved = formatDate(article.savedAt, dateSavedFormat);
