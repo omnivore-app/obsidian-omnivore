@@ -9,6 +9,10 @@ indent_style = tab
 indent_size = 4
 tab_width = 4
 
+[*.yml]
+indent_style = space
+indent_size = 2
+
 # 2 space indentation
 [*.{ts,js}]
 indent_style = space
