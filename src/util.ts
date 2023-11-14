@@ -1,17 +1,17 @@
-import { diff_match_patch } from "diff-match-patch";
-import { DateTime } from "luxon";
-import escape from "markdown-escape";
-import { parseYaml } from "obsidian";
-import outOfCharacter from "out-of-character";
-import { Highlight } from "./api";
+import { diff_match_patch } from "diff-match-patch"
+import { DateTime } from "luxon"
+import escape from "markdown-escape"
+import { parseYaml } from "obsidian"
+import outOfCharacter from "out-of-character"
+import { Highlight } from "./api"
 
-export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm";
-export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`;
-export const REPLACEMENT_CHAR = "-";
+export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
+export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`
+export const REPLACEMENT_CHAR = "-"
 // On Unix-like systems / is reserved and <>:"/\|?* as well as non-printable characters \u0000-\u001F on Windows
 // credit: https://github.com/sindresorhus/filename-reserved-regex
 // eslint-disable-next-line no-control-regex
-export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g;
+export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g
 
 export interface HighlightPoint {
   left: number;
@@ -20,60 +20,60 @@ export interface HighlightPoint {
 
 export const getHighlightLocation = (patch: string | null): number => {
   if (!patch) {
-    return 0;
+    return 0
   }
-  const dmp = new diff_match_patch();
-  const patches = dmp.patch_fromText(patch);
-  return patches[0].start1 || 0;
-};
+  const dmp = new diff_match_patch()
+  const patches = dmp.patch_fromText(patch)
+  return patches[0].start1 || 0
+}
 
 export const getHighlightPoint = (patch: string | null): HighlightPoint => {
   if (!patch) {
-    return { left: 0, top: 0 };
+    return { left: 0, top: 0 }
   }
-  const { bbox } = JSON.parse(patch) as { bbox: number[] };
+  const { bbox } = JSON.parse(patch) as { bbox: number[] }
   if (!bbox || bbox.length !== 4) {
-    return { left: 0, top: 0 };
+    return { left: 0, top: 0 }
   }
-  return { left: bbox[0], top: bbox[1] };
-};
+  return { left: bbox[0], top: bbox[1] }
+}
 
 export const compareHighlightsInFile = (a: Highlight, b: Highlight): number => {
   // get the position of the highlight in the file
-  const highlightPointA = getHighlightPoint(a.patch);
-  const highlightPointB = getHighlightPoint(b.patch);
+  const highlightPointA = getHighlightPoint(a.patch)
+  const highlightPointB = getHighlightPoint(b.patch)
   if (highlightPointA.top === highlightPointB.top) {
     // if top is same, sort by left
-    return highlightPointA.left - highlightPointB.left;
+    return highlightPointA.left - highlightPointB.left
   }
   // sort by top
-  return highlightPointA.top - highlightPointB.top;
-};
+  return highlightPointA.top - highlightPointB.top
+}
 
 export const markdownEscape = (text: string): string => {
   try {
-    return escape(text);
+    return escape(text)
   } catch (e) {
-    console.error("markdownEscape error", e);
-    return text;
+    console.error("markdownEscape error", e)
+    return text
   }
-};
+}
 
 export const escapeQuotationMarks = (text: string): string => {
-  return text.replace(/"/g, '\\"');
-};
+  return text.replace(/"/g, '\\"')
+}
 
 export const parseDateTime = (str: string): DateTime => {
-  const res = DateTime.fromFormat(str, DATE_FORMAT);
+  const res = DateTime.fromFormat(str, DATE_FORMAT)
   if (res.isValid) {
-    return res;
+    return res
   }
-  return DateTime.fromFormat(str, DATE_FORMAT_W_OUT_SECONDS);
-};
+  return DateTime.fromFormat(str, DATE_FORMAT_W_OUT_SECONDS)
+}
 
 export const wrapAround = (value: number, size: number): number => {
-  return ((value % size) + size) % size;
-};
+  return ((value % size) + size) % size
+}
 
 export const unicodeSlug = (str: string, savedAt: string) => {
   return (
@@ -94,20 +94,20 @@ export const unicodeSlug = (str: string, savedAt: string) => {
       .substring(0, 64) +
     "-" +
     new Date(savedAt).getTime().toString(16)
-  );
-};
+  )
+}
 
 export const replaceIllegalChars = (str: string): string => {
   return removeInvisibleChars(
     str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR)
-  );
-};
+  )
+}
 
 export function formatDate(date: string, format: string): string {
   if (isNaN(Date.parse(date))) {
-    throw new Error(`Invalid date: ${date}`);
+    throw new Error(`Invalid date: ${date}`)
   }
-  return DateTime.fromJSDate(new Date(date)).toFormat(format);
+  return DateTime.fromJSDate(new Date(date)).toFormat(format)
 }
 
 export const getQueryFromFilter = (
@@ -116,68 +116,68 @@ export const getQueryFromFilter = (
 ): string => {
   switch (filter) {
     case "ALL":
-      return "";
+      return ""
     case "HIGHLIGHTS":
-      return `has:highlights`;
+      return `has:highlights`
     case "ADVANCED":
-      return customQuery;
+      return customQuery
     default:
-      return "";
+      return ""
   }
-};
+}
 
 export const siteNameFromUrl = (originalArticleUrl: string): string => {
   try {
-    return new URL(originalArticleUrl).hostname.replace(/^www\./, "");
+    return new URL(originalArticleUrl).hostname.replace(/^www\./, "")
   } catch {
-    return "";
+    return ""
   }
-};
+}
 
 export const formatHighlightQuote = (
   quote: string | null,
   template: string
 ): string => {
   if (!quote) {
-    return "";
+    return ""
   }
   // if the template has highlights, we need to preserve paragraphs
-  const regex = /{{#highlights}}(\n)*>/gm;
+  const regex = /{{#highlights}}(\n)*>/gm
   if (regex.test(template)) {
     // replace all empty lines with blockquote '>' to preserve paragraphs
-    quote = quote.replaceAll("&gt;", ">").replaceAll(/\n/gm, "\n> ");
+    quote = quote.replaceAll("&gt;", ">").replaceAll(/\n/gm, "\n> ")
   }
 
-  return quote;
-};
+  return quote
+}
 
 export const findFrontMatterIndex = (
   frontMatter: any[],
   id: string
 ): number => {
   // find index of front matter with matching id
-  return frontMatter.findIndex((fm) => fm.id == id);
-};
+  return frontMatter.findIndex((fm) => fm.id == id)
+}
 
 export const parseFrontMatterFromContent = (content: string) => {
   // get front matter yaml from content
-  const frontMatter = content.match(/^---\n(.*?)\n---/s);
+  const frontMatter = content.match(/^---\n(.*?)\n---/s)
   if (!frontMatter) {
-    return undefined;
+    return undefined
   }
   // parse yaml
-  return parseYaml(frontMatter[1]);
-};
+  return parseYaml(frontMatter[1])
+}
 
 export const removeFrontMatterFromContent = (content: string): string => {
-  const frontMatterRegex = /^---.*?---\n*/s;
+  const frontMatterRegex = /^---.*?---\n*/s
 
-  return content.replace(frontMatterRegex, "");
-};
+  return content.replace(frontMatterRegex, "")
+}
 
 export const snakeToCamelCase = (str: string) =>
-  str.replace(/(_[a-z])/g, (group) => group.toUpperCase().replace("_", ""));
+  str.replace(/(_[a-z])/g, (group) => group.toUpperCase().replace("_", ""))
 
 const removeInvisibleChars = (str: string): string => {
-  return outOfCharacter.replace(str);
-};
+  return outOfCharacter.replace(str)
+}
