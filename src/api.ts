@@ -1,89 +1,89 @@
-import { requestUrl } from "obsidian"
+import { requestUrl } from 'obsidian'
 
 export interface SearchResponse {
   data: {
     search: {
-      edges: { node: Article }[];
+      edges: { node: Article }[]
       pageInfo: {
-        hasNextPage: boolean;
-      };
-    };
-  };
+        hasNextPage: boolean
+      }
+    }
+  }
 }
 
 export interface DeleteArticleResponse {
-    "data": {
-        "setBookmarkArticle": {
-            "bookmarkedArticle": {
-                "id": string
-            }
-        }
+  data: {
+    setBookmarkArticle: {
+      bookmarkedArticle: {
+        id: string
+      }
     }
+  }
 }
 
 export enum PageType {
-  Article = "ARTICLE",
-  Book = "BOOK",
-  File = "FILE",
-  Profile = "PROFILE",
-  Unknown = "UNKNOWN",
-  Website = "WEBSITE",
-  Tweet = "TWEET",
-  Video = "VIDEO",
-  Image = "IMAGE",
+  Article = 'ARTICLE',
+  Book = 'BOOK',
+  File = 'FILE',
+  Profile = 'PROFILE',
+  Unknown = 'UNKNOWN',
+  Website = 'WEBSITE',
+  Tweet = 'TWEET',
+  Video = 'VIDEO',
+  Image = 'IMAGE',
 }
 
 export interface Article {
-  id: string;
-  title: string;
-  siteName: string;
-  originalArticleUrl: string;
-  author?: string;
-  description?: string;
-  slug: string;
-  labels?: Label[];
-  highlights?: Highlight[];
-  updatedAt: string;
-  savedAt: string;
-  pageType: PageType;
-  content: string;
-  publishedAt?: string;
-  url: string;
-  readAt?: string;
-  wordsCount?: number;
-  readingProgressPercent: number;
-  isArchived: boolean;
-  archivedAt?: string;
-  contentReader?: string;
+  id: string
+  title: string
+  siteName: string
+  originalArticleUrl: string
+  author?: string
+  description?: string
+  slug: string
+  labels?: Label[]
+  highlights?: Highlight[]
+  updatedAt: string
+  savedAt: string
+  pageType: PageType
+  content: string
+  publishedAt?: string
+  url: string
+  readAt?: string
+  wordsCount?: number
+  readingProgressPercent: number
+  isArchived: boolean
+  archivedAt?: string
+  contentReader?: string
 }
 
 export interface Label {
-  name: string;
+  name: string
 }
 
 export enum HighlightType {
-  Highlight = "HIGHLIGHT",
-  Note = "NOTE",
-  Redaction = "REDACTION",
+  Highlight = 'HIGHLIGHT',
+  Note = 'NOTE',
+  Redaction = 'REDACTION',
 }
 
 export interface Highlight {
-  id: string;
-  quote: string | null;
-  annotation: string | null;
-  patch: string | null;
-  updatedAt: string;
-  labels?: Label[];
-  type: HighlightType;
-  highlightPositionPercent: number;
-  color?: string;
-  highlightPositionAnchorIndex: number;
+  id: string
+  quote: string | null
+  annotation: string | null
+  patch: string | null
+  updatedAt: string
+  labels?: Label[]
+  type: HighlightType
+  highlightPositionPercent: number
+  color?: string
+  highlightPositionAnchorIndex: number
 }
 
 const requestHeaders = (apiKey: string) => ({
-  "Content-Type": "application/json",
+  'Content-Type': 'application/json',
   authorization: apiKey,
-  "X-OmnivoreClient": "obsidian-plugin",
+  'X-OmnivoreClient': 'obsidian-plugin',
 })
 
 export const loadArticles = async (
@@ -91,10 +91,10 @@ export const loadArticles = async (
   apiKey: string,
   after = 0,
   first = 10,
-  updatedAt = "",
-  query = "",
+  updatedAt = '',
+  query = '',
   includeContent = false,
-  format = "html"
+  format = 'html'
 ): Promise<[Article[], boolean]> => {
   const res = await requestUrl({
     url: endpoint,
@@ -156,13 +156,14 @@ export const loadArticles = async (
       variables: {
         after: `${after}`,
         first,
-       query: `${updatedAt ? "updated:" + updatedAt : ""
+        query: `${
+          updatedAt ? 'updated:' + updatedAt : ''
         } sort:saved-asc ${query}`,
         includeContent,
         format,
       },
     }),
-    method: "POST",
+    method: 'POST',
   })
 
   const jsonRes = res.json as SearchResponse
@@ -171,13 +172,16 @@ export const loadArticles = async (
   return [articles, jsonRes.data.search.pageInfo.hasNextPage]
 }
 
-
-export const deleteArticleById = async (endpoint: string, apiKey: string, articleId: string) => {
+export const deleteArticleById = async (
+  endpoint: string,
+  apiKey: string,
+  articleId: string
+) => {
   const res = await requestUrl({
-      url: endpoint,
-      headers: requestHeaders(apiKey),
-      body: JSON.stringify({
-          query: `
+    url: endpoint,
+    headers: requestHeaders(apiKey),
+    body: JSON.stringify({
+      query: `
               mutation SetBookmarkArticle($input: SetBookmarkArticleInput!) {
                   setBookmarkArticle(input: $input) {
                       ... on SetBookmarkArticleSuccess {
@@ -190,19 +194,19 @@ export const deleteArticleById = async (endpoint: string, apiKey: string, articl
                       }
                   }
               }`,
-          variables: {
-              input: {
-                  "articleID": articleId,
-                  "bookmark": false
-              }
-          },
-      }),
-      method: "POST",
+      variables: {
+        input: {
+          articleID: articleId,
+          bookmark: false,
+        },
+      },
+    }),
+    method: 'POST',
   })
 
   const jsonRes = res.json as DeleteArticleResponse
   if (jsonRes.data.setBookmarkArticle.bookmarkedArticle.id === articleId) {
-      return true
+    return true
   }
 
   return false
