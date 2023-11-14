@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.8.0...1.8.1) (2023-11-14)
+
+
+### Bug Fixes
+
+* lint code in CI ([#161](https://github.com/omnivore-app/obsidian-omnivore/issues/161)) ([460c489](https://github.com/omnivore-app/obsidian-omnivore/commit/460c48937f9d2583d43a26398e2b94eff15f0ef8))
+
 # [1.8.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.7.1...1.8.0) (2023-11-10)
 
 
