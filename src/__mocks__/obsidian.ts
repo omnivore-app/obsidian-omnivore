@@ -1,7 +1,7 @@
 export const mockObsidianApp = {
   // Mock implementation of the App API
   app: {
-    platform: () => "desktop",
+    platform: () => 'desktop',
     plugins: {
       getPlugins: () => [],
       isEnabled: () => true,
@@ -11,7 +11,7 @@ export const mockObsidianApp = {
   // Mock implementation of the Workspace API
   workspace: {
     onLayoutReady: (callback: () => void) => {
-      setTimeout(callback, 0);
+      setTimeout(callback, 0)
     },
     getLeavesOfType: () => [],
     getConfig: () => ({}),
@@ -19,12 +19,12 @@ export const mockObsidianApp = {
 
   // Mock implementation of the MarkdownView API
   markdownView: {
-    getMode: () => "source",
-    getMarkdown: () => "",
+    getMode: () => 'source',
+    getMarkdown: () => '',
   },
-};
+}
 
 // Mock implementation of the Obsidian global object
 export const obsidian = {
   ...mockObsidianApp,
-};
+}

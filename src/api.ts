@@ -1,4 +1,4 @@
-import { requestUrl } from "obsidian";
+import { requestUrl } from "obsidian"
 
 export interface SearchResponse {
   data: {
@@ -84,7 +84,7 @@ const requestHeaders = (apiKey: string) => ({
   "Content-Type": "application/json",
   authorization: apiKey,
   "X-OmnivoreClient": "obsidian-plugin",
-});
+})
 
 export const loadArticles = async (
   endpoint: string,
@@ -163,13 +163,13 @@ export const loadArticles = async (
       },
     }),
     method: "POST",
-  });
+  })
 
-  const jsonRes = res.json as SearchResponse;
-  const articles = jsonRes.data.search.edges.map((e) => e.node);
+  const jsonRes = res.json as SearchResponse
+  const articles = jsonRes.data.search.edges.map((e) => e.node)
 
-  return [articles, jsonRes.data.search.pageInfo.hasNextPage];
-};
+  return [articles, jsonRes.data.search.pageInfo.hasNextPage]
+}
 
 
 export const deleteArticleById = async (endpoint: string, apiKey: string, articleId: string) => {
@@ -198,11 +198,11 @@ export const deleteArticleById = async (endpoint: string, apiKey: string, articl
           },
       }),
       method: "POST",
-  });
+  })
 
-  const jsonRes = res.json as DeleteArticleResponse;
+  const jsonRes = res.json as DeleteArticleResponse
   if (jsonRes.data.setBookmarkArticle.bookmarkedArticle.id === articleId) {
-      return true;
+      return true
   }
 
   return false
