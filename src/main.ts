@@ -60,7 +60,7 @@ export default class OmnivorePlugin extends Plugin {
 
     this.addCommand({
       id: "sync",
-      name: "Sync",
+      name: "Sync new changes",
       callback: () => {
         this.fetchOmnivore()
       },
@@ -454,13 +454,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Filter")
-      .setDesc("Select an Omnivore search filter type")
+      .setDesc("Select an Omnivore search filter type. Changing this would reset the 'Last sync' timestamp")
       .addDropdown((dropdown) => {
         dropdown.addOptions(Filter)
         dropdown
           .setValue(this.plugin.settings.filter)
           .onChange(async (value) => {
             this.plugin.settings.filter = value
+            this.plugin.settings.syncAt = ""
             await this.plugin.saveSettings()
           })
       })
@@ -475,7 +476,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
               text: "https://docs.omnivore.app/using/search",
               href: "https://docs.omnivore.app/using/search",
             }),
-            " for more info on search query syntax. Make sure your Filter (in the section above) is set to advanced when using a custom query."
+            " for more info on search query syntax. Make sure your Filter (in the section above) is set to advanced when using a custom query.",
+            " Changing this would reset the 'Last Sync' timestamp"
           )
         })
       )
@@ -487,13 +489,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.customQuery)
           .onChange(async (value) => {
             this.plugin.settings.customQuery = value
+            this.plugin.settings.syncAt = ""
             await this.plugin.saveSettings()
           })
       )
 
     new Setting(containerEl)
       .setName("Last Sync")
-      .setDesc("Last time the plugin synced with Omnivore")
+      .setDesc("Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated after this timestamp")
       .addMomentFormat((momentFormat) =>
         momentFormat
           .setPlaceholder("Last Sync")
