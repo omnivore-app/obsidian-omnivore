@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   dateHighlightedFormat: 'yyyy-MM-dd HH:mm:ss',
   dateSavedFormat: 'yyyy-MM-dd HH:mm:ss',
   apiKey: '',
-  filter: 'HIGHLIGHTS',
+  filter: 'ALL',
   syncAt: '',
   customQuery: '',
   template: DEFAULT_TEMPLATE,
