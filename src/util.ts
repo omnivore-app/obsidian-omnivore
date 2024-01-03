@@ -116,9 +116,9 @@ export const getQueryFromFilter = (
 ): string => {
   switch (filter) {
     case "ALL":
-      return ""
+      return "in:all"
     case "HIGHLIGHTS":
-      return `has:highlights`
+      return `has:highlights in:all`
     case "ADVANCED":
       return customQuery
     default:
