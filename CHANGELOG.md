@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.8.1...1.9.0) (2024-01-04)
+
+
+### Features
+
+* start to sync when plugin is loaded ([#170](https://github.com/omnivore-app/obsidian-omnivore/issues/170)) ([280f027](https://github.com/omnivore-app/obsidian-omnivore/commit/280f0271c317ef6354fca9cdc8721c8a1d74b963))
+
 ## [1.8.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.8.0...1.8.1) (2023-11-14)
 
 
