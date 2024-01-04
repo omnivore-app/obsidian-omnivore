@@ -102,6 +102,9 @@ export default class OmnivorePlugin extends Plugin {
     this.addSettingTab(new OmnivoreSettingTab(this.app, this))
 
     this.scheduleSync()
+
+    // sync when the app is loaded
+    await this.fetchOmnivore()
   }
 
   onunload() {}
