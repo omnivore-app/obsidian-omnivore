@@ -49,6 +49,7 @@ export interface Article {
   content: string
   publishedAt?: string
   url: string
+  image?: string
   readAt?: string
   wordsCount?: number
   readingProgressPercent: number
@@ -112,6 +113,7 @@ export const loadArticles = async (
                   siteName
                   originalArticleUrl
                   url
+                  image
                   author
                   updatedAt
                   description
