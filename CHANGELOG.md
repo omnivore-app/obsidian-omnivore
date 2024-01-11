@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.0...1.9.1) (2024-01-11)
+
+
+### Bug Fixes
+
+* add image to the variables of article template ([0941dc2](https://github.com/omnivore-app/obsidian-omnivore/commit/0941dc2cc73933dc40c5f5930776def1e2847c34))
+
 # [1.9.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.8.1...1.9.0) (2024-01-04)
 
 
