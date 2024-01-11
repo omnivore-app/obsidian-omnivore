@@ -76,6 +76,7 @@ export type ArticleView =
       readLength?: number
       state: string
       dateArchived?: string
+      image?: string
     }
   | FunctionMap
 
@@ -250,6 +251,7 @@ export const renderArticleContnet = async (
     readLength,
     state: getArticleState(article),
     dateArchived: article.archivedAt,
+    image: article.image,
     ...functionMap,
   }
 
