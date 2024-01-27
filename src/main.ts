@@ -103,8 +103,10 @@ export default class OmnivorePlugin extends Plugin {
 
     this.scheduleSync()
 
-    // sync when the app is loaded
-    await this.fetchOmnivore()
+    // sync when the app is loaded if frequency is greater than zero
+    if (this.settings.frequency > 0) {
+      await this.fetchOmnivore()
+    }
   }
 
   onunload() {}
