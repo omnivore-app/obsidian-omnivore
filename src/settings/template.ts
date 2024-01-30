@@ -77,6 +77,7 @@ export type ArticleView =
       state: string
       dateArchived?: string
       image?: string
+      updatedAt: string
     }
   | FunctionMap
 
@@ -252,6 +253,7 @@ export const renderArticleContnet = async (
     state: getArticleState(article),
     dateArchived: article.archivedAt,
     image: article.image,
+    updatedAt: article.updatedAt,
     ...functionMap,
   }
 
