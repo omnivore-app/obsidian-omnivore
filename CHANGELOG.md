@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.1...1.9.2) (2024-01-30)
+
+
+### Bug Fixes
+
+* add updatedAt variable to the article template to get the last u… ([#183](https://github.com/omnivore-app/obsidian-omnivore/issues/183)) ([05079e1](https://github.com/omnivore-app/obsidian-omnivore/commit/05079e1edf3cfba6785de4379f0d3bb85b2450da)), closes [#176](https://github.com/omnivore-app/obsidian-omnivore/issues/176) [#187](https://github.com/omnivore-app/obsidian-omnivore/issues/187)
+
 ## [1.9.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.0...1.9.1) (2024-01-11)
 
 
