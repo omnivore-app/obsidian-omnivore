@@ -1,3 +1,10 @@
+## [1.9.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.2...1.9.3) (2024-02-07)
+
+
+### Bug Fixes
+
+* make siteName and other variables in the article template available in the folder/file name settings ([#190](https://github.com/omnivore-app/obsidian-omnivore/issues/190)) ([6329bb3](https://github.com/omnivore-app/obsidian-omnivore/commit/6329bb397e804891bc6efdfb1a469c7a4dd72559))
+
 ## [1.9.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.1...1.9.2) (2024-01-30)
 
 
