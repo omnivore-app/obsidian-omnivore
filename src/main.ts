@@ -23,10 +23,10 @@ import {
 import { FolderSuggest } from "./settings/file-suggest"
 import {
   preParseTemplate,
+  render,
   renderArticleContnet,
   renderFilename,
-  renderFolderName,
-} from "./settings/template"
+} from './settings/template'
 import {
   DATE_FORMAT,
   findFrontMatterIndex,
@@ -35,7 +35,7 @@ import {
   parseFrontMatterFromContent,
   removeFrontMatterFromContent,
   replaceIllegalChars,
-} from "./util"
+} from './util'
 
 export default class OmnivorePlugin extends Plugin {
   settings: OmnivoreSettings
@@ -59,33 +59,33 @@ export default class OmnivorePlugin extends Plugin {
     }
 
     this.addCommand({
-      id: "sync",
-      name: "Sync new changes",
+      id: 'sync',
+      name: 'Sync new changes',
       callback: () => {
         this.fetchOmnivore()
       },
     })
 
     this.addCommand({
-        id: "deleteArticle",
-        name: "Delete Current Article from Omnivore",
-        callback: () => {
-          this.deleteCurrentArticle(this.app.workspace.getActiveFile())
-        }
+      id: 'deleteArticle',
+      name: 'Delete Current Article from Omnivore',
+      callback: () => {
+        this.deleteCurrentArticle(this.app.workspace.getActiveFile())
+      },
     })
 
     this.addCommand({
-      id: "resync",
-      name: "Resync all articles",
+      id: 'resync',
+      name: 'Resync all articles',
       callback: () => {
-        this.settings.syncAt = ""
+        this.settings.syncAt = ''
         this.saveSettings()
-        new Notice("Omnivore Last Sync reset")
+        new Notice('Omnivore Last Sync reset')
         this.fetchOmnivore()
       },
     })
 
-    const iconId = "Omnivore"
+    const iconId = 'Omnivore'
     // add icon
     addIcon(
       iconId,
@@ -143,10 +143,10 @@ export default class OmnivorePlugin extends Plugin {
     const url = article.url
     const response = await requestUrl({
       url,
-      contentType: "application/pdf",
+      contentType: 'application/pdf',
     })
     const folderName = normalizePath(
-      renderFolderName(
+      render(
         article,
         this.settings.attachmentFolder,
         this.settings.folderDateFormat
@@ -185,12 +185,12 @@ export default class OmnivorePlugin extends Plugin {
     } = this.settings
 
     if (syncing) {
-      new Notice("🐢 Already syncing ...")
+      new Notice('🐢 Already syncing ...')
       return
     }
 
     if (!apiKey) {
-      new Notice("Missing Omnivore api key")
+      new Notice('Missing Omnivore api key')
       return
     }
 
@@ -200,17 +200,17 @@ export default class OmnivorePlugin extends Plugin {
     try {
       console.log(`obsidian-omnivore starting sync since: '${syncAt}'`)
 
-      manualSync && new Notice("🚀 Fetching articles ...")
+      manualSync && new Notice('🚀 Fetching articles ...')
 
       // pre-parse template
       frontMatterTemplate && preParseTemplate(frontMatterTemplate)
       const templateSpans = preParseTemplate(template)
       // check if we need to include content or file attachment
       const includeContent = templateSpans.some(
-        (templateSpan) => templateSpan[1] === "content"
+        (templateSpan) => templateSpan[1] === 'content'
       )
       const includeFileAttachment = templateSpans.some(
-        (templateSpan) => templateSpan[1] === "fileAttachment"
+        (templateSpan) => templateSpan[1] === 'fileAttachment'
       )
 
       const size = 50
@@ -219,7 +219,7 @@ export default class OmnivorePlugin extends Plugin {
         hasNextPage;
         after += size
       ) {
-        [articles, hasNextPage] = await loadArticles(
+        ;[articles, hasNextPage] = await loadArticles(
           this.settings.endpoint,
           apiKey,
           after,
@@ -227,12 +227,12 @@ export default class OmnivorePlugin extends Plugin {
           parseDateTime(syncAt).toISO() || undefined,
           getQueryFromFilter(filter, customQuery),
           includeContent,
-          "highlightedMarkdown"
+          'highlightedMarkdown'
         )
 
         for (const article of articles) {
           const folderName = normalizePath(
-            renderFolderName(article, folder, this.settings.folderDateFormat)
+            render(article, folder, this.settings.folderDateFormat)
           )
           const omnivoreFolder =
             this.app.vault.getAbstractFileByPath(folderName)
@@ -285,7 +285,7 @@ export default class OmnivorePlugin extends Plugin {
                 !Array.isArray(newFrontMatter) ||
                 newFrontMatter.length === 0
               ) {
-                throw new Error("Front matter does not exist in the template")
+                throw new Error('Front matter does not exist in the template')
               }
               let newContentWithoutFrontMatter: string
 
@@ -302,7 +302,7 @@ export default class OmnivorePlugin extends Plugin {
                 const sectionEnd = `%%${article.id}_end%%`
                 const existingContentRegex = new RegExp(
                   `${sectionStart}.*?${sectionEnd}`,
-                  "s"
+                  's'
                 )
                 newContentWithoutFrontMatter =
                   existingContentWithoutFrontmatter.replace(
@@ -367,7 +367,7 @@ export default class OmnivorePlugin extends Plugin {
           try {
             await this.app.vault.create(normalizedPath, content)
           } catch (error) {
-            if (error.toString().includes("File already exists")) {
+            if (error.toString().includes('File already exists')) {
               new Notice(
                 `Skipping file creation: ${normalizedPath}. Please check if you have duplicated article titles and delete the file if needed.`
               )
@@ -378,10 +378,10 @@ export default class OmnivorePlugin extends Plugin {
         }
       }
 
-      manualSync && new Notice("🔖 Articles fetched")
+      manualSync && new Notice('🔖 Articles fetched')
       this.settings.syncAt = DateTime.local().toFormat(DATE_FORMAT)
     } catch (e) {
-      new Notice("Failed to fetch articles")
+      new Notice('Failed to fetch articles')
       console.error(e)
     } finally {
       this.settings.syncing = false
@@ -390,23 +390,27 @@ export default class OmnivorePlugin extends Plugin {
   }
 
   private async deleteCurrentArticle(file: TFile | null) {
-    if(!file) {
-        return
+    if (!file) {
+      return
     }
     //use frontmatter id to find the file
     const articleId = this.app.metadataCache.getFileCache(file)?.frontmatter?.id
     if (!articleId) {
-        new Notice("Failed to delete article: article id not found")
+      new Notice('Failed to delete article: article id not found')
     }
 
-    try{
-        const isDeleted = deleteArticleById(this.settings.endpoint, this.settings.apiKey, articleId)
-        if(!isDeleted) {
-            new Notice("Failed to delete article in Omnivore")
-        }
+    try {
+      const isDeleted = deleteArticleById(
+        this.settings.endpoint,
+        this.settings.apiKey,
+        articleId
+      )
+      if (!isDeleted) {
+        new Notice('Failed to delete article in Omnivore')
+      }
     } catch (e) {
-        new Notice("Failed to delete article in Omnivore")
-        console.error(e)
+      new Notice('Failed to delete article in Omnivore')
+      console.error(e)
     }
 
     await this.app.vault.delete(file)
