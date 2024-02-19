@@ -118,14 +118,14 @@ export default class OmnivorePlugin extends Plugin {
     if (this.settings.filter === 'ADVANCED') {
       this.settings.filter = 'ALL'
       console.log(
-        'obsidian-omnivore: advanced filter is replaced with all filter'
+        'obsidian-omnivore: advanced filter is replaced with all filter',
       )
       const customQuery = this.settings.customQuery
       this.settings.customQuery = `in:all ${
         customQuery ? `(${customQuery})` : ''
       }`
       console.log(
-        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`
+        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`,
       )
       this.saveSettings()
     }
@@ -134,7 +134,7 @@ export default class OmnivorePlugin extends Plugin {
     if (!this.settings.customQuery) {
       this.settings.customQuery = getQueryFromFilter(this.settings.filter)
       console.log(
-        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`
+        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`,
       )
       this.saveSettings()
     }
@@ -246,7 +246,7 @@ export default class OmnivorePlugin extends Plugin {
         hasNextPage;
         after += size
       ) {
-        ;;[articles, hasNextPage] = await loadArticles(
+        ;[articles, hasNextPage] = await loadArticles(
           this.settings.endpoint,
           apiKey,
           after,
@@ -473,7 +473,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             fragment.createEl('a', {
               text: 'https://omnivore.app/settings/api',
               href: 'https://omnivore.app/settings/api',
-            })
+            }),
           )
         }),
       )
@@ -490,7 +490,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Filter')
       .setDesc(
-        "Select an Omnivore search filter type. Changing this would update the 'Custom Query' accordingly and reset the 'Last sync' timestamp"
+        "Select an Omnivore search filter type. Changing this would update the 'Custom Query' accordingly and reset the 'Last sync' timestamp",
       )
       .addDropdown((dropdown) => {
         dropdown.addOptions(Filter)
@@ -515,14 +515,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
               text: 'https://docs.omnivore.app/using/search',
               href: 'https://docs.omnivore.app/using/search',
             }),
-            " for more info on search query syntax. Changing this would reset the 'Last Sync' timestamp"
+            " for more info on search query syntax. Changing this would reset the 'Last Sync' timestamp",
           )
         }),
       )
       .addText((text) =>
         text
           .setPlaceholder(
-            'Enter an Omnivore custom search query if advanced filter is selected'
+            'Enter an Omnivore custom search query if advanced filter is selected',
           )
           .setValue(this.plugin.settings.customQuery)
           .onChange(async (value) => {
@@ -530,13 +530,13 @@ class OmnivoreSettingTab extends PluginSettingTab {
             this.plugin.settings.syncAt = ''
             await this.plugin.saveSettings()
             this.display()
-          })
+          }),
       )
 
     new Setting(containerEl)
       .setName('Last Sync')
       .setDesc(
-        "Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated after this timestamp"
+        "Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated after this timestamp",
       )
       .addMomentFormat((momentFormat) =>
         momentFormat
@@ -577,7 +577,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             }),
             fragment.createEl('br'),
             fragment.createEl('br'),
-            'If you want to use a custom front matter template, you can enter it below under the advanced settings'
+            'If you want to use a custom front matter template, you can enter it below under the advanced settings',
           )
         }),
       )
@@ -593,7 +593,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
               .filter(
                 (v, i, a) =>
                   FRONT_MATTER_VARIABLES.includes(v.split('::')[0]) &&
-                  a.indexOf(v) === i
+                  a.indexOf(v) === i,
               )
             await this.plugin.saveSettings()
           })
@@ -613,7 +613,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             }),
             fragment.createEl('br'),
             fragment.createEl('br'),
-            'If you want to use a custom front matter template, you can enter it below under the advanced settings'
+            'If you want to use a custom front matter template, you can enter it below under the advanced settings',
           )
         }),
       )
@@ -647,7 +647,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Frequency')
       .setDesc(
-        'Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync'
+        'Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync',
       )
       .addText((text) =>
         text
@@ -671,7 +671,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Folder')
       .setDesc(
-        'Enter the folder where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name'
+        'Enter the folder where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name',
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl)
@@ -686,7 +686,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Attachment Folder')
       .setDesc(
-        'Enter the folder where the attachment will be downloaded to. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name'
+        'Enter the folder where the attachment will be downloaded to. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name',
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl)
@@ -702,7 +702,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Is Single File')
       .setDesc(
-        'Check this box if you want to save all articles in a single file'
+        'Check this box if you want to save all articles in a single file',
       )
       .addToggle((toggle) =>
         toggle
@@ -716,7 +716,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Filename')
       .setDesc(
-        'Enter the filename where the data will be stored. {{id}}, {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename'
+        'Enter the filename where the data will be stored. {{id}}, {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename',
       )
       .addText((text) =>
         text
@@ -737,7 +737,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             fragment.createEl('a', {
               text: 'reference',
               href: 'https://moment.github.io/luxon/#/formatting?id=table-of-tokens',
-            })
+            }),
           )
         }),
       )
@@ -760,7 +760,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             fragment.createEl('a', {
               text: 'reference',
               href: 'https://moment.github.io/luxon/#/formatting?id=table-of-tokens',
-            })
+            }),
           )
         }),
       )
@@ -776,7 +776,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Date Saved Format')
       .setDesc(
-        'Enter the date format for dateSaved variable in rendered template'
+        'Enter the date format for dateSaved variable in rendered template',
       )
       .addText((text) =>
         text
@@ -790,7 +790,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Date Highlighted Format')
       .setDesc(
-        'Enter the date format for dateHighlighted variable in rendered template'
+        'Enter the date format for dateHighlighted variable in rendered template',
       )
       .addText((text) =>
         text
@@ -839,7 +839,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
             'We recommend you to use Front Matter section under the basic settings to define the metadata.',
             fragment.createEl('br'),
             fragment.createEl('br'),
-            'If this template is set, it will override the Front Matter so please make sure your template is a valid YAML.'
+            'If this template is set, it will override the Front Matter so please make sure your template is a valid YAML.',
           )
         }),
       )
