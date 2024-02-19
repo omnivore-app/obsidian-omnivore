@@ -75,8 +75,8 @@ function generateRandomISODateStrings(quantity: number): string[] {
         Math.floor(Math.random() * 24),
         Math.floor(Math.random() * 60),
         Math.floor(Math.random() * 60),
-        Math.floor(Math.random() * 1000)
-      )
+        Math.floor(Math.random() * 1000),
+      ),
     )
 
     // Randomly select a timezone from the available time zones
@@ -86,7 +86,7 @@ function generateRandomISODateStrings(quantity: number): string[] {
     // Convert the generated date to the randomly selected timezone
     // const dateTimeWithZone = DateTime.fromJSDate(date, { zone: randomTimeZone }).toUTC();
     const jsDateTimeWithZone = new Date(
-      date.toLocaleString('en-US', { timeZone: randomTimeZone })
+      date.toLocaleString('en-US', { timeZone: randomTimeZone }),
     )
     const luxonDate = DateTime.fromJSDate(jsDateTimeWithZone)
     randomISODateStrings.push(luxonDate.toISO() as string)
@@ -102,13 +102,13 @@ describe('formatDate on random dates', () => {
       const result = formatDate(date, 'yyyy-MM-dd HH:mm:ss')
       // test with regex to ensure the format is correct
       expect(result).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
-    }
+    },
   )
 })
 
 function getCasesWithRandomDates(
   testFormats: string[],
-  quantity = 10
+  quantity = 10,
 ): {
   date: string
   luxonFormat: string
@@ -117,7 +117,7 @@ function getCasesWithRandomDates(
     generateRandomISODateStrings(quantity).map((date) => ({
       date,
       luxonFormat,
-    }))
+    })),
   )
 }
 
@@ -135,7 +135,7 @@ describe('round trip on random dates', () => {
       const result = formatDate(testCase.date, testCase.luxonFormat)
       const result2 = formatDate(result, testCase.luxonFormat)
       expect(result2).toBe(result)
-    }
+    },
   )
 
   const atypicalFormats = [
@@ -148,9 +148,9 @@ describe('round trip on random dates', () => {
       const formattedDate = formatDate(testCase.date, testCase.luxonFormat)
       const parsedDate = DateTime.fromFormat(
         formattedDate,
-        testCase.luxonFormat
+        testCase.luxonFormat,
       )
       expect(parsedDate.isValid).toBe(true)
-    }
+    },
   )
 })

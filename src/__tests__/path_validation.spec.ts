@@ -29,7 +29,7 @@ describe('replaceIllegalChars() removes all expected characters', () => {
       const input = `this${character}string`
       const output = replaceIllegalChars(input)
       expect(output).not.toContain(character)
-    }
+    },
   )
 })
 
@@ -41,7 +41,7 @@ describe('replaceIllegalChars() function replaces illegal characters with replac
       const expectedOutput = `this${REPLACEMENT_CHAR}string`
       const output = replaceIllegalChars(input)
       expect(output).toEqual(expectedOutput)
-    }
+    },
   )
 })
 
@@ -51,7 +51,7 @@ describe('replaceIllegalChars() function does not modify string without illegal 
     (input) => {
       const output = replaceIllegalChars(input)
       expect(output).toEqual(input)
-    }
+    },
   )
 })
 
@@ -72,14 +72,14 @@ describe('replaceIllegalChars() function replaces all occurrences of illegal cha
       const output = replaceIllegalChars(input)
       expect(output).toEqual(expectedOutput)
       expect(output.match(ILLEGAL_CHAR_REGEX)).toBeNull()
-    }
+    },
   )
 })
 
 describe('file system behavior with non-alphanumeric characters not in the illegal character list', () => {
   const nonAlphanumericCharactersWithoutIllegal: string[] = Array.from(
     { length: 127 - 32 },
-    (_, i) => String.fromCharCode(i + 32)
+    (_, i) => String.fromCharCode(i + 32),
   )
     .filter((char) => !/^[a-zA-Z0-9]+$/.test(char))
     .map(replaceIllegalChars)
@@ -97,7 +97,7 @@ describe('file system behavior with non-alphanumeric characters not in the illeg
       fs.unlinkSync(input)
       // verify the file has been deleted
       expect(fs.existsSync(input)).toBe(false)
-    }
+    },
   )
 })
 
@@ -110,6 +110,6 @@ describe('replaceIllegalChars() function removes all occurrences of invisible ch
       const output = replaceIllegalChars(input)
       expect(output).toEqual(expectedOutput)
       expect(output.match(ILLEGAL_CHAR_REGEX)).toBeNull()
-    }
+    },
   )
 })
