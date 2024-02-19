@@ -17,7 +17,7 @@ export const FRONT_MATTER_VARIABLES = [
   'read_length',
   'state',
   'date_archived',
-  'image'
+  'image',
 ]
 
 export const DEFAULT_SETTINGS: OmnivoreSettings = {

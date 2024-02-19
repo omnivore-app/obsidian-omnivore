@@ -95,7 +95,7 @@ export const loadArticles = async (
   updatedAt = '',
   query = '',
   includeContent = false,
-  format = 'html'
+  format = 'html',
 ): Promise<[Article[], boolean]> => {
   const res = await requestUrl({
     url: endpoint,
@@ -177,7 +177,7 @@ export const loadArticles = async (
 export const deleteArticleById = async (
   endpoint: string,
   apiKey: string,
-  articleId: string
+  articleId: string,
 ) => {
   const res = await requestUrl({
     url: endpoint,
