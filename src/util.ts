@@ -110,19 +110,18 @@ export function formatDate(date: string, format: string): string {
   return DateTime.fromJSDate(new Date(date)).toFormat(format)
 }
 
-export const getQueryFromFilter = (
-  filter: string,
-  customQuery: string
-): string => {
+export const getQueryFromFilter = (filter: string): string => {
   switch (filter) {
-    case "ALL":
-      return "in:all"
-    case "HIGHLIGHTS":
-      return `has:highlights in:all`
-    case "ADVANCED":
-      return customQuery
+    case 'ALL':
+      return 'in:all'
+    case 'HIGHLIGHTS':
+      return `in:all has:highlights`
+    case 'ARCHIVED':
+      return `in:archive`
+    case 'LIBRARY':
+      return `in:library`
     default:
-      return ""
+      return 'in:all'
   }
 }
 

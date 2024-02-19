@@ -113,6 +113,31 @@ export default class OmnivorePlugin extends Plugin {
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
+
+    // for backward compatibility, replace advanced filter with all filter
+    if (this.settings.filter === 'ADVANCED') {
+      this.settings.filter = 'ALL'
+      console.log(
+        'obsidian-omnivore: advanced filter is replaced with all filter'
+      )
+      const customQuery = this.settings.customQuery
+      this.settings.customQuery = `in:all ${
+        customQuery ? `(${customQuery})` : ''
+      }`
+      console.log(
+        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`
+      )
+      this.saveSettings()
+    }
+
+    // for backward compatibility, set custom query from filter
+    if (!this.settings.customQuery) {
+      this.settings.customQuery = getQueryFromFilter(this.settings.filter)
+      console.log(
+        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`
+      )
+      this.saveSettings()
+    }
   }
 
   async saveSettings() {
@@ -172,7 +197,6 @@ export default class OmnivorePlugin extends Plugin {
     const {
       syncAt,
       apiKey,
-      filter,
       customQuery,
       highlightOrder,
       syncing,
@@ -219,13 +243,13 @@ export default class OmnivorePlugin extends Plugin {
         hasNextPage;
         after += size
       ) {
-        ;[articles, hasNextPage] = await loadArticles(
+        ;;[articles, hasNextPage] = await loadArticles(
           this.settings.endpoint,
           apiKey,
           after,
           size,
           parseDateTime(syncAt).toISO() || undefined,
-          getQueryFromFilter(filter, customQuery),
+          customQuery,
           includeContent,
           'highlightedMarkdown'
         )
@@ -436,24 +460,24 @@ class OmnivoreSettingTab extends PluginSettingTab {
 
     containerEl.empty()
 
-    containerEl.createEl("h2", { text: "Settings for Omnivore plugin" })
+    containerEl.createEl('h2', { text: 'Settings for Omnivore plugin' })
 
     new Setting(containerEl)
-      .setName("API Key")
+      .setName('API Key')
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "You can create an API key at ",
-            fragment.createEl("a", {
-              text: "https://omnivore.app/settings/api",
-              href: "https://omnivore.app/settings/api",
+            'You can create an API key at ',
+            fragment.createEl('a', {
+              text: 'https://omnivore.app/settings/api',
+              href: 'https://omnivore.app/settings/api',
             })
           )
         })
       )
       .addText((text) =>
         text
-          .setPlaceholder("Enter your Omnivore Api Key")
+          .setPlaceholder('Enter your Omnivore Api Key')
           .setValue(this.plugin.settings.apiKey)
           .onChange(async (value) => {
             this.plugin.settings.apiKey = value
@@ -462,53 +486,59 @@ class OmnivoreSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName("Filter")
-      .setDesc("Select an Omnivore search filter type. Changing this would reset the 'Last sync' timestamp")
+      .setName('Filter')
+      .setDesc(
+        "Select an Omnivore search filter type. Changing this would update the 'Custom Query' accordingly and reset the 'Last sync' timestamp"
+      )
       .addDropdown((dropdown) => {
         dropdown.addOptions(Filter)
         dropdown
           .setValue(this.plugin.settings.filter)
           .onChange(async (value) => {
             this.plugin.settings.filter = value
-            this.plugin.settings.syncAt = ""
+            this.plugin.settings.customQuery = getQueryFromFilter(value)
+            this.plugin.settings.syncAt = ''
             await this.plugin.saveSettings()
+            this.display()
           })
       })
 
     new Setting(containerEl)
-      .setName("Custom query")
+      .setName('Custom Query')
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "See ",
-            fragment.createEl("a", {
-              text: "https://docs.omnivore.app/using/search",
-              href: "https://docs.omnivore.app/using/search",
+            'See ',
+            fragment.createEl('a', {
+              text: 'https://docs.omnivore.app/using/search',
+              href: 'https://docs.omnivore.app/using/search',
             }),
-            " for more info on search query syntax. Make sure your Filter (in the section above) is set to advanced when using a custom query.",
-            " Changing this would reset the 'Last Sync' timestamp"
+            " for more info on search query syntax. Changing this would reset the 'Last Sync' timestamp"
           )
         })
       )
       .addText((text) =>
         text
           .setPlaceholder(
-            "Enter an Omnivore custom search query if advanced filter is selected"
+            'Enter an Omnivore custom search query if advanced filter is selected'
           )
           .setValue(this.plugin.settings.customQuery)
           .onChange(async (value) => {
             this.plugin.settings.customQuery = value
-            this.plugin.settings.syncAt = ""
+            this.plugin.settings.syncAt = ''
             await this.plugin.saveSettings()
+            this.display()
           })
       )
 
     new Setting(containerEl)
-      .setName("Last Sync")
-      .setDesc("Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated after this timestamp")
+      .setName('Last Sync')
+      .setDesc(
+        "Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated after this timestamp"
+      )
       .addMomentFormat((momentFormat) =>
         momentFormat
-          .setPlaceholder("Last Sync")
+          .setPlaceholder('Last Sync')
           .setValue(this.plugin.settings.syncAt)
           .setDefaultFormat("yyyy-MM-dd'T'HH:mm:ss")
           .onChange(async (value) => {
@@ -518,8 +548,8 @@ class OmnivoreSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName("Highlight Order")
-      .setDesc("Select the order in which highlights are applied")
+      .setName('Highlight Order')
+      .setDesc('Select the order in which highlights are applied')
       .addDropdown((dropdown) => {
         dropdown.addOptions(HighlightOrder)
         dropdown
@@ -531,63 +561,63 @@ class OmnivoreSettingTab extends PluginSettingTab {
       })
 
     new Setting(containerEl)
-      .setName("Front Matter")
+      .setName('Front Matter')
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter the metadata to be used in your note separated by commas. You can also use custom aliases in the format of metatdata::alias, e.g. date_saved::date. ",
-            fragment.createEl("br"),
-            fragment.createEl("br"),
-            "Available metadata can be found at ",
-            fragment.createEl("a", {
-              text: "Reference",
-              href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter",
+            'Enter the metadata to be used in your note separated by commas. You can also use custom aliases in the format of metatdata::alias, e.g. date_saved::date. ',
+            fragment.createEl('br'),
+            fragment.createEl('br'),
+            'Available metadata can be found at ',
+            fragment.createEl('a', {
+              text: 'Reference',
+              href: 'https://docs.omnivore.app/integrations/obsidian.html#front-matter',
             }),
-            fragment.createEl("br"),
-            fragment.createEl("br"),
-            "If you want to use a custom front matter template, you can enter it below under the advanced settings"
+            fragment.createEl('br'),
+            fragment.createEl('br'),
+            'If you want to use a custom front matter template, you can enter it below under the advanced settings'
           )
         })
       )
       .addTextArea((text) => {
         text
-          .setPlaceholder("Enter the metadata")
-          .setValue(this.plugin.settings.frontMatterVariables.join(","))
+          .setPlaceholder('Enter the metadata')
+          .setValue(this.plugin.settings.frontMatterVariables.join(','))
           .onChange(async (value) => {
             // validate front matter variables and deduplicate
             this.plugin.settings.frontMatterVariables = value
-              .split(",")
+              .split(',')
               .map((v) => v.trim())
               .filter(
                 (v, i, a) =>
-                  FRONT_MATTER_VARIABLES.includes(v.split("::")[0]) &&
+                  FRONT_MATTER_VARIABLES.includes(v.split('::')[0]) &&
                   a.indexOf(v) === i
               )
             await this.plugin.saveSettings()
           })
-        text.inputEl.setAttr("rows", 4)
-        text.inputEl.setAttr("cols", 30)
+        text.inputEl.setAttr('rows', 4)
+        text.inputEl.setAttr('cols', 30)
       })
 
     new Setting(containerEl)
-      .setName("Article Template")
+      .setName('Article Template')
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter template to render articles with ",
-            fragment.createEl("a", {
-              text: "Reference",
-              href: "https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian",
+            'Enter template to render articles with ',
+            fragment.createEl('a', {
+              text: 'Reference',
+              href: 'https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian',
             }),
-            fragment.createEl("br"),
-            fragment.createEl("br"),
-            "If you want to use a custom front matter template, you can enter it below under the advanced settings"
+            fragment.createEl('br'),
+            fragment.createEl('br'),
+            'If you want to use a custom front matter template, you can enter it below under the advanced settings'
           )
         })
       )
       .addTextArea((text) => {
         text
-          .setPlaceholder("Enter the template")
+          .setPlaceholder('Enter the template')
           .setValue(this.plugin.settings.template)
           .onChange(async (value) => {
             // if template is empty, use default template
@@ -596,36 +626,36 @@ class OmnivoreSettingTab extends PluginSettingTab {
               : DEFAULT_SETTINGS.template
             await this.plugin.saveSettings()
           })
-        text.inputEl.setAttr("rows", 25)
-        text.inputEl.setAttr("cols", 50)
+        text.inputEl.setAttr('rows', 25)
+        text.inputEl.setAttr('cols', 50)
       })
       .addExtraButton((button) => {
         // add a button to reset template
         button
-          .setIcon("reset")
-          .setTooltip("Reset template")
+          .setIcon('reset')
+          .setTooltip('Reset template')
           .onClick(async () => {
             this.plugin.settings.template = DEFAULT_SETTINGS.template
             await this.plugin.saveSettings()
             this.display()
-            new Notice("Template reset")
+            new Notice('Template reset')
           })
       })
 
     new Setting(containerEl)
-      .setName("Frequency")
+      .setName('Frequency')
       .setDesc(
-        "Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync"
+        'Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync'
       )
       .addText((text) =>
         text
-          .setPlaceholder("Enter the frequency")
+          .setPlaceholder('Enter the frequency')
           .setValue(this.plugin.settings.frequency.toString())
           .onChange(async (value) => {
             // validate frequency
             const frequency = parseInt(value)
             if (isNaN(frequency)) {
-              new Notice("Frequency must be a positive integer")
+              new Notice('Frequency must be a positive integer')
               return
             }
             // save frequency
@@ -637,14 +667,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName("Folder")
+      .setName('Folder')
       .setDesc(
-        "Enter the folder where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name"
+        'Enter the folder where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name'
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl)
         search
-          .setPlaceholder("Enter the folder")
+          .setPlaceholder('Enter the folder')
           .setValue(this.plugin.settings.folder)
           .onChange(async (value) => {
             this.plugin.settings.folder = value
@@ -652,14 +682,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       })
     new Setting(containerEl)
-      .setName("Attachment Folder")
+      .setName('Attachment Folder')
       .setDesc(
-        "Enter the folder where the attachment will be downloaded to. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name"
+        'Enter the folder where the attachment will be downloaded to. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name'
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl)
         search
-          .setPlaceholder("Enter the attachment folder")
+          .setPlaceholder('Enter the attachment folder')
           .setValue(this.plugin.settings.attachmentFolder)
           .onChange(async (value) => {
             this.plugin.settings.attachmentFolder = value
@@ -668,9 +698,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
       })
 
     new Setting(containerEl)
-      .setName("Is Single File")
+      .setName('Is Single File')
       .setDesc(
-        "Check this box if you want to save all articles in a single file"
+        'Check this box if you want to save all articles in a single file'
       )
       .addToggle((toggle) =>
         toggle
@@ -682,13 +712,13 @@ class OmnivoreSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName("Filename")
+      .setName('Filename')
       .setDesc(
-        "Enter the filename where the data will be stored. {{id}}, {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename"
+        'Enter the filename where the data will be stored. {{id}}, {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename'
       )
       .addText((text) =>
         text
-          .setPlaceholder("Enter the filename")
+          .setPlaceholder('Enter the filename')
           .setValue(this.plugin.settings.filename)
           .onChange(async (value) => {
             this.plugin.settings.filename = value
@@ -697,21 +727,21 @@ class OmnivoreSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName("Filename Date Format")
+      .setName('Filename Date Format')
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter the format date for use in rendered filename. Format ",
-            fragment.createEl("a", {
-              text: "reference",
-              href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",
+            'Enter the format date for use in rendered filename. Format ',
+            fragment.createEl('a', {
+              text: 'reference',
+              href: 'https://moment.github.io/luxon/#/formatting?id=table-of-tokens',
             })
           )
         })
       )
       .addText((text) =>
         text
-          .setPlaceholder("yyyy-MM-dd")
+          .setPlaceholder('yyyy-MM-dd')
           .setValue(this.plugin.settings.filenameDateFormat)
           .onChange(async (value) => {
             this.plugin.settings.filenameDateFormat = value
@@ -720,21 +750,21 @@ class OmnivoreSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
-      .setName("Folder Date Format")
+      .setName('Folder Date Format')
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter the format date for use in rendered folder name. Format ",
-            fragment.createEl("a", {
-              text: "reference",
-              href: "https://moment.github.io/luxon/#/formatting?id=table-of-tokens",
+            'Enter the format date for use in rendered folder name. Format ',
+            fragment.createEl('a', {
+              text: 'reference',
+              href: 'https://moment.github.io/luxon/#/formatting?id=table-of-tokens',
             })
           )
         })
       )
       .addText((text) =>
         text
-          .setPlaceholder("yyyy-MM-dd")
+          .setPlaceholder('yyyy-MM-dd')
           .setValue(this.plugin.settings.folderDateFormat)
           .onChange(async (value) => {
             this.plugin.settings.folderDateFormat = value
@@ -742,9 +772,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       )
     new Setting(containerEl)
-      .setName("Date Saved Format")
+      .setName('Date Saved Format')
       .setDesc(
-        "Enter the date format for dateSaved variable in rendered template"
+        'Enter the date format for dateSaved variable in rendered template'
       )
       .addText((text) =>
         text
@@ -756,13 +786,13 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       )
     new Setting(containerEl)
-      .setName("Date Highlighted Format")
+      .setName('Date Highlighted Format')
       .setDesc(
-        "Enter the date format for dateHighlighted variable in rendered template"
+        'Enter the date format for dateHighlighted variable in rendered template'
       )
       .addText((text) =>
         text
-          .setPlaceholder("Date Highlighted Format")
+          .setPlaceholder('Date Highlighted Format')
           .setValue(this.plugin.settings.dateHighlightedFormat)
           .onChange(async (value) => {
             this.plugin.settings.dateHighlightedFormat = value
@@ -770,21 +800,21 @@ class OmnivoreSettingTab extends PluginSettingTab {
           })
       )
 
-    containerEl.createEl("h5", {
-      cls: "omnivore-collapsible",
-      text: "Advanced Settings",
+    containerEl.createEl('h5', {
+      cls: 'omnivore-collapsible',
+      text: 'Advanced Settings',
     })
 
-    const advancedSettings = containerEl.createEl("div", {
-      cls: "omnivore-content",
+    const advancedSettings = containerEl.createEl('div', {
+      cls: 'omnivore-content',
     })
 
     new Setting(advancedSettings)
-      .setName("API Endpoint")
+      .setName('API Endpoint')
       .setDesc("Enter the Omnivore server's API endpoint")
       .addText((text) =>
         text
-          .setPlaceholder("API endpoint")
+          .setPlaceholder('API endpoint')
           .setValue(this.plugin.settings.endpoint)
           .onChange(async (value) => {
             this.plugin.settings.endpoint = value
@@ -793,65 +823,65 @@ class OmnivoreSettingTab extends PluginSettingTab {
       )
 
     new Setting(advancedSettings)
-      .setName("Front Matter Template")
+      .setName('Front Matter Template')
       .setDesc(
         createFragment((fragment) => {
           fragment.append(
-            "Enter YAML template to render the front matter with ",
-            fragment.createEl("a", {
-              text: "Reference",
-              href: "https://docs.omnivore.app/integrations/obsidian.html#front-matter-template",
+            'Enter YAML template to render the front matter with ',
+            fragment.createEl('a', {
+              text: 'Reference',
+              href: 'https://docs.omnivore.app/integrations/obsidian.html#front-matter-template',
             }),
-            fragment.createEl("br"),
-            fragment.createEl("br"),
-            "We recommend you to use Front Matter section under the basic settings to define the metadata.",
-            fragment.createEl("br"),
-            fragment.createEl("br"),
-            "If this template is set, it will override the Front Matter so please make sure your template is a valid YAML."
+            fragment.createEl('br'),
+            fragment.createEl('br'),
+            'We recommend you to use Front Matter section under the basic settings to define the metadata.',
+            fragment.createEl('br'),
+            fragment.createEl('br'),
+            'If this template is set, it will override the Front Matter so please make sure your template is a valid YAML.'
           )
         })
       )
       .addTextArea((text) => {
         text
-          .setPlaceholder("Enter the template")
+          .setPlaceholder('Enter the template')
           .setValue(this.plugin.settings.frontMatterTemplate)
           .onChange(async (value) => {
             this.plugin.settings.frontMatterTemplate = value
             await this.plugin.saveSettings()
           })
 
-        text.inputEl.setAttr("rows", 10)
-        text.inputEl.setAttr("cols", 30)
+        text.inputEl.setAttr('rows', 10)
+        text.inputEl.setAttr('cols', 30)
       })
       .addExtraButton((button) => {
         // add a button to reset template
         button
-          .setIcon("reset")
-          .setTooltip("Reset front matter template")
+          .setIcon('reset')
+          .setTooltip('Reset front matter template')
           .onClick(async () => {
             this.plugin.settings.frontMatterTemplate =
               DEFAULT_SETTINGS.frontMatterTemplate
             await this.plugin.saveSettings()
             this.display()
-            new Notice("Front matter template reset")
+            new Notice('Front matter template reset')
           })
       })
 
-    const help = containerEl.createEl("p")
+    const help = containerEl.createEl('p')
     help.innerHTML = `For more information, please visit our <a href="https://github.com/omnivore-app/obsidian-omnivore">GitHub page</a>, email us at <a href="mailto:feedback@omnivore.app">feedback@omnivore.app</a> or join our <a href="https://discord.gg/h2z5rppzz9">Discord server</a>.`
 
     // script to make collapsible sections
-    const coll = document.getElementsByClassName("omnivore-collapsible")
+    const coll = document.getElementsByClassName('omnivore-collapsible')
     let i
 
     for (i = 0; i < coll.length; i++) {
-      coll[i].addEventListener("click", function () {
-        this.classList.toggle("omnivore-active")
+      coll[i].addEventListener('click', function () {
+        this.classList.toggle('omnivore-active')
         const content = this.nextElementSibling
         if (content.style.maxHeight) {
           content.style.maxHeight = null
         } else {
-          content.style.maxHeight = "fit-content"
+          content.style.maxHeight = 'fit-content'
         }
       })
     }

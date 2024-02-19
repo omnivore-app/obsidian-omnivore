@@ -45,9 +45,10 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
 }
 
 export enum Filter {
-  ALL = 'import all my articles',
-  HIGHLIGHTS = 'import just highlights',
-  ADVANCED = 'advanced',
+  ALL = 'Sync all the items',
+  LIBRARY = 'Sync only the library items',
+  ARCHIVED = 'Sync only the archived items',
+  HIGHLIGHTS = 'Sync only the highlighted items',
 }
 
 export enum HighlightOrder {
