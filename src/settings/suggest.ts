@@ -18,12 +18,12 @@ class Suggest<T> {
     containerEl.on(
       'click',
       '.suggestion-item',
-      this.onSuggestionClick.bind(this)
+      this.onSuggestionClick.bind(this),
     )
     containerEl.on(
       'mousemove',
       '.suggestion-item',
-      this.onSuggestionMouseover.bind(this)
+      this.onSuggestionMouseover.bind(this),
     )
 
     scope.register([], 'ArrowUp', (event) => {
@@ -127,7 +127,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
       '.suggestion-container',
       (event: MouseEvent) => {
         event.preventDefault()
-      }
+      },
     )
   }
 

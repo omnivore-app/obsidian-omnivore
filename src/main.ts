@@ -1,4 +1,4 @@
-import { DateTime } from "luxon"
+import { DateTime } from 'luxon'
 import {
   addIcon,
   App,
@@ -11,16 +11,16 @@ import {
   stringifyYaml,
   TFile,
   TFolder,
-} from "obsidian"
-import { Article, deleteArticleById, loadArticles, PageType } from "./api"
+} from 'obsidian'
+import { Article, deleteArticleById, loadArticles, PageType } from './api'
 import {
   DEFAULT_SETTINGS,
   Filter,
   FRONT_MATTER_VARIABLES,
   HighlightOrder,
   OmnivoreSettings,
-} from "./settings"
-import { FolderSuggest } from "./settings/file-suggest"
+} from './settings'
+import { FolderSuggest } from './settings/file-suggest'
 import {
   preParseTemplate,
   render,
@@ -49,7 +49,7 @@ export default class OmnivorePlugin extends Plugin {
     const currentVersion = this.settings.version
     if (latestVersion !== currentVersion) {
       this.settings.version = latestVersion
-      this.saveSettings()
+      await this.saveSettings()
       // show release notes
       const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.
     
@@ -61,27 +61,27 @@ export default class OmnivorePlugin extends Plugin {
     this.addCommand({
       id: 'sync',
       name: 'Sync new changes',
-      callback: () => {
-        this.fetchOmnivore()
+      callback: async () => {
+        await this.fetchOmnivore()
       },
     })
 
     this.addCommand({
       id: 'deleteArticle',
       name: 'Delete Current Article from Omnivore',
-      callback: () => {
-        this.deleteCurrentArticle(this.app.workspace.getActiveFile())
+      callback: async () => {
+        await this.deleteCurrentArticle(this.app.workspace.getActiveFile())
       },
     })
 
     this.addCommand({
       id: 'resync',
       name: 'Resync all articles',
-      callback: () => {
+      callback: async () => {
         this.settings.syncAt = ''
-        this.saveSettings()
+        await this.saveSettings()
         new Notice('Omnivore Last Sync reset')
-        this.fetchOmnivore()
+        await this.fetchOmnivore()
       },
     })
 
@@ -89,7 +89,7 @@ export default class OmnivorePlugin extends Plugin {
     // add icon
     addIcon(
       iconId,
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="currentColor" d="M15.9 7.801c0 .507-.123 1.12-.248 1.656v.004l-.001.003a2.87 2.87 0 0 1-2.793 2.186h-.036c-1.625 0-2.649-1.334-2.649-2.828v-2.14l-1.21 1.794-.067.055a1.404 1.404 0 0 1-1.793 0l-.065-.053-1.248-1.82v4.414H4.6V6.268c0-.91 1.078-1.439 1.794-.802l.055.048 1.46 2.13a.21.21 0 0 0 .179 0l1.43-2.119.065-.054c.68-.567 1.78-.138 1.78.815v2.536c0 .971.619 1.638 1.46 1.638h.035c.78 0 1.45-.527 1.636-1.277.125-.534.216-1.026.216-1.378-.017-3.835-3.262-6.762-7.188-6.498-3.311.23-5.986 2.905-6.216 6.216A6.705 6.705 0 0 0 8 14.693v1.19a7.895 7.895 0 0 1-7.882-8.44C.39 3.536 3.536.39 7.44.118 12.017-.19 15.88 3.242 15.9 7.8z"/></svg>`
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="currentColor" d="M15.9 7.801c0 .507-.123 1.12-.248 1.656v.004l-.001.003a2.87 2.87 0 0 1-2.793 2.186h-.036c-1.625 0-2.649-1.334-2.649-2.828v-2.14l-1.21 1.794-.067.055a1.404 1.404 0 0 1-1.793 0l-.065-.053-1.248-1.82v4.414H4.6V6.268c0-.91 1.078-1.439 1.794-.802l.055.048 1.46 2.13a.21.21 0 0 0 .179 0l1.43-2.119.065-.054c.68-.567 1.78-.138 1.78.815v2.536c0 .971.619 1.638 1.46 1.638h.035c.78 0 1.45-.527 1.636-1.277.125-.534.216-1.026.216-1.378-.017-3.835-3.262-6.762-7.188-6.498-3.311.23-5.986 2.905-6.216 6.216A6.705 6.705 0 0 0 8 14.693v1.19a7.895 7.895 0 0 1-7.882-8.44C.39 3.536 3.536.39 7.44.118 12.017-.19 15.88 3.242 15.9 7.8z"/></svg>`,
     )
 
     // This creates an icon in the left ribbon.
@@ -118,14 +118,14 @@ export default class OmnivorePlugin extends Plugin {
     if (this.settings.filter === 'ADVANCED') {
       this.settings.filter = 'ALL'
       console.log(
-        'obsidian-omnivore: advanced filter is replaced with all filter'
+        'obsidian-omnivore: advanced filter is replaced with all filter',
       )
       const customQuery = this.settings.customQuery
       this.settings.customQuery = `in:all ${
         customQuery ? `(${customQuery})` : ''
       }`
       console.log(
-        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`
+        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`,
       )
       this.saveSettings()
     }
@@ -134,7 +134,7 @@ export default class OmnivorePlugin extends Plugin {
     if (!this.settings.customQuery) {
       this.settings.customQuery = getQueryFromFilter(this.settings.filter)
       console.log(
-        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`
+        `obsidian-omnivore: custom query is set to ${this.settings.customQuery}`,
       )
       this.saveSettings()
     }
@@ -144,7 +144,7 @@ export default class OmnivorePlugin extends Plugin {
     await this.saveData(this.settings)
   }
 
-  scheduleSync() {
+  async scheduleSync() {
     // clear previous interval
     if (this.settings.intervalId > 0) {
       window.clearInterval(this.settings.intervalId)
@@ -152,12 +152,15 @@ export default class OmnivorePlugin extends Plugin {
     const frequency = this.settings.frequency
     if (frequency > 0) {
       // schedule new interval
-      const intervalId = window.setInterval(async () => {
-        await this.fetchOmnivore(false)
-      }, frequency * 60 * 1000)
+      const intervalId = window.setInterval(
+        async () => {
+          await this.fetchOmnivore(false)
+        },
+        frequency * 60 * 1000,
+      )
       // save new interval id
       this.settings.intervalId = intervalId
-      this.saveSettings()
+      await this.saveSettings()
       // clear interval when plugin is unloaded
       this.registerInterval(intervalId)
     }
@@ -174,8 +177,8 @@ export default class OmnivorePlugin extends Plugin {
       render(
         article,
         this.settings.attachmentFolder,
-        this.settings.folderDateFormat
-      )
+        this.settings.folderDateFormat,
+      ),
     )
     const folder = app.vault.getAbstractFileByPath(folderName)
     if (!(folder instanceof TFolder)) {
@@ -186,7 +189,7 @@ export default class OmnivorePlugin extends Plugin {
     if (!(file instanceof TFile)) {
       const newFile = await app.vault.createBinary(
         fileName,
-        response.arrayBuffer
+        response.arrayBuffer,
       )
       return newFile.path
     }
@@ -231,10 +234,10 @@ export default class OmnivorePlugin extends Plugin {
       const templateSpans = preParseTemplate(template)
       // check if we need to include content or file attachment
       const includeContent = templateSpans.some(
-        (templateSpan) => templateSpan[1] === 'content'
+        (templateSpan) => templateSpan[1] === 'content',
       )
       const includeFileAttachment = templateSpans.some(
-        (templateSpan) => templateSpan[1] === 'fileAttachment'
+        (templateSpan) => templateSpan[1] === 'fileAttachment',
       )
 
       const size = 50
@@ -243,7 +246,7 @@ export default class OmnivorePlugin extends Plugin {
         hasNextPage;
         after += size
       ) {
-        ;;[articles, hasNextPage] = await loadArticles(
+        ;[articles, hasNextPage] = await loadArticles(
           this.settings.endpoint,
           apiKey,
           after,
@@ -251,12 +254,12 @@ export default class OmnivorePlugin extends Plugin {
           parseDateTime(syncAt).toISO() || undefined,
           customQuery,
           includeContent,
-          'highlightedMarkdown'
+          'highlightedMarkdown',
         )
 
         for (const article of articles) {
           const folderName = normalizePath(
-            render(article, folder, this.settings.folderDateFormat)
+            render(article, folder, this.settings.folderDateFormat),
           )
           const omnivoreFolder =
             this.app.vault.getAbstractFileByPath(folderName)
@@ -276,11 +279,11 @@ export default class OmnivorePlugin extends Plugin {
             isSingleFile,
             frontMatterVariables,
             frontMatterTemplate,
-            fileAttachment
+            fileAttachment,
           )
           // use the custom filename
           const customFilename = replaceIllegalChars(
-            renderFilename(article, filename, this.settings.filenameDateFormat)
+            renderFilename(article, filename, this.settings.filenameDateFormat),
           )
           const pageName = `${folderName}/${customFilename}.md`
           const normalizedPath = normalizePath(pageName)
@@ -316,7 +319,7 @@ export default class OmnivorePlugin extends Plugin {
               // find the front matter with the same id
               const frontMatterIdx = findFrontMatterIndex(
                 existingFrontMatter,
-                article.id
+                article.id,
               )
               if (frontMatterIdx >= 0) {
                 // this article already exists in the file
@@ -326,12 +329,12 @@ export default class OmnivorePlugin extends Plugin {
                 const sectionEnd = `%%${article.id}_end%%`
                 const existingContentRegex = new RegExp(
                   `${sectionStart}.*?${sectionEnd}`,
-                  's'
+                  's',
                 )
                 newContentWithoutFrontMatter =
                   existingContentWithoutFrontmatter.replace(
                     existingContentRegex,
-                    contentWithoutFrontmatter
+                    contentWithoutFrontmatter,
                   )
 
                 existingFrontMatter[frontMatterIdx] = newFrontMatter[0]
@@ -344,12 +347,12 @@ export default class OmnivorePlugin extends Plugin {
               }
 
               const newFrontMatterStr = `---\n${stringifyYaml(
-                existingFrontMatter
+                existingFrontMatter,
               )}---`
 
               await this.app.vault.modify(
                 omnivoreFile,
-                `${newFrontMatterStr}\n\n${newContentWithoutFrontMatter}`
+                `${newFrontMatterStr}\n\n${newContentWithoutFrontMatter}`,
               )
               continue
             }
@@ -366,9 +369,8 @@ export default class OmnivorePlugin extends Plugin {
                     this.app.vault.getAbstractFileByPath(newNormalizedPath)
                   if (newOmnivoreFile instanceof TFile) {
                     // a file with the same name and id already exists, so we need to update it
-                    const existingContent = await this.app.vault.read(
-                      newOmnivoreFile
-                    )
+                    const existingContent =
+                      await this.app.vault.read(newOmnivoreFile)
                     if (existingContent !== content) {
                       await this.app.vault.modify(newOmnivoreFile, content)
                     }
@@ -383,7 +385,7 @@ export default class OmnivorePlugin extends Plugin {
                 if (existingContent !== content) {
                   await this.app.vault.modify(omnivoreFile, content)
                 }
-              }
+              },
             )
             continue
           }
@@ -393,7 +395,7 @@ export default class OmnivorePlugin extends Plugin {
           } catch (error) {
             if (error.toString().includes('File already exists')) {
               new Notice(
-                `Skipping file creation: ${normalizedPath}. Please check if you have duplicated article titles and delete the file if needed.`
+                `Skipping file creation: ${normalizedPath}. Please check if you have duplicated article titles and delete the file if needed.`,
               )
             } else {
               throw error
@@ -427,7 +429,7 @@ export default class OmnivorePlugin extends Plugin {
       const isDeleted = deleteArticleById(
         this.settings.endpoint,
         this.settings.apiKey,
-        articleId
+        articleId,
       )
       if (!isDeleted) {
         new Notice('Failed to delete article in Omnivore')
@@ -471,9 +473,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
             fragment.createEl('a', {
               text: 'https://omnivore.app/settings/api',
               href: 'https://omnivore.app/settings/api',
-            })
+            }),
           )
-        })
+        }),
       )
       .addText((text) =>
         text
@@ -482,13 +484,13 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.apiKey = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
 
     new Setting(containerEl)
       .setName('Filter')
       .setDesc(
-        "Select an Omnivore search filter type. Changing this would update the 'Custom Query' accordingly and reset the 'Last sync' timestamp"
+        "Select an Omnivore search filter type. Changing this would update the 'Custom Query' accordingly and reset the 'Last sync' timestamp",
       )
       .addDropdown((dropdown) => {
         dropdown.addOptions(Filter)
@@ -513,14 +515,14 @@ class OmnivoreSettingTab extends PluginSettingTab {
               text: 'https://docs.omnivore.app/using/search',
               href: 'https://docs.omnivore.app/using/search',
             }),
-            " for more info on search query syntax. Changing this would reset the 'Last Sync' timestamp"
+            " for more info on search query syntax. Changing this would reset the 'Last Sync' timestamp",
           )
-        })
+        }),
       )
       .addText((text) =>
         text
           .setPlaceholder(
-            'Enter an Omnivore custom search query if advanced filter is selected'
+            'Enter an Omnivore custom search query if advanced filter is selected',
           )
           .setValue(this.plugin.settings.customQuery)
           .onChange(async (value) => {
@@ -528,13 +530,13 @@ class OmnivoreSettingTab extends PluginSettingTab {
             this.plugin.settings.syncAt = ''
             await this.plugin.saveSettings()
             this.display()
-          })
+          }),
       )
 
     new Setting(containerEl)
       .setName('Last Sync')
       .setDesc(
-        "Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated after this timestamp"
+        "Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated after this timestamp",
       )
       .addMomentFormat((momentFormat) =>
         momentFormat
@@ -544,7 +546,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.syncAt = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
 
     new Setting(containerEl)
@@ -575,9 +577,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
             }),
             fragment.createEl('br'),
             fragment.createEl('br'),
-            'If you want to use a custom front matter template, you can enter it below under the advanced settings'
+            'If you want to use a custom front matter template, you can enter it below under the advanced settings',
           )
-        })
+        }),
       )
       .addTextArea((text) => {
         text
@@ -591,7 +593,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
               .filter(
                 (v, i, a) =>
                   FRONT_MATTER_VARIABLES.includes(v.split('::')[0]) &&
-                  a.indexOf(v) === i
+                  a.indexOf(v) === i,
               )
             await this.plugin.saveSettings()
           })
@@ -611,9 +613,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
             }),
             fragment.createEl('br'),
             fragment.createEl('br'),
-            'If you want to use a custom front matter template, you can enter it below under the advanced settings'
+            'If you want to use a custom front matter template, you can enter it below under the advanced settings',
           )
-        })
+        }),
       )
       .addTextArea((text) => {
         text
@@ -645,7 +647,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Frequency')
       .setDesc(
-        'Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync'
+        'Enter the frequency in minutes to sync with Omnivore automatically. 0 means manual sync',
       )
       .addText((text) =>
         text
@@ -663,13 +665,13 @@ class OmnivoreSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings()
 
             this.plugin.scheduleSync()
-          })
+          }),
       )
 
     new Setting(containerEl)
       .setName('Folder')
       .setDesc(
-        'Enter the folder where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name'
+        'Enter the folder where the data will be stored. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name',
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl)
@@ -684,7 +686,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Attachment Folder')
       .setDesc(
-        'Enter the folder where the attachment will be downloaded to. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name'
+        'Enter the folder where the attachment will be downloaded to. {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the folder name',
       )
       .addSearch((search) => {
         new FolderSuggest(this.app, search.inputEl)
@@ -700,7 +702,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Is Single File')
       .setDesc(
-        'Check this box if you want to save all articles in a single file'
+        'Check this box if you want to save all articles in a single file',
       )
       .addToggle((toggle) =>
         toggle
@@ -708,13 +710,13 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.isSingleFile = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
 
     new Setting(containerEl)
       .setName('Filename')
       .setDesc(
-        'Enter the filename where the data will be stored. {{id}}, {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename'
+        'Enter the filename where the data will be stored. {{id}}, {{{title}}}, {{{dateSaved}}} and {{{datePublished}}} could be used in the filename',
       )
       .addText((text) =>
         text
@@ -723,7 +725,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.filename = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
 
     new Setting(containerEl)
@@ -735,9 +737,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
             fragment.createEl('a', {
               text: 'reference',
               href: 'https://moment.github.io/luxon/#/formatting?id=table-of-tokens',
-            })
+            }),
           )
-        })
+        }),
       )
       .addText((text) =>
         text
@@ -746,7 +748,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.filenameDateFormat = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
 
     new Setting(containerEl)
@@ -758,9 +760,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
             fragment.createEl('a', {
               text: 'reference',
               href: 'https://moment.github.io/luxon/#/formatting?id=table-of-tokens',
-            })
+            }),
           )
-        })
+        }),
       )
       .addText((text) =>
         text
@@ -769,12 +771,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.folderDateFormat = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
     new Setting(containerEl)
       .setName('Date Saved Format')
       .setDesc(
-        'Enter the date format for dateSaved variable in rendered template'
+        'Enter the date format for dateSaved variable in rendered template',
       )
       .addText((text) =>
         text
@@ -783,12 +785,12 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.dateSavedFormat = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
     new Setting(containerEl)
       .setName('Date Highlighted Format')
       .setDesc(
-        'Enter the date format for dateHighlighted variable in rendered template'
+        'Enter the date format for dateHighlighted variable in rendered template',
       )
       .addText((text) =>
         text
@@ -797,7 +799,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.dateHighlightedFormat = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
 
     containerEl.createEl('h5', {
@@ -819,7 +821,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.endpoint = value
             await this.plugin.saveSettings()
-          })
+          }),
       )
 
     new Setting(advancedSettings)
@@ -837,9 +839,9 @@ class OmnivoreSettingTab extends PluginSettingTab {
             'We recommend you to use Front Matter section under the basic settings to define the metadata.',
             fragment.createEl('br'),
             fragment.createEl('br'),
-            'If this template is set, it will override the Front Matter so please make sure your template is a valid YAML.'
+            'If this template is set, it will override the Front Matter so please make sure your template is a valid YAML.',
           )
-        })
+        }),
       )
       .addTextArea((text) => {
         text

@@ -1,21 +1,21 @@
-import { diff_match_patch } from "diff-match-patch"
-import { DateTime } from "luxon"
-import escape from "markdown-escape"
-import { parseYaml } from "obsidian"
-import outOfCharacter from "out-of-character"
-import { Highlight } from "./api"
+import { diff_match_patch } from 'diff-match-patch'
+import { DateTime } from 'luxon'
+import escape from 'markdown-escape'
+import { parseYaml } from 'obsidian'
+import outOfCharacter from 'out-of-character'
+import { Highlight } from './api'
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`
-export const REPLACEMENT_CHAR = "-"
+export const REPLACEMENT_CHAR = '-'
 // On Unix-like systems / is reserved and <>:"/\|?* as well as non-printable characters \u0000-\u001F on Windows
 // credit: https://github.com/sindresorhus/filename-reserved-regex
 // eslint-disable-next-line no-control-regex
 export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g
 
 export interface HighlightPoint {
-  left: number;
-  top: number;
+  left: number
+  top: number
 }
 
 export const getHighlightLocation = (patch: string | null): number => {
@@ -54,7 +54,7 @@ export const markdownEscape = (text: string): string => {
   try {
     return escape(text)
   } catch (e) {
-    console.error("markdownEscape error", e)
+    console.error('markdownEscape error', e)
     return text
   }
 }
@@ -78,29 +78,27 @@ export const wrapAround = (value: number, size: number): number => {
 export const unicodeSlug = (str: string, savedAt: string) => {
   return (
     str
-      .normalize("NFKD") // using NFKD method returns the Unicode Normalization Form of a given string.
-      .replace(/[\u0300-\u036f]/g, "") // remove all previously split accents
+      .normalize('NFKD') // using NFKD method returns the Unicode Normalization Form of a given string.
+      .replace(/[\u0300-\u036f]/g, '') // remove all previously split accents
       .trim()
       .toLowerCase()
       .replace(
         /[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g,
-        ""
+        '',
       ) // replace all the symbols with -
-      .replace(/\s+/g, "-") // collapse whitespace and replace by -
-      .replace(/_/g, "-") // replace _ with -
-      .replace(/-+/g, "-") // collapse dashes
+      .replace(/\s+/g, '-') // collapse whitespace and replace by -
+      .replace(/_/g, '-') // replace _ with -
+      .replace(/-+/g, '-') // collapse dashes
       // remove trailing -
-      .replace(/-$/g, "")
+      .replace(/-$/g, '')
       .substring(0, 64) +
-    "-" +
+    '-' +
     new Date(savedAt).getTime().toString(16)
   )
 }
 
 export const replaceIllegalChars = (str: string): string => {
-  return removeInvisibleChars(
-    str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR)
-  )
+  return removeInvisibleChars(str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR))
 }
 
 export function formatDate(date: string, format: string): string {
@@ -127,24 +125,24 @@ export const getQueryFromFilter = (filter: string): string => {
 
 export const siteNameFromUrl = (originalArticleUrl: string): string => {
   try {
-    return new URL(originalArticleUrl).hostname.replace(/^www\./, "")
+    return new URL(originalArticleUrl).hostname.replace(/^www\./, '')
   } catch {
-    return ""
+    return ''
   }
 }
 
 export const formatHighlightQuote = (
   quote: string | null,
-  template: string
+  template: string,
 ): string => {
   if (!quote) {
-    return ""
+    return ''
   }
   // if the template has highlights, we need to preserve paragraphs
   const regex = /{{#highlights}}(\n)*>/gm
   if (regex.test(template)) {
     // replace all empty lines with blockquote '>' to preserve paragraphs
-    quote = quote.replaceAll("&gt;", ">").replaceAll(/\n/gm, "\n> ")
+    quote = quote.replaceAll('&gt;', '>').replaceAll(/\n/gm, '\n> ')
   }
 
   return quote
@@ -152,7 +150,7 @@ export const formatHighlightQuote = (
 
 export const findFrontMatterIndex = (
   frontMatter: any[],
-  id: string
+  id: string,
 ): number => {
   // find index of front matter with matching id
   return frontMatter.findIndex((fm) => fm.id == id)
@@ -171,11 +169,11 @@ export const parseFrontMatterFromContent = (content: string) => {
 export const removeFrontMatterFromContent = (content: string): string => {
   const frontMatterRegex = /^---.*?---\n*/s
 
-  return content.replace(frontMatterRegex, "")
+  return content.replace(frontMatterRegex, '')
 }
 
 export const snakeToCamelCase = (str: string) =>
-  str.replace(/(_[a-z])/g, (group) => group.toUpperCase().replace("_", ""))
+  str.replace(/(_[a-z])/g, (group) => group.toUpperCase().replace('_', ''))
 
 const removeInvisibleChars = (str: string): string => {
   return outOfCharacter.replace(str)
