@@ -103,8 +103,8 @@ export default class OmnivorePlugin extends Plugin {
 
     this.scheduleSync()
 
-    // sync when the app is loaded if frequency is greater than zero
-    if (this.settings.frequency > 0) {
+    // sync when the app is loaded if syncOnStart is true
+    if (this.settings.syncOnStart) {
       await this.fetchOmnivore()
     }
   }
@@ -529,7 +529,6 @@ class OmnivoreSettingTab extends PluginSettingTab {
             this.plugin.settings.customQuery = value
             this.plugin.settings.syncAt = ''
             await this.plugin.saveSettings()
-            this.display()
           }),
       )
 
@@ -643,6 +642,20 @@ class OmnivoreSettingTab extends PluginSettingTab {
             new Notice('Template reset')
           })
       })
+
+    new Setting(containerEl)
+      .setName('Sync on Start')
+      .setDesc(
+        'Check this box if you want to sync with Omnivore when the app is loaded',
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.syncOnStart)
+          .onChange(async (value) => {
+            this.plugin.settings.syncOnStart = value
+            await this.plugin.saveSettings()
+          }),
+      )
 
     new Setting(containerEl)
       .setName('Frequency')
