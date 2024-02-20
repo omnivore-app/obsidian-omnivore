@@ -42,6 +42,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   intervalId: 0,
   frontMatterVariables: [],
   frontMatterTemplate: '',
+  syncOnStart: true,
 }
 
 export enum Filter {
@@ -78,4 +79,5 @@ export interface OmnivoreSettings {
   frontMatterVariables: string[]
   frontMatterTemplate: string
   filenameDateFormat: string
+  syncOnStart: boolean
 }
