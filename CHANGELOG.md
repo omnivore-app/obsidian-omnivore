@@ -1,3 +1,11 @@
+## [1.9.4](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.3...1.9.4) (2024-02-20)
+
+
+### Bug Fixes
+
+* add a setting to disable sync on start ([#198](https://github.com/omnivore-app/obsidian-omnivore/issues/198)) ([d9c5fb2](https://github.com/omnivore-app/obsidian-omnivore/commit/d9c5fb29dbb0f5f9faa29823736f8b08c99b85ef))
+* update filter setting will update custom query accordingly and default to in:all ([#196](https://github.com/omnivore-app/obsidian-omnivore/issues/196)) ([f443aee](https://github.com/omnivore-app/obsidian-omnivore/commit/f443aee91cb30f686b272866f886d5466cc41e49))
+
 ## [1.9.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.2...1.9.3) (2024-02-07)
 
 
