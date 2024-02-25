@@ -240,7 +240,7 @@ export default class OmnivorePlugin extends Plugin {
         (templateSpan) => templateSpan[1] === 'fileAttachment',
       )
 
-      const size = 50
+      const size = 15
       for (
         let hasNextPage = true, articles: Article[] = [], after = 0;
         hasNextPage;
