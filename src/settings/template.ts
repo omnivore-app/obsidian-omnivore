@@ -1,7 +1,8 @@
+import { PageType } from '@omnivore/api'
 import { truncate } from 'lodash'
 import Mustache from 'mustache'
 import { parseYaml, stringifyYaml } from 'obsidian'
-import { Article, HighlightType, PageType } from '../api'
+import { Article, HighlightType } from '../api'
 import {
   compareHighlightsInFile,
   formatDate,
@@ -200,7 +201,7 @@ export const renderArticleContnet = async (
   if (highlightOrder === 'LOCATION') {
     articleHighlights.sort((a, b) => {
       try {
-        if (article.pageType === PageType.File) {
+        if (article.pageType === 'FILE') {
           // sort by location in file
           return compareHighlightsInFile(a, b)
         }
@@ -217,17 +218,21 @@ export const renderArticleContnet = async (
       text: formatHighlightQuote(highlight.quote, template),
       highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
       highlightID: highlight.id.slice(0, 8),
-      dateHighlighted: formatDate(highlight.updatedAt, dateHighlightedFormat),
+      dateHighlighted: highlight.updatedAt
+        ? formatDate(highlight.updatedAt, dateHighlightedFormat)
+        : '',
       note: highlight.annotation ?? undefined,
-      labels: renderLabels(highlight.labels),
+      labels: renderLabels(highlight.labels || []),
       color: highlight.color ?? 'yellow',
-      positionPercent: highlight.highlightPositionPercent,
-      positionAnchorIndex: highlight.highlightPositionAnchorIndex + 1, // PDF page numbers start at 1
+      positionPercent: highlight.highlightPositionPercent || 0,
+      positionAnchorIndex: highlight.highlightPositionAnchorIndex
+        ? highlight.highlightPositionAnchorIndex + 1
+        : 0, // PDF page numbers start at 1
     }
   })
   const dateSaved = formatDate(article.savedAt, dateSavedFormat)
   const siteName =
-    article.siteName || siteNameFromUrl(article.originalArticleUrl)
+    article.siteName || siteNameFromUrl(article.originalArticleUrl || '')
   const publishedAt = article.publishedAt
   const datePublished = publishedAt
     ? formatDate(publishedAt, dateSavedFormat).trim()
@@ -247,24 +252,27 @@ export const renderArticleContnet = async (
     title: article.title,
     omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
     siteName,
-    originalUrl: article.originalArticleUrl,
-    author: article.author,
-    labels: renderLabels(article.labels),
+    originalUrl: article.originalArticleUrl || article.url,
+    author: article.author || 'unknown-author',
+    labels: renderLabels(article.labels || []),
     dateSaved,
     highlights,
-    content: article.contentReader === 'WEB' ? article.content : undefined,
+    content:
+      article.contentReader === 'WEB'
+        ? article.content || undefined
+        : undefined,
     datePublished,
     fileAttachment,
-    description: article.description,
+    description: article.description || undefined,
     note: articleNote?.annotation ?? undefined,
     type: article.pageType,
     dateRead,
-    wordsCount,
+    wordsCount: article.wordsCount || undefined,
     readLength,
     state: getArticleState(article),
-    dateArchived: article.archivedAt,
-    image: article.image,
-    updatedAt: article.updatedAt,
+    dateArchived: article.archivedAt || undefined,
+    image: article.image || undefined,
+    updatedAt: article.updatedAt || '',
     ...functionMap,
   }
 
@@ -361,9 +369,11 @@ export const render = (
     : undefined
   const view: View = {
     ...article,
+    siteName:
+      article.siteName || siteNameFromUrl(article.originalArticleUrl || ''),
     author: article.author || 'unknown-author',
     omnivoreUrl: getOmnivoreUrl(article),
-    originalUrl: article.originalArticleUrl,
+    originalUrl: article.originalArticleUrl || article.url,
     date: dateSaved,
     dateSaved,
     datePublished,

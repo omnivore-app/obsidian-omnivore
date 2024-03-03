@@ -1,3 +1,4 @@
+import { Omnivore, PageType } from '@omnivore/api'
 import { requestUrl } from 'obsidian'
 
 export interface SearchResponse {
@@ -21,41 +22,41 @@ export interface DeleteArticleResponse {
   }
 }
 
-export enum PageType {
-  Article = 'ARTICLE',
-  Book = 'BOOK',
-  File = 'FILE',
-  Profile = 'PROFILE',
-  Unknown = 'UNKNOWN',
-  Website = 'WEBSITE',
-  Tweet = 'TWEET',
-  Video = 'VIDEO',
-  Image = 'IMAGE',
-}
+// export enum PageType {
+//   Article = 'ARTICLE',
+//   Book = 'BOOK',
+//   File = 'FILE',
+//   Profile = 'PROFILE',
+//   Unknown = 'UNKNOWN',
+//   Website = 'WEBSITE',
+//   Tweet = 'TWEET',
+//   Video = 'VIDEO',
+//   Image = 'IMAGE',
+// }
 
 export interface Article {
   id: string
   title: string
-  siteName: string
-  originalArticleUrl: string
-  author?: string
-  description?: string
+  siteName: string | null
+  originalArticleUrl: string | null
+  author?: string | null
+  description?: string | null
   slug: string
-  labels?: Label[]
-  highlights?: Highlight[]
-  updatedAt: string
+  labels?: Label[] | null
+  highlights?: Highlight[] | null
+  updatedAt: string | null
   savedAt: string
   pageType: PageType
-  content: string
-  publishedAt?: string
+  content: string | null
+  publishedAt?: string | null
   url: string
-  image?: string
-  readAt?: string
-  wordsCount?: number
+  image?: string | null
+  readAt?: string | null
+  wordsCount?: number | null
   readingProgressPercent: number
   isArchived: boolean
-  archivedAt?: string
-  contentReader?: string
+  archivedAt?: string | null
+  contentReader?: string | null
 }
 
 export interface Label {
@@ -73,12 +74,12 @@ export interface Highlight {
   quote: string | null
   annotation: string | null
   patch: string | null
-  updatedAt: string
-  labels?: Label[]
-  type: HighlightType
-  highlightPositionPercent: number
-  color?: string
-  highlightPositionAnchorIndex: number
+  updatedAt: string | null
+  labels?: Label[] | null
+  type: 'HIGHLIGHT' | 'NOTE' | 'REDACTION'
+  highlightPositionPercent: number | null
+  color?: string | null
+  highlightPositionAnchorIndex: number | null
 }
 
 const requestHeaders = (apiKey: string) => ({
@@ -97,81 +98,94 @@ export const loadArticles = async (
   includeContent = false,
   format = 'html',
 ): Promise<[Article[], boolean]> => {
-  const res = await requestUrl({
-    url: endpoint,
-    headers: requestHeaders(apiKey),
-    body: JSON.stringify({
-      query: `
-        query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {
-          search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {
-            ... on SearchSuccess {
-              edges {
-                node {
-                  id
-                  title
-                  slug
-                  siteName
-                  originalArticleUrl
-                  url
-                  image
-                  author
-                  updatedAt
-                  description
-                  savedAt
-                  pageType
-                  content
-                  publishedAt
-                  readAt
-                  wordsCount
-                  isArchived
-                  readingProgressPercent
-                  archivedAt
-                  contentReader
-                  highlights {
-                    id
-                    quote
-                    annotation
-                    patch
-                    updatedAt
-                    type
-                    highlightPositionPercent
-                    highlightPositionAnchorIndex
-                    labels {
-                      name
-                    }
-                    color
-                  }
-                  labels {
-                    name
-                  }
-                }
-              }
-              pageInfo {
-                hasNextPage
-              }
-            }
-            ... on SearchError {
-              errorCodes
-            }
-          }
-        }`,
-      variables: {
-        after: `${after}`,
-        first,
-        query: `${
-          updatedAt ? 'updated:' + updatedAt : ''
-        } sort:saved-asc ${query}`,
-        includeContent,
-        format,
-      },
-    }),
-    method: 'POST',
+  // const res = await requestUrl({
+  //   url: endpoint,
+  //   headers: requestHeaders(apiKey),
+  //   body: JSON.stringify({
+  //     query: `
+  //       query Search($after: String, $first: Int, $query: String, $includeContent: Boolean, $format: String) {
+  //         search(first: $first, after: $after, query: $query, includeContent: $includeContent, format: $format) {
+  //           ... on SearchSuccess {
+  //             edges {
+  //               node {
+  //                 id
+  //                 title
+  //                 slug
+  //                 siteName
+  //                 originalArticleUrl
+  //                 url
+  //                 image
+  //                 author
+  //                 updatedAt
+  //                 description
+  //                 savedAt
+  //                 pageType
+  //                 content
+  //                 publishedAt
+  //                 readAt
+  //                 wordsCount
+  //                 isArchived
+  //                 readingProgressPercent
+  //                 archivedAt
+  //                 contentReader
+  //                 highlights {
+  //                   id
+  //                   quote
+  //                   annotation
+  //                   patch
+  //                   updatedAt
+  //                   type
+  //                   highlightPositionPercent
+  //                   highlightPositionAnchorIndex
+  //                   labels {
+  //                     name
+  //                   }
+  //                   color
+  //                 }
+  //                 labels {
+  //                   name
+  //                 }
+  //               }
+  //             }
+  //             pageInfo {
+  //               hasNextPage
+  //             }
+  //           }
+  //           ... on SearchError {
+  //             errorCodes
+  //           }
+  //         }
+  //       }`,
+  //     variables: {
+  //       after: `${after}`,
+  //       first,
+  //       query: `${
+  //         updatedAt ? 'updated:' + updatedAt : ''
+  //       } sort:saved-asc ${query}`,
+  //       includeContent,
+  //       format,
+  //     },
+  //   }),
+  //   method: 'POST',
+  // })
+
+  // const jsonRes = res.json as SearchResponse
+  // const articles = jsonRes.data.search.edges.map((e) => e.node)
+
+  // return [articles, jsonRes.data.search.pageInfo.hasNextPage]
+
+  const omnivore = new Omnivore(endpoint, apiKey)
+
+  const response = await omnivore.search({
+    after: `${after}`,
+    first,
+    query: `${updatedAt ? 'updated:' + updatedAt : ''} sort:saved-asc ${query}`,
+    includeContent,
+    format,
   })
 
-  const jsonRes = res.json as SearchResponse
-  const articles = jsonRes.data.search.edges.map((e) => e.node)
-
-  return [articles, jsonRes.data.search.pageInfo.hasNextPage]
+  const articles = response.edges.map((e) => e.node)
+  return [articles, response.pageInfo.hasNextPage]
 }
 
 export const deleteArticleById = async (

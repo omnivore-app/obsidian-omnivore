@@ -12,7 +12,7 @@ import {
   TFile,
   TFolder,
 } from 'obsidian'
-import { Article, deleteArticleById, loadArticles, PageType } from './api'
+import { Article, deleteArticleById, loadArticles } from './api'
 import {
   DEFAULT_SETTINGS,
   Filter,
@@ -267,7 +267,7 @@ export default class OmnivorePlugin extends Plugin {
             await this.app.vault.createFolder(folderName)
           }
           const fileAttachment =
-            article.pageType === PageType.File && includeFileAttachment
+            article.pageType === 'FILE' && includeFileAttachment
               ? await this.downloadFileAsAttachment(article)
               : undefined
           const content = await renderArticleContnet(

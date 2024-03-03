@@ -56,7 +56,8 @@
 		"markdown-escape": "^2.0.0",
 		"mustache": "^4.2.0",
 		"out-of-character": "^1.2.1",
-		"process": "^0.11.10"
+		"process": "^0.11.10",
+		"react": "^17.0.2"
 	},
 	"volta": {
 		"node": "16.15.1",
