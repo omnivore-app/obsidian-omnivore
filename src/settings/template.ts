@@ -1,4 +1,4 @@
-import { PageType } from '@omnivore/api'
+import { PageType } from '@omnivore-app/api'
 import { truncate } from 'lodash'
 import Mustache from 'mustache'
 import { parseYaml, stringifyYaml } from 'obsidian'

@@ -1,4 +1,9 @@
-import { Omnivore, PageType } from '@omnivore/api'
+import {
+  Omnivore,
+  OmnivoreErrorCode,
+  PageType,
+  isOmnivoreError,
+} from '@omnivore-app/api'
 import { requestUrl } from 'obsidian'
 
 export interface SearchResponse {
@@ -174,18 +179,37 @@ export const loadArticles = async (
 
   // return [articles, jsonRes.data.search.pageInfo.hasNextPage]
 
-  const omnivore = new Omnivore(endpoint, apiKey)
-
-  const response = await omnivore.search({
-    after: `${after}`,
-    first,
-    query: `${updatedAt ? 'updated:' + updatedAt : ''} sort:saved-asc ${query}`,
-    includeContent,
-    format,
+  const omnivore = new Omnivore({
+    authToken: apiKey,
+    baseUrl: endpoint,
+    timeoutMs: 10000,
   })
 
-  const articles = response.edges.map((e) => e.node)
-  return [articles, response.pageInfo.hasNextPage]
+  try {
+    const response = await omnivore.items.search({
+      after: `${after}`,
+      first,
+      query: `${updatedAt ? 'updated:' + updatedAt : ''} sort:saved-asc ${query}`,
+      includeContent,
+      format: format as 'html' | 'markdown',
+    })
+
+    const articles = response.edges.map((e) => e.node)
+    return [articles, response.pageInfo.hasNextPage]
+  } catch (error: unknown) {
+    if (isOmnivoreError(error)) {
+      switch (error.code) {
+        case OmnivoreErrorCode.GraphQLError:
+          console.error('GraphQL error:', error)
+          break
+        case OmnivoreErrorCode.NetworkError:
+          console.error('Network error:', error)
+          break
+      }
+    }
+  }
+
+  return [[], false]
 }
 
 export const deleteArticleById = async (
