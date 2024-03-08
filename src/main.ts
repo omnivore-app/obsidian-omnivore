@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { Item } from '@omnivore-app/api'
 import {
   addIcon,
   App,
@@ -12,7 +12,7 @@ import {
   TFile,
   TFolder,
 } from 'obsidian'
-import { Article, deleteArticleById, loadArticles } from './api'
+import { deleteItem, getItems } from './api'
 import {
   DEFAULT_SETTINGS,
   Filter,
@@ -24,11 +24,10 @@ import { FolderSuggest } from './settings/file-suggest'
 import {
   preParseTemplate,
   render,
-  renderArticleContnet,
   renderFilename,
+  renderItemContnet,
 } from './settings/template'
 import {
-  DATE_FORMAT,
   findFrontMatterIndex,
   getQueryFromFilter,
   parseDateTime,
@@ -70,7 +69,7 @@ export default class OmnivorePlugin extends Plugin {
       id: 'deleteArticle',
       name: 'Delete Current Article from Omnivore',
       callback: async () => {
-        await this.deleteCurrentArticle(this.app.workspace.getActiveFile())
+        await this.deleteCurrentItem(this.app.workspace.getActiveFile())
       },
     })
 
@@ -105,7 +104,7 @@ export default class OmnivorePlugin extends Plugin {
 
     // sync when the app is loaded if syncOnStart is true
     if (this.settings.syncOnStart) {
-      await this.fetchOmnivore()
+      await this.fetchOmnivore(false)
     }
   }
 
@@ -166,28 +165,28 @@ export default class OmnivorePlugin extends Plugin {
     }
   }
 
-  async downloadFileAsAttachment(article: Article): Promise<string> {
+  async downloadFileAsAttachment(item: Item): Promise<string> {
     // download pdf from the URL to the attachment folder
-    const url = article.url
+    const url = item.url
     const response = await requestUrl({
       url,
       contentType: 'application/pdf',
     })
     const folderName = normalizePath(
       render(
-        article,
+        item,
         this.settings.attachmentFolder,
         this.settings.folderDateFormat,
       ),
     )
-    const folder = app.vault.getAbstractFileByPath(folderName)
+    const folder = this.app.vault.getAbstractFileByPath(folderName)
     if (!(folder instanceof TFolder)) {
-      await app.vault.createFolder(folderName)
+      await this.app.vault.createFolder(folderName)
     }
-    const fileName = normalizePath(`${folderName}/${article.id}.pdf`)
-    const file = app.vault.getAbstractFileByPath(fileName)
+    const fileName = normalizePath(`${folderName}/${item.id}.pdf`)
+    const file = this.app.vault.getAbstractFileByPath(fileName)
     if (!(file instanceof TFile)) {
-      const newFile = await app.vault.createBinary(
+      const newFile = await this.app.vault.createBinary(
         fileName,
         response.arrayBuffer,
       )
@@ -227,7 +226,7 @@ export default class OmnivorePlugin extends Plugin {
     try {
       console.log(`obsidian-omnivore starting sync since: '${syncAt}'`)
 
-      manualSync && new Notice('🚀 Fetching articles ...')
+      manualSync && new Notice('🚀 Fetching items ...')
 
       // pre-parse template
       frontMatterTemplate && preParseTemplate(frontMatterTemplate)
@@ -241,12 +240,8 @@ export default class OmnivorePlugin extends Plugin {
       )
 
       const size = 15
-      for (
-        let hasNextPage = true, articles: Article[] = [], after = 0;
-        hasNextPage;
-        after += size
-      ) {
-        ;[articles, hasNextPage] = await loadArticles(
+      for (let after = 0; ; after += size) {
+        const [items, hasNextPage] = await getItems(
           this.settings.endpoint,
           apiKey,
           after,
@@ -257,9 +252,9 @@ export default class OmnivorePlugin extends Plugin {
           'highlightedMarkdown',
         )
 
-        for (const article of articles) {
+        for (const item of items) {
           const folderName = normalizePath(
-            render(article, folder, this.settings.folderDateFormat),
+            render(item, folder, this.settings.folderDateFormat),
           )
           const omnivoreFolder =
             this.app.vault.getAbstractFileByPath(folderName)
@@ -267,11 +262,11 @@ export default class OmnivorePlugin extends Plugin {
             await this.app.vault.createFolder(folderName)
           }
           const fileAttachment =
-            article.pageType === 'FILE' && includeFileAttachment
-              ? await this.downloadFileAsAttachment(article)
+            item.pageType === 'FILE' && includeFileAttachment
+              ? await this.downloadFileAsAttachment(item)
               : undefined
-          const content = await renderArticleContnet(
-            article,
+          const content = await renderItemContnet(
+            item,
             template,
             highlightOrder,
             this.settings.dateHighlightedFormat,
@@ -283,7 +278,7 @@ export default class OmnivorePlugin extends Plugin {
           )
           // use the custom filename
           const customFilename = replaceIllegalChars(
-            renderFilename(article, filename, this.settings.filenameDateFormat),
+            renderFilename(item, filename, this.settings.filenameDateFormat),
           )
           const pageName = `${folderName}/${customFilename}.md`
           const normalizedPath = normalizePath(pageName)
@@ -319,14 +314,14 @@ export default class OmnivorePlugin extends Plugin {
               // find the front matter with the same id
               const frontMatterIdx = findFrontMatterIndex(
                 existingFrontMatter,
-                article.id,
+                item.id,
               )
               if (frontMatterIdx >= 0) {
                 // this article already exists in the file
                 // we need to locate the article which is wrapped in comments
                 // and replace the content
-                const sectionStart = `%%${article.id}_start%%`
-                const sectionEnd = `%%${article.id}_end%%`
+                const sectionStart = `%%${item.id}_start%%`
+                const sectionEnd = `%%${item.id}_end%%`
                 const existingContentRegex = new RegExp(
                   `${sectionStart}.*?${sectionEnd}`,
                   's',
@@ -361,9 +356,9 @@ export default class OmnivorePlugin extends Plugin {
               omnivoreFile,
               async (frontMatter) => {
                 const id = frontMatter.id
-                if (id && id !== article.id) {
+                if (id && id !== item.id) {
                   // this article has the same name but different id
-                  const newPageName = `${folderName}/${customFilename}-${article.id}.md`
+                  const newPageName = `${folderName}/${customFilename}-${item.id}.md`
                   const newNormalizedPath = normalizePath(newPageName)
                   const newOmnivoreFile =
                     this.app.vault.getAbstractFileByPath(newNormalizedPath)
@@ -402,34 +397,36 @@ export default class OmnivorePlugin extends Plugin {
             }
           }
         }
-      }
 
-      manualSync && new Notice('🔖 Articles fetched')
-      this.settings.syncAt = DateTime.local().toFormat(DATE_FORMAT)
+        if (!hasNextPage) {
+          break
+        }
+      }
     } catch (e) {
-      new Notice('Failed to fetch articles')
+      new Notice('Failed to fetch items')
       console.error(e)
     } finally {
       this.settings.syncing = false
       await this.saveSettings()
+      manualSync && new Notice('🎉 Sync completed')
     }
   }
 
-  private async deleteCurrentArticle(file: TFile | null) {
+  private async deleteCurrentItem(file: TFile | null) {
     if (!file) {
       return
     }
     //use frontmatter id to find the file
-    const articleId = this.app.metadataCache.getFileCache(file)?.frontmatter?.id
-    if (!articleId) {
+    const itemId = this.app.metadataCache.getFileCache(file)?.frontmatter?.id
+    if (!itemId) {
       new Notice('Failed to delete article: article id not found')
     }
 
     try {
-      const isDeleted = deleteArticleById(
+      const isDeleted = deleteItem(
         this.settings.endpoint,
         this.settings.apiKey,
-        articleId,
+        itemId,
       )
       if (!isDeleted) {
         new Notice('Failed to delete article in Omnivore')

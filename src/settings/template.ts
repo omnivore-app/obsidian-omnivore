@@ -1,8 +1,7 @@
-import { PageType } from '@omnivore-app/api'
+import { Item, ItemType } from '@omnivore-app/api'
 import { truncate } from 'lodash'
 import Mustache from 'mustache'
 import { parseYaml, stringifyYaml } from 'obsidian'
-import { Article, HighlightType } from '../api'
 import {
   compareHighlightsInFile,
   formatDate,
@@ -47,7 +46,7 @@ export interface HighlightView {
   text: string
   highlightUrl: string
   highlightID: string
-  dateHighlighted: string
+  dateHighlighted?: string
   note?: string
   labels?: LabelView[]
   color: string
@@ -61,8 +60,8 @@ export type ArticleView =
       title: string
       omnivoreUrl: string
       siteName: string
-      originalUrl: string
-      author?: string
+      originalUrl?: string
+      author: string
       labels?: LabelView[]
       dateSaved: string
       highlights: HighlightView[]
@@ -71,14 +70,14 @@ export type ArticleView =
       fileAttachment?: string
       description?: string
       note?: string
-      type: PageType
+      type: ItemType
       dateRead?: string
       wordsCount?: number
       readLength?: number
       state: string
       dateArchived?: string
       image?: string
-      updatedAt: string
+      updatedAt?: string
     }
   | FunctionMap
 
@@ -93,31 +92,31 @@ export type View =
       date: string
       dateSaved: string
       datePublished?: string
-      type: PageType
+      type: ItemType
       dateRead?: string
       state: string
       dateArchived?: string
     }
   | FunctionMap
 
-enum ArticleState {
+enum ItemState {
   Inbox = 'INBOX',
   Reading = 'READING',
   Completed = 'COMPLETED',
   Archived = 'ARCHIVED',
 }
 
-const getArticleState = (article: Article): string => {
-  if (article.isArchived) {
-    return ArticleState.Archived
+const getItemState = (item: Item): string => {
+  if (item.isArchived) {
+    return ItemState.Archived
   }
-  if (article.readingProgressPercent > 0) {
-    return article.readingProgressPercent === 100
-      ? ArticleState.Completed
-      : ArticleState.Reading
+  if (item.readingProgressPercent > 0) {
+    return item.readingProgressPercent === 100
+      ? ItemState.Completed
+      : ItemState.Reading
   }
 
-  return ArticleState.Inbox
+  return ItemState.Inbox
 }
 
 function lowerCase() {
@@ -159,16 +158,16 @@ const functionMap: FunctionMap = {
   formatDate: formatDateFunc,
 }
 
-const getOmnivoreUrl = (article: Article) => {
-  return `https://omnivore.app/me/${article.slug}`
+const getOmnivoreUrl = (item: Item) => {
+  return `https://omnivore.app/me/${item.slug}`
 }
 
 export const renderFilename = (
-  article: Article,
+  item: Item,
   filename: string,
   dateFormat: string,
 ) => {
-  const renderedFilename = render(article, filename, dateFormat)
+  const renderedFilename = render(item, filename, dateFormat)
 
   // truncate the filename to 100 characters
   return truncate(renderedFilename, {
@@ -183,8 +182,8 @@ export const renderLabels = (labels?: LabelView[]) => {
   }))
 }
 
-export const renderArticleContnet = async (
-  article: Article,
+export const renderItemContnet = async (
+  item: Item,
   template: string,
   highlightOrder: string,
   dateHighlightedFormat: string,
@@ -195,13 +194,13 @@ export const renderArticleContnet = async (
   fileAttachment?: string,
 ) => {
   // filter out notes and redactions
-  const articleHighlights =
-    article.highlights?.filter((h) => h.type === HighlightType.Highlight) || []
+  const itemHighlights =
+    item.highlights?.filter((h) => h.type === 'HIGHLIGHT') || []
   // sort highlights by location if selected in options
   if (highlightOrder === 'LOCATION') {
-    articleHighlights.sort((a, b) => {
+    itemHighlights.sort((a, b) => {
       try {
-        if (article.pageType === 'FILE') {
+        if (item.pageType === 'FILE') {
           // sort by location in file
           return compareHighlightsInFile(a, b)
         }
@@ -213,16 +212,16 @@ export const renderArticleContnet = async (
       }
     })
   }
-  const highlights: HighlightView[] = articleHighlights.map((highlight) => {
+  const highlights: HighlightView[] = itemHighlights.map((highlight) => {
     return {
       text: formatHighlightQuote(highlight.quote, template),
-      highlightUrl: `https://omnivore.app/me/${article.slug}#${highlight.id}`,
+      highlightUrl: `https://omnivore.app/me/${item.slug}#${highlight.id}`,
       highlightID: highlight.id.slice(0, 8),
       dateHighlighted: highlight.updatedAt
         ? formatDate(highlight.updatedAt, dateHighlightedFormat)
-        : '',
+        : undefined,
       note: highlight.annotation ?? undefined,
-      labels: renderLabels(highlight.labels || []),
+      labels: renderLabels(highlight.labels || undefined),
       color: highlight.color ?? 'yellow',
       positionPercent: highlight.highlightPositionPercent || 0,
       positionAnchorIndex: highlight.highlightPositionAnchorIndex
@@ -230,54 +229,50 @@ export const renderArticleContnet = async (
         : 0, // PDF page numbers start at 1
     }
   })
-  const dateSaved = formatDate(article.savedAt, dateSavedFormat)
+  const dateSaved = formatDate(item.savedAt, dateSavedFormat)
   const siteName =
-    article.siteName || siteNameFromUrl(article.originalArticleUrl || '')
-  const publishedAt = article.publishedAt
+    item.siteName || siteNameFromUrl(item.originalArticleUrl || item.url)
+  const publishedAt = item.publishedAt
   const datePublished = publishedAt
     ? formatDate(publishedAt, dateSavedFormat).trim()
     : undefined
-  const articleNote = article.highlights?.find(
-    (h) => h.type === HighlightType.Note,
-  )
-  const dateRead = article.readAt
-    ? formatDate(article.readAt, dateSavedFormat).trim()
+  const articleNote = item.highlights?.find((h) => h.type === 'NOTE')
+  const dateRead = item.readAt
+    ? formatDate(item.readAt, dateSavedFormat).trim()
     : undefined
-  const wordsCount = article.wordsCount
+  const wordsCount = item.wordsCount
   const readLength = wordsCount
     ? Math.round(Math.max(1, wordsCount / 235))
     : undefined
   const articleView: ArticleView = {
-    id: article.id,
-    title: article.title,
-    omnivoreUrl: `https://omnivore.app/me/${article.slug}`,
+    id: item.id,
+    title: item.title,
+    omnivoreUrl: `https://omnivore.app/me/${item.slug}`,
     siteName,
-    originalUrl: article.originalArticleUrl || article.url,
-    author: article.author || 'unknown-author',
-    labels: renderLabels(article.labels || []),
+    originalUrl: item.originalArticleUrl || item.url,
+    author: item.author || 'unknown',
+    labels: renderLabels(item.labels || undefined),
     dateSaved,
     highlights,
     content:
-      article.contentReader === 'WEB'
-        ? article.content || undefined
-        : undefined,
+      item.contentReader === 'WEB' ? item.content || undefined : undefined,
     datePublished,
     fileAttachment,
-    description: article.description || undefined,
+    description: item.description || undefined,
     note: articleNote?.annotation ?? undefined,
-    type: article.pageType,
+    type: item.pageType,
     dateRead,
-    wordsCount: article.wordsCount || undefined,
+    wordsCount: item.wordsCount || undefined,
     readLength,
-    state: getArticleState(article),
-    dateArchived: article.archivedAt || undefined,
-    image: article.image || undefined,
-    updatedAt: article.updatedAt || '',
+    state: getItemState(item),
+    dateArchived: item.archivedAt || undefined,
+    image: item.image || undefined,
+    updatedAt: item.updatedAt || undefined,
     ...functionMap,
   }
 
   let frontMatter: { [id: string]: unknown } = {
-    id: article.id, // id is required for deduplication
+    id: item.id, // id is required for deduplication
   }
 
   // if the front matter template is set, use it
@@ -339,8 +334,8 @@ export const renderArticleContnet = async (
   let frontMatterYaml = stringifyYaml(frontMatter)
   if (isSingleFile) {
     // wrap the content without front matter in comments
-    const sectionStart = `%%${article.id}_start%%`
-    const sectionEnd = `%%${article.id}_end%%`
+    const sectionStart = `%%${item.id}_start%%`
+    const sectionEnd = `%%${item.id}_end%%`
     contentWithoutFrontMatter = `${sectionStart}\n${contentWithoutFrontMatter}\n${sectionEnd}`
 
     // if single file, wrap the front matter in an array
@@ -352,35 +347,31 @@ export const renderArticleContnet = async (
   return `${frontMatterStr}\n\n${contentWithoutFrontMatter}`
 }
 
-export const render = (
-  article: Article,
-  template: string,
-  dateFormat: string,
-) => {
-  const dateSaved = formatDate(article.savedAt, dateFormat)
-  const datePublished = article.publishedAt
-    ? formatDate(article.publishedAt, dateFormat).trim()
+export const render = (item: Item, template: string, dateFormat: string) => {
+  const dateSaved = formatDate(item.savedAt, dateFormat)
+  const datePublished = item.publishedAt
+    ? formatDate(item.publishedAt, dateFormat).trim()
     : undefined
-  const dateArchived = article.archivedAt
-    ? formatDate(article.archivedAt, dateFormat).trim()
+  const dateArchived = item.archivedAt
+    ? formatDate(item.archivedAt, dateFormat).trim()
     : undefined
-  const dateRead = article.readAt
-    ? formatDate(article.readAt, dateFormat).trim()
+  const dateRead = item.readAt
+    ? formatDate(item.readAt, dateFormat).trim()
     : undefined
   const view: View = {
-    ...article,
+    ...item,
     siteName:
-      article.siteName || siteNameFromUrl(article.originalArticleUrl || ''),
-    author: article.author || 'unknown-author',
-    omnivoreUrl: getOmnivoreUrl(article),
-    originalUrl: article.originalArticleUrl || article.url,
+      item.siteName || siteNameFromUrl(item.originalArticleUrl || item.url),
+    author: item.author || 'unknown',
+    omnivoreUrl: getOmnivoreUrl(item),
+    originalUrl: item.originalArticleUrl || item.url,
     date: dateSaved,
     dateSaved,
     datePublished,
     dateArchived,
     dateRead,
-    type: article.pageType,
-    state: getArticleState(article),
+    type: item.pageType,
+    state: getItemState(item),
     ...functionMap,
   }
   return Mustache.render(template, view)

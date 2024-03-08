@@ -912,10 +912,10 @@
   dependencies:
     "@octokit/openapi-types" "^18.0.0"
 
-"@omnivore-app/api@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@omnivore-app/api/-/api-1.0.1.tgz#b9f6a59405134e1d8951227ac6b7aedc309442d8"
-  integrity sha512-GkBXV2StMjeGQOeClU4U9rsoHeJ7/xTRvkU/eAOmkDboceOxGzORWgUi2OQh8qQIHjNUU1044UwfO1GZJiuSyA==
+"@omnivore-app/api@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@omnivore-app/api/-/api-1.0.3.tgz#ac517fae8d371949b9117c64d7e52f6f7a78b485"
+  integrity sha512-KhCIdRFgxuh1Ztz3+8m2Ys9O0x2dFZffVBBrwOOV3E14mGoXNKfaIyncjK9xi/8TopQrq6+8ekwfMyoiWxxeaA==
   dependencies:
     "@urql/core" "^4.3.0"
     gql.tada "^1.3.1"
@@ -3052,10 +3052,6 @@ ip-regex@^4.1.0:
   resolved "https://registry.yarnpkg.com/ip-regex/-/ip-regex-4.3.0.tgz#687275ab0f57fa76978ff8f4dddc8a23d5990db5"
   integrity sha512-B9ZWJxHHOHUhUjCPrMpLD4xEq35bUTClHM1S6CBU5ixQnkZmwipwgc96vAd7AAGM9TGHvJR+Uss+/Ak6UphK+Q==
 
-ip@^2.0.0:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/ip/-/ip-2.0.1.tgz#e8f3595d33a3ea66490204234b77636965307105"
-  integrity sha512-lJUL9imLTNi1ZfXT+DU6rBBdbiKGBuay9B6xGSPVjUeQwaH1RIGqef8RZkUtHioLmSNpPR5M4HVKJGm1j8FWVQ==
 is-arrayish@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/is-arrayish/-/is-arrayish-0.2.1.tgz#77c99840527aa8ecb1a8ba697b80645a7a926a9d"
