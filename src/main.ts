@@ -253,8 +253,10 @@ export default class OmnivorePlugin extends Plugin {
         )
 
         for (const item of items) {
-          const folderName = normalizePath(
-            render(item, folder, this.settings.folderDateFormat),
+          const folderName = replaceIllegalChars(
+            normalizePath(
+              render(item, folder, this.settings.folderDateFormat),
+            )
           )
           const omnivoreFolder =
             this.app.vault.getAbstractFileByPath(folderName)
