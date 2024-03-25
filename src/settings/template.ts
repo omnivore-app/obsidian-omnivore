@@ -333,11 +333,6 @@ export const renderItemContnet = async (
   let contentWithoutFrontMatter = removeFrontMatterFromContent(content)
   let frontMatterYaml = stringifyYaml(frontMatter)
   if (isSingleFile) {
-    // wrap the content without front matter in comments
-    const sectionStart = `%%${item.id}_start%%`
-    const sectionEnd = `%%${item.id}_end%%`
-    contentWithoutFrontMatter = `${sectionStart}\n${contentWithoutFrontMatter}\n${sectionEnd}`
-
     // if single file, wrap the front matter in an array
     frontMatterYaml = stringifyYaml([frontMatter])
   }
