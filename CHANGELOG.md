@@ -1,3 +1,10 @@
+## [1.9.5](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.4...1.9.5) (2024-04-16)
+
+
+### Bug Fixes
+
+* better name for Sync on Start in settings ([93fe7e9](https://github.com/omnivore-app/obsidian-omnivore/commit/93fe7e9c680ad96736bb04b820a7da777c49eb94))
+
 ## [1.9.4](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.3...1.9.4) (2024-02-20)
 
 
