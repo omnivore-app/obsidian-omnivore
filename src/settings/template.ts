@@ -11,6 +11,7 @@ import {
   siteNameFromUrl,
   snakeToCamelCase,
 } from '../util'
+import { HighlightManagerId } from '.'
 
 type FunctionMap = {
   [key: string]: () => (
@@ -182,10 +183,11 @@ export const renderLabels = (labels?: LabelView[]) => {
   }))
 }
 
-export const renderItemContnet = async (
+export const renderItemContent = async (
   item: Item,
   template: string,
   highlightOrder: string,
+  highlightManagerId: HighlightManagerId | undefined,
   dateHighlightedFormat: string,
   dateSavedFormat: string,
   isSingleFile: boolean,
@@ -213,8 +215,19 @@ export const renderItemContnet = async (
     })
   }
   const highlights: HighlightView[] = itemHighlights.map((highlight) => {
+    const highlightColor = highlight.color ?? 'yellow'
+    const highlightRenderOption = highlightManagerId
+      ? {
+          highlightColor: highlightColor,
+          highlightManagerId: highlightManagerId,
+        }
+      : null
     return {
-      text: formatHighlightQuote(highlight.quote, template),
+      text: formatHighlightQuote(
+        highlight.quote,
+        template,
+        highlightRenderOption,
+      ),
       highlightUrl: `https://omnivore.app/me/${item.slug}#${highlight.id}`,
       highlightID: highlight.id.slice(0, 8),
       dateHighlighted: highlight.updatedAt
@@ -222,7 +235,7 @@ export const renderItemContnet = async (
         : undefined,
       note: highlight.annotation ?? undefined,
       labels: renderLabels(highlight.labels || undefined),
-      color: highlight.color ?? 'yellow',
+      color: highlightColor,
       positionPercent: highlight.highlightPositionPercent || 0,
       positionAnchorIndex: highlight.highlightPositionAnchorIndex
         ? highlight.highlightPositionAnchorIndex + 1
