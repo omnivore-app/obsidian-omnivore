@@ -643,7 +643,7 @@ class OmnivoreSettingTab extends PluginSettingTab {
       })
 
     new Setting(containerEl)
-      .setName('Sync on Start')
+      .setName('Sync on startup')
       .setDesc(
         'Check this box if you want to sync with Omnivore when the app is loaded',
       )
