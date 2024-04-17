@@ -1,5 +1,12 @@
 import { Item, ItemFormat, Omnivore } from '@omnivore-app/api'
 
+export enum HighlightColors {
+  Yellow = 'yellow',
+  Red = 'red',
+  Green = 'green',
+  Blue = 'blue',
+}
+
 export const getItems = async (
   endpoint: string,
   apiKey: string,

@@ -1,3 +1,4 @@
+import { HighlightColors } from '../api'
 import { DEFAULT_TEMPLATE } from './template'
 
 export const FRONT_MATTER_VARIABLES = [
@@ -19,6 +20,25 @@ export const FRONT_MATTER_VARIABLES = [
   'date_archived',
   'image',
 ]
+
+export enum Filter {
+  ALL = 'Sync all the items',
+  LIBRARY = 'Sync only the library items',
+  ARCHIVED = 'Sync only the archived items',
+  HIGHLIGHTS = 'Sync only the highlighted items',
+}
+
+export enum HighlightOrder {
+  LOCATION = 'the location of highlights in the article',
+  TIME = 'the time that highlights are updated',
+}
+
+export enum HighlightManagerId {
+  HIGHLIGHTR = 'hltr',
+  OMNIVORE = 'omni',
+}
+
+export type HighlightColorMapping = { [key in HighlightColors]: string }
 
 export const DEFAULT_SETTINGS: OmnivoreSettings = {
   dateHighlightedFormat: 'yyyy-MM-dd HH:mm:ss',
@@ -43,18 +63,14 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   frontMatterVariables: [],
   frontMatterTemplate: '',
   syncOnStart: true,
-}
-
-export enum Filter {
-  ALL = 'Sync all the items',
-  LIBRARY = 'Sync only the library items',
-  ARCHIVED = 'Sync only the archived items',
-  HIGHLIGHTS = 'Sync only the highlighted items',
-}
-
-export enum HighlightOrder {
-  LOCATION = 'the location of highlights in the article',
-  TIME = 'the time that highlights are updated',
+  enableHighlightColorRender: false,
+  highlightManagerId: HighlightManagerId.OMNIVORE,
+  highlightColorMapping: {
+    [HighlightColors.Yellow]: '#fff3a3',
+    [HighlightColors.Red]: '#ff5582',
+    [HighlightColors.Blue]: '#adccff',
+    [HighlightColors.Green]: '#bbfabb',
+  },
 }
 
 export interface OmnivoreSettings {
@@ -80,4 +96,7 @@ export interface OmnivoreSettings {
   frontMatterTemplate: string
   filenameDateFormat: string
   syncOnStart: boolean
+  enableHighlightColorRender: boolean
+  highlightManagerId: HighlightManagerId
+  highlightColorMapping: HighlightColorMapping
 }
