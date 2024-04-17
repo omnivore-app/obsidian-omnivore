@@ -24,6 +24,7 @@ import {
   parseFrontMatterFromContent,
   removeFrontMatterFromContent,
   replaceIllegalCharsFile,
+  replaceIllegalCharsFolder,
   setOrUpdateHighlightColors,
 } from './util'
 import { OmnivoreSettingTab } from './settingsTab'
@@ -247,7 +248,7 @@ export default class OmnivorePlugin extends Plugin {
         )
 
         for (const item of items) {
-          const folderName = replaceIllegalCharsFile(
+          const folderName = replaceIllegalCharsFolder(
             normalizePath(render(item, folder, this.settings.folderDateFormat)),
           )
           const omnivoreFolder =
