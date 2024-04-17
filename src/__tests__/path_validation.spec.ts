@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import {
-  ILLEGAL_CHAR_REGEX,
-  replaceIllegalChars,
+  ILLEGAL_CHAR_REGEX_FILE,
+  replaceIllegalCharsFile,
   REPLACEMENT_CHAR,
 } from '../util'
 
@@ -22,56 +22,56 @@ const expectedManualIllegalChars: string[] = [
 // ZERO WIDTH JOINER and SOFT HYPHEN
 const expectedInvisibleChars: string[] = ['­', '‍']
 
-describe('replaceIllegalChars() removes all expected characters', () => {
+describe('replaceIllegalCharsFile() removes all expected characters', () => {
   test.each(expectedManualIllegalChars)(
     'Illegal character "%s" is removed',
     (character) => {
       const input = `this${character}string`
-      const output = replaceIllegalChars(input)
+      const output = replaceIllegalCharsFile(input)
       expect(output).not.toContain(character)
     },
   )
 })
 
-describe('replaceIllegalChars() function replaces illegal characters with replacement char', () => {
+describe('replaceIllegalCharsFile() function replaces illegal characters with replacement char', () => {
   test.each(expectedManualIllegalChars)(
     "Illegal character '%s' is replaced",
     (char) => {
       const input = `this${char}string`
       const expectedOutput = `this${REPLACEMENT_CHAR}string`
-      const output = replaceIllegalChars(input)
+      const output = replaceIllegalCharsFile(input)
       expect(output).toEqual(expectedOutput)
     },
   )
 })
 
-describe('replaceIllegalChars() function does not modify string without illegal characters', () => {
+describe('replaceIllegalCharsFile() function does not modify string without illegal characters', () => {
   test.each(['this_is_a_valid_string', 'this is a valid string'])(
     "String '%s' is not modified",
     (input) => {
-      const output = replaceIllegalChars(input)
+      const output = replaceIllegalCharsFile(input)
       expect(output).toEqual(input)
     },
   )
 })
 
-describe('replaceIllegalChars() function handles empty string', () => {
+describe('replaceIllegalCharsFile() function handles empty string', () => {
   test('Empty string is not modified', () => {
     const input = ''
-    const output = replaceIllegalChars(input)
+    const output = replaceIllegalCharsFile(input)
     expect(output).toEqual(input)
   })
 })
 
-describe('replaceIllegalChars() function replaces all occurrences of illegal characters', () => {
+describe('replaceIllegalCharsFile() function replaces all occurrences of illegal characters', () => {
   test.each(expectedManualIllegalChars)(
     "Illegal character '%s' is replaced",
     (char) => {
       const input = `${char}foo${char}bar`
       const expectedOutput = `${REPLACEMENT_CHAR}foo${REPLACEMENT_CHAR}bar`
-      const output = replaceIllegalChars(input)
+      const output = replaceIllegalCharsFile(input)
       expect(output).toEqual(expectedOutput)
-      expect(output.match(ILLEGAL_CHAR_REGEX)).toBeNull()
+      expect(output.match(ILLEGAL_CHAR_REGEX_FILE)).toBeNull()
     },
   )
 })
@@ -82,7 +82,7 @@ describe('file system behavior with non-alphanumeric characters not in the illeg
     (_, i) => String.fromCharCode(i + 32),
   )
     .filter((char) => !/^[a-zA-Z0-9]+$/.test(char))
-    .map(replaceIllegalChars)
+    .map(replaceIllegalCharsFile)
 
   test.each(nonAlphanumericCharactersWithoutIllegal)(
     "File system allows creation of file with character '%s'",
@@ -101,15 +101,15 @@ describe('file system behavior with non-alphanumeric characters not in the illeg
   )
 })
 
-describe('replaceIllegalChars() function removes all occurrences of invisible characters', () => {
+describe('replaceIllegalCharsFile() function removes all occurrences of invisible characters', () => {
   test.each(expectedInvisibleChars)(
     "Invisible character '%s' is replaced",
     (char) => {
       const input = `${char}foo${char}bar`
       const expectedOutput = 'foobar'
-      const output = replaceIllegalChars(input)
+      const output = replaceIllegalCharsFile(input)
       expect(output).toEqual(expectedOutput)
-      expect(output.match(ILLEGAL_CHAR_REGEX)).toBeNull()
+      expect(output.match(ILLEGAL_CHAR_REGEX_FILE)).toBeNull()
     },
   )
 })
