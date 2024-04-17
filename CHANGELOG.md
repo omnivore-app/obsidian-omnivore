@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.5...1.10.0) (2024-04-17)
+
+
+### Features
+
+* render highlight color in article note ([c8a4e70](https://github.com/omnivore-app/obsidian-omnivore/commit/c8a4e7050db0b90bfd816afa27ae0ece54c828ba))
+
 ## [1.9.5](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.4...1.9.5) (2024-04-16)
 
 
