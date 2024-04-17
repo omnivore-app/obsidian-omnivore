@@ -4,6 +4,7 @@ import { DateTime } from 'luxon'
 import escape from 'markdown-escape'
 import { parseYaml } from 'obsidian'
 import outOfCharacter from 'out-of-character'
+import { HighlightColorMapping, HighlightManagerId } from './settings'
 
 export const DATE_FORMAT_W_OUT_SECONDS = "yyyy-MM-dd'T'HH:mm"
 export const DATE_FORMAT = `${DATE_FORMAT_W_OUT_SECONDS}:ss`
@@ -16,6 +17,11 @@ export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g
 export interface HighlightPoint {
   left: number
   top: number
+}
+
+export interface HighlightRenderOption {
+  highlightManagerId: HighlightManagerId
+  highlightColor: string
 }
 
 export const getHighlightLocation = (patch: string | null): number => {
@@ -131,9 +137,32 @@ export const siteNameFromUrl = (originalArticleUrl: string): string => {
   }
 }
 
+const wrapHighlightMarkup = (
+  quote: string,
+  highlightRenderOption: HighlightRenderOption,
+): string => {
+  const { highlightManagerId, highlightColor } = highlightRenderOption
+
+  const markupRender = (content: string) => {
+    if (content.trim().length === 0) {
+      return ''
+    }
+    if (highlightManagerId == HighlightManagerId.HIGHLIGHTR) {
+      return `<mark class="${highlightManagerId}-${highlightColor}">${content}</mark>`
+    } else {
+      return `<mark class="${highlightManagerId} ${highlightManagerId}-${highlightColor}">${content}</mark>`
+    }
+  }
+
+  return quote.replaceAll(/(>)?(.+)$/gm, (_, g1, g2) => {
+    return (g1 ?? '') + markupRender(g2)
+  })
+}
+
 export const formatHighlightQuote = (
   quote: string | null,
   template: string,
+  highlightRenderOption: HighlightRenderOption | null,
 ): string => {
   if (!quote) {
     return ''
@@ -143,6 +172,9 @@ export const formatHighlightQuote = (
   if (regex.test(template)) {
     // replace all empty lines with blockquote '>' to preserve paragraphs
     quote = quote.replaceAll('&gt;', '>').replaceAll(/\n/gm, '\n> ')
+  }
+  if (highlightRenderOption != null) {
+    quote = wrapHighlightMarkup(quote, highlightRenderOption)
   }
 
   return quote
@@ -177,4 +209,14 @@ export const snakeToCamelCase = (str: string) =>
 
 const removeInvisibleChars = (str: string): string => {
   return outOfCharacter.replace(str)
+}
+
+export const setOrUpdateHighlightColors = (
+  colorSetting: HighlightColorMapping,
+) => {
+  const root = document.documentElement
+
+  Object.entries(colorSetting).forEach(([k, v]) => {
+    root.style.setProperty(`--omni-${k}`, v)
+  })
 }
