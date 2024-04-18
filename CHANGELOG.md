@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.10.0...1.10.1) (2024-04-18)
+
+
+### Bug Fixes
+
+* folder path separators are incorrectly replaced ([5d6bf4f](https://github.com/omnivore-app/obsidian-omnivore/commit/5d6bf4f5725e4dadd160184ddebbf54fa5ae96bd)), closes [#219](https://github.com/omnivore-app/obsidian-omnivore/issues/219)
+
 # [1.10.0](https://github.com/omnivore-app/obsidian-omnivore/compare/1.9.5...1.10.0) (2024-04-17)
 
 
