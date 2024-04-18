@@ -23,7 +23,8 @@ import {
   parseDateTime,
   parseFrontMatterFromContent,
   removeFrontMatterFromContent,
-  replaceIllegalChars,
+  replaceIllegalCharsFile,
+  replaceIllegalCharsFolder,
   setOrUpdateHighlightColors,
 } from './util'
 import { OmnivoreSettingTab } from './settingsTab'
@@ -247,7 +248,7 @@ export default class OmnivorePlugin extends Plugin {
         )
 
         for (const item of items) {
-          const folderName = replaceIllegalChars(
+          const folderName = replaceIllegalCharsFolder(
             normalizePath(render(item, folder, this.settings.folderDateFormat)),
           )
           const omnivoreFolder =
@@ -274,7 +275,7 @@ export default class OmnivorePlugin extends Plugin {
             fileAttachment,
           )
           // use the custom filename
-          const customFilename = replaceIllegalChars(
+          const customFilename = replaceIllegalCharsFile(
             renderFilename(item, filename, this.settings.filenameDateFormat),
           )
           const pageName = `${folderName}/${customFilename}.md`

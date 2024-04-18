@@ -18,6 +18,7 @@
 		"no-prototype-builtins": "off",
 		"@typescript-eslint/no-empty-function": "off",
 		"@typescript-eslint/no-extra-semi": "off",
-		"semi": [2, "never"]
+		"semi": [2, "never"],
+		"no-control-regex": 0
 	}
 }

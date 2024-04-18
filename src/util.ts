@@ -12,7 +12,8 @@ export const REPLACEMENT_CHAR = '-'
 // On Unix-like systems / is reserved and <>:"/\|?* as well as non-printable characters \u0000-\u001F on Windows
 // credit: https://github.com/sindresorhus/filename-reserved-regex
 // eslint-disable-next-line no-control-regex
-export const ILLEGAL_CHAR_REGEX = /[<>:"/\\|?*\u0000-\u001F]/g
+export const ILLEGAL_CHAR_REGEX_FILE = /[<>:"/\\|?*\u0000-\u001F]/g
+export const ILLEGAL_CHAR_REGEX_FOLDER = /[<>:"\\|?*\u0000-\u001F]/g
 
 export interface HighlightPoint {
   left: number
@@ -103,8 +104,16 @@ export const unicodeSlug = (str: string, savedAt: string) => {
   )
 }
 
-export const replaceIllegalChars = (str: string): string => {
-  return removeInvisibleChars(str.replace(ILLEGAL_CHAR_REGEX, REPLACEMENT_CHAR))
+export const replaceIllegalCharsFile = (str: string): string => {
+  return removeInvisibleChars(
+    str.replace(ILLEGAL_CHAR_REGEX_FILE, REPLACEMENT_CHAR),
+  )
+}
+
+export const replaceIllegalCharsFolder = (str: string): string => {
+  return removeInvisibleChars(
+    str.replace(ILLEGAL_CHAR_REGEX_FOLDER, REPLACEMENT_CHAR),
+  )
 }
 
 export function formatDate(date: string, format: string): string {
