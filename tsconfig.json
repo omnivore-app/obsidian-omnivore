@@ -12,7 +12,7 @@
 		"isolatedModules": true,
 		"strictNullChecks": true,
 		"esModuleInterop": true,
-		"lib": ["ES2021","ES2021.String", "DOM"]
+		"lib": ["ES2021", "ES2021.String", "DOM"]
 	},
 	"include": ["src/**/*.ts"]
 }

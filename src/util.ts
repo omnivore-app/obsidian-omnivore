@@ -105,11 +105,15 @@ export const unicodeSlug = (str: string, savedAt: string) => {
 }
 
 export const replaceIllegalCharsFile = (str: string): string => {
-  return removeInvisibleChars(str.replace(ILLEGAL_CHAR_REGEX_FILE, REPLACEMENT_CHAR))
+  return removeInvisibleChars(
+    str.replace(ILLEGAL_CHAR_REGEX_FILE, REPLACEMENT_CHAR),
+  )
 }
 
 export const replaceIllegalCharsFolder = (str: string): string => {
-	return removeInvisibleChars(str.replace(ILLEGAL_CHAR_REGEX_FOLDER, REPLACEMENT_CHAR))
+  return removeInvisibleChars(
+    str.replace(ILLEGAL_CHAR_REGEX_FOLDER, REPLACEMENT_CHAR),
+  )
 }
 
 export function formatDate(date: string, format: string): string {
