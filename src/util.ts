@@ -13,7 +13,7 @@ export const REPLACEMENT_CHAR = '-'
 // credit: https://github.com/sindresorhus/filename-reserved-regex
 // eslint-disable-next-line no-control-regex
 export const ILLEGAL_CHAR_REGEX_FILE = /[<>:"/\\|?*\u0000-\u001F]/g
-export const ILLEGAL_CHAR_REGEX_FOLDER = /[<>"\\|?*\u0000-\u001F]/g
+export const ILLEGAL_CHAR_REGEX_FOLDER = /[<>:"\\|?*\u0000-\u001F]/g
 
 export interface HighlightPoint {
   left: number

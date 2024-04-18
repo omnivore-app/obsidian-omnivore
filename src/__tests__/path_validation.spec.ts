@@ -2,11 +2,11 @@ import * as fs from 'fs'
 import {
   ILLEGAL_CHAR_REGEX_FILE,
   replaceIllegalCharsFile,
+  replaceIllegalCharsFolder,
   REPLACEMENT_CHAR,
 } from '../util'
 
-const expectedManualIllegalChars: string[] = [
-  '/',
+const expectedManualIllegalCharsInFolderName: string[] = [
   '\\',
   '?',
   '*',
@@ -19,8 +19,31 @@ const expectedManualIllegalChars: string[] = [
   '\u001F',
 ]
 
+// Adding forward slash too which is not allowed in file names
+const expectedManualIllegalChars =
+  expectedManualIllegalCharsInFolderName.concat(['/'])
+
 // ZERO WIDTH JOINER and SOFT HYPHEN
 const expectedInvisibleChars: string[] = ['­', '‍']
+
+describe('replaceIllegalCharsFolder() does not replace forward slash', () => {
+  test('Forward slash is not replaced', () => {
+    const input = 'this/that'
+    const output = replaceIllegalCharsFolder(input)
+    expect(output).toEqual(input)
+  })
+})
+
+describe('replaceIllegalCharsFolder() removes all expected characters', () => {
+  test.each(expectedManualIllegalCharsInFolderName)(
+    'Illegal character "%s" is removed',
+    (character) => {
+      const input = `this${character}string`
+      const output = replaceIllegalCharsFolder(input)
+      expect(output).not.toContain(character)
+    },
+  )
+})
 
 describe('replaceIllegalCharsFile() removes all expected characters', () => {
   test.each(expectedManualIllegalChars)(
