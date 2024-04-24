@@ -1,4 +1,5 @@
 import { Item } from '@omnivore-app/api'
+import { DateTime } from 'luxon'
 import {
   addIcon,
   normalizePath,
@@ -17,7 +18,9 @@ import {
   renderFilename,
   renderItemContent,
 } from './settings/template'
+import { OmnivoreSettingTab } from './settingsTab'
 import {
+  DATE_FORMAT,
   findFrontMatterIndex,
   getQueryFromFilter,
   parseDateTime,
@@ -27,7 +30,6 @@ import {
   replaceIllegalCharsFolder,
   setOrUpdateHighlightColors,
 } from './util'
-import { OmnivoreSettingTab } from './settingsTab'
 
 export default class OmnivorePlugin extends Plugin {
   settings: OmnivoreSettings
@@ -396,17 +398,21 @@ export default class OmnivorePlugin extends Plugin {
           }
         }
 
+        this.settings.syncAt = DateTime.local().toFormat(DATE_FORMAT)
+
         if (!hasNextPage) {
           break
         }
       }
+
+      console.log('obsidian-omnivore sync completed', this.settings.syncAt)
+      manualSync && new Notice('🎉 Sync completed')
     } catch (e) {
       new Notice('Failed to fetch items')
       console.error(e)
     } finally {
       this.settings.syncing = false
       await this.saveSettings()
-      manualSync && new Notice('🎉 Sync completed')
     }
   }
 
