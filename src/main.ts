@@ -398,14 +398,15 @@ export default class OmnivorePlugin extends Plugin {
           }
         }
 
-        manualSync && new Notice('🎉 Sync completed')
-
         this.settings.syncAt = DateTime.local().toFormat(DATE_FORMAT)
 
         if (!hasNextPage) {
           break
         }
       }
+
+      console.log('obsidian-omnivore sync completed', this.settings.syncAt)
+      manualSync && new Notice('🎉 Sync completed')
     } catch (e) {
       new Notice('Failed to fetch items')
       console.error(e)
