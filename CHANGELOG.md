@@ -1,3 +1,10 @@
+## [1.10.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.10.1...1.10.2) (2024-04-24)
+
+
+### Bug Fixes
+
+* update sync_at once sync is completed ([9b7e289](https://github.com/omnivore-app/obsidian-omnivore/commit/9b7e2899fa2766d0e0d441de616dfd050b379172))
+
 ## [1.10.1](https://github.com/omnivore-app/obsidian-omnivore/compare/1.10.0...1.10.1) (2024-04-18)
 
 
