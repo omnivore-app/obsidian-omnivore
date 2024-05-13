@@ -52,6 +52,41 @@ const downloadFromUrl = async (url: string): Promise<string> => {
   }
 }
 
+const fetchContentForItems = async (
+  endpoint: string,
+  apiKey: string,
+  items: Item[],
+) => {
+  const content = await getContent(
+    endpoint,
+    apiKey,
+    items.map((a) => a.id),
+  )
+
+  await Promise.allSettled(
+    content.data.map(async (c) => {
+      if (c.error) {
+        console.error('Error fetching content', c.error)
+        return
+      }
+
+      const item = items.find((i) => i.id === c.libraryItemId)
+      if (!item) {
+        console.error('Item not found', c.libraryItemId)
+        return
+      }
+
+      // timeout if download takes too long
+      item.content = await Promise.race([
+        downloadFromUrl(c.downloadUrl),
+        new Promise<string>(
+          (_, reject) => setTimeout(() => reject('Timeout'), 600_000), // 10 minutes
+        ),
+      ])
+    }),
+  )
+}
+
 export const getItems = async (
   endpoint: string,
   apiKey: string,
@@ -76,37 +111,16 @@ export const getItems = async (
     format,
   })
 
-  const articles = response.edges.map((e) => e.node)
-  if (includeContent && articles.length > 0) {
+  const items = response.edges.map((e) => e.node)
+  if (includeContent && items.length > 0) {
     try {
-      const content = await getContent(
-        endpoint,
-        apiKey,
-        articles.map((a) => a.id),
-      )
-
-      await Promise.allSettled(
-        content.data.map(async (c, index) => {
-          if (c.error) {
-            console.error('Error fetching content', c.error)
-            return
-          }
-
-          // timeout if download takes too long
-          articles[index].content = await Promise.race([
-            downloadFromUrl(c.downloadUrl),
-            new Promise<string>(
-              (_, reject) => setTimeout(() => reject('Timeout'), 10000), // 10 seconds
-            ),
-          ])
-        }),
-      )
+      await fetchContentForItems(endpoint, apiKey, items)
     } catch (error) {
       console.error('Error fetching content', error)
     }
   }
 
-  return [articles, response.pageInfo.hasNextPage]
+  return [items, response.pageInfo.hasNextPage]
 }
 
 export const deleteItem = async (
