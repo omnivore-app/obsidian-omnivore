@@ -1,3 +1,10 @@
+## [1.10.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.10.2...1.10.3) (2024-05-16)
+
+
+### Bug Fixes
+
+* wrong base url in the api request ([432a404](https://github.com/omnivore-app/obsidian-omnivore/commit/432a40497b95d418c0c65c12bf4e55ff0fc671e1))
+
 ## [1.10.2](https://github.com/omnivore-app/obsidian-omnivore/compare/1.10.1...1.10.2) (2024-04-24)
 
 
