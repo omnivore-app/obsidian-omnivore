@@ -16,13 +16,15 @@ interface GetContentResponse {
   }[]
 }
 
+const baseUrl = (endpoint: string) => endpoint.replace(/\/api\/graphql$/, '')
+
 const getContent = async (
   endpoint: string,
   apiKey: string,
   libraryItemIds: string[],
 ): Promise<GetContentResponse> => {
   const response = await requestUrl({
-    url: `${endpoint}/api/content`,
+    url: `${baseUrl(endpoint)}/api/content`,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -80,7 +82,7 @@ const fetchContentForItems = async (
       item.content = await Promise.race([
         downloadFromUrl(c.downloadUrl),
         new Promise<string>(
-          (_, reject) => setTimeout(() => reject('Timeout'), 600_000), // 10 minutes
+          (_, reject) => setTimeout(() => reject('Timeout'), 60_000), // 60 seconds
         ),
       ])
     }),
@@ -99,7 +101,7 @@ export const getItems = async (
 ): Promise<[Item[], boolean]> => {
   const omnivore = new Omnivore({
     authToken: apiKey,
-    baseUrl: endpoint,
+    baseUrl: baseUrl(endpoint),
     timeoutMs: 10000, // 10 seconds
   })
 
@@ -130,7 +132,7 @@ export const deleteItem = async (
 ) => {
   const omnivore = new Omnivore({
     authToken: apiKey,
-    baseUrl: endpoint,
+    baseUrl: baseUrl(endpoint),
     timeoutMs: 10000, // 10 seconds
   })
 
