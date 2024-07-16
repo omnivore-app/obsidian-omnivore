@@ -82,7 +82,7 @@ const fetchContentForItems = async (
       item.content = await Promise.race([
         downloadFromUrl(c.downloadUrl),
         new Promise<string>(
-          (_, reject) => setTimeout(() => reject('Timeout'), 60_000), // 60 seconds
+          (_, reject) => setTimeout(() => reject('Timeout'), 600_000), // 10 minutes
         ),
       ])
     }),
