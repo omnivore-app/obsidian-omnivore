@@ -1,3 +1,10 @@
+## [1.10.4](https://github.com/omnivore-app/obsidian-omnivore/compare/1.10.3...1.10.4) (2024-07-16)
+
+
+### Bug Fixes
+
+* some highlighted markdown content not synced ([bc84e26](https://github.com/omnivore-app/obsidian-omnivore/commit/bc84e26a832d6cc7773be903955c7bea6182db29))
+
 ## [1.10.3](https://github.com/omnivore-app/obsidian-omnivore/compare/1.10.2...1.10.3) (2024-05-16)
 
 
