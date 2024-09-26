@@ -46,6 +46,9 @@ export const getHighlightPoint = (patch: string | null): HighlightPoint => {
 }
 
 export const compareHighlightsInFile = (a: Highlight, b: Highlight): number => {
+  if (a.highlightPositionPercent != b.highlightPositionPercent) {
+      return a.highlightPositionPercent - b.highlightPositionPercent;
+  }
   // get the position of the highlight in the file
   const highlightPointA = getHighlightPoint(a.patch)
   const highlightPointB = getHighlightPoint(b.patch)
