@@ -151,7 +151,7 @@ export class OmnivoreSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Last Sync')
       .setDesc(
-        "Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated after this timestamp",
+        "Last time the plugin synced with Omnivore. The 'Sync' command fetches articles updated/saved after this timestamp",
       )
       .addMomentFormat((momentFormat) =>
         momentFormat
@@ -160,6 +160,18 @@ export class OmnivoreSettingTab extends PluginSettingTab {
           .setDefaultFormat("yyyy-MM-dd'T'HH:mm:ss")
           .onChange(async (value) => {
             this.plugin.settings.syncAt = value
+            await this.plugin.saveSettings()
+          }),
+      )
+
+    new Setting(containerEl)
+      .setName('Sync New Articles Only')
+      .setDesc('Check this box if you want to sync only articles saved after last sync')
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.syncNewArticlesOnly)
+          .onChange(async (value) => {
+            this.plugin.settings.syncNewArticlesOnly = value
             await this.plugin.saveSettings()
           }),
       )

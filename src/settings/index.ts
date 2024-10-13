@@ -46,6 +46,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   apiKey: '',
   filter: 'ALL',
   syncAt: '',
+  syncNewArticlesOnly: false,
   customQuery: '',
   template: DEFAULT_TEMPLATE,
   highlightOrder: 'LOCATION',
@@ -77,6 +78,7 @@ export interface OmnivoreSettings {
   apiKey: string
   filter: string
   syncAt: string
+  syncNewArticlesOnly: boolean
   customQuery: string
   highlightOrder: string
   template: string

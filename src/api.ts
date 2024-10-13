@@ -95,6 +95,7 @@ export const getItems = async (
   after = 0,
   first = 10,
   updatedAt = '',
+  savedAt = '',
   query = '',
   includeContent = false,
   format: ItemFormat = 'html',
@@ -108,7 +109,7 @@ export const getItems = async (
   const response = await omnivore.items.search({
     after,
     first,
-    query: `${updatedAt ? 'updated:' + updatedAt : ''} sort:saved-asc ${query}`,
+    query: `${updatedAt ? 'updated:' + updatedAt : ''} ${savedAt ? 'saved:' + savedAt : ''} sort:saved-asc ${query}`,
     includeContent: false,
     format,
   })

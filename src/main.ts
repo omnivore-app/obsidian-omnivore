@@ -46,7 +46,7 @@ export default class OmnivorePlugin extends Plugin {
       await this.saveSettings()
       // show release notes
       const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.
-    
+
     What's new: https://github.com/omnivore-app/obsidian-omnivore/blob/main/CHANGELOG.md
     `
       new Notice(releaseNotes, 10000)
@@ -195,6 +195,7 @@ export default class OmnivorePlugin extends Plugin {
   async fetchOmnivore(manualSync = true) {
     const {
       syncAt,
+      syncNewArticlesOnly,
       apiKey,
       customQuery,
       highlightOrder,
@@ -237,13 +238,15 @@ export default class OmnivorePlugin extends Plugin {
       )
 
       const size = 15
+      const timeAt = parseDateTime(syncAt).toISO() || undefined
       for (let after = 0; ; after += size) {
         const [items, hasNextPage] = await getItems(
           this.settings.endpoint,
           apiKey,
           after,
           size,
-          parseDateTime(syncAt).toISO() || undefined,
+          !syncNewArticlesOnly ? timeAt : undefined,
+          syncNewArticlesOnly ? timeAt : undefined,
           customQuery,
           includeContent,
           'highlightedMarkdown',
