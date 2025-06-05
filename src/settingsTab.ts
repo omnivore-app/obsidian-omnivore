@@ -40,8 +40,8 @@ export class OmnivoreSettingTab extends PluginSettingTab {
           fragment.append(
             'You can create an API key at ',
             fragment.createEl('a', {
-              text: 'https://omnivore.app/settings/api',
-              href: 'https://omnivore.app/settings/api',
+              text: 'https://omnivore.mydomain.com/settings/api',
+              href: 'https://omnivore.mydomain.com/settings/api',
             }),
           )
         }),
@@ -52,6 +52,18 @@ export class OmnivoreSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.apiKey)
           .onChange(async (value) => {
             this.plugin.settings.apiKey = value
+            await this.plugin.saveSettings()
+          }),
+      )
+    new Setting(containerEl)
+      .setName('API Endpoint')
+      .setDesc("Enter the Omnivore server's API endpoint")
+      .addText((text) =>
+        text
+          .setPlaceholder('API endpoint')
+          .setValue(this.plugin.settings.endpoint)
+          .onChange(async (value) => {
+            this.plugin.settings.endpoint = value
             await this.plugin.saveSettings()
           }),
       )
@@ -86,8 +98,8 @@ export class OmnivoreSettingTab extends PluginSettingTab {
           fragment.append(
             'See ',
             fragment.createEl('a', {
-              text: 'https://docs.omnivore.app/using/search',
-              href: 'https://docs.omnivore.app/using/search',
+              text: 'https://github.com/omnivore-app/docs.omnivore/tree/main/docs/using/search',
+              href: 'https://github.com/omnivore-app/docs.omnivore/tree/main/docs/using/search',
             }),
             " for more info on search query syntax. Changing this would reset the 'Last Sync' timestamp",
           )
@@ -286,7 +298,7 @@ export class OmnivoreSettingTab extends PluginSettingTab {
             'Available metadata can be found at ',
             fragment.createEl('a', {
               text: 'Reference',
-              href: 'https://docs.omnivore.app/integrations/obsidian.html#front-matter',
+              href: 'https://github.com/omnivore-app/docs.omnivore/tree/main/docs/integrations/obsidian.md#front-matter',
             }),
             fragment.createEl('br'),
             fragment.createEl('br'),
@@ -322,7 +334,7 @@ export class OmnivoreSettingTab extends PluginSettingTab {
             'Enter template to render articles with ',
             fragment.createEl('a', {
               text: 'Reference',
-              href: 'https://docs.omnivore.app/integrations/obsidian.html#controlling-the-layout-of-the-data-imported-to-obsidian',
+              href: 'https://github.com/omnivore-app/docs.omnivore/tree/main/docs/integrations/obsidian.md#controlling-the-layout-of-the-data-imported-to-obsidian',
             }),
             fragment.createEl('br'),
             fragment.createEl('br'),
@@ -530,19 +542,6 @@ export class OmnivoreSettingTab extends PluginSettingTab {
     })
 
     new Setting(advancedSettings)
-      .setName('API Endpoint')
-      .setDesc("Enter the Omnivore server's API endpoint")
-      .addText((text) =>
-        text
-          .setPlaceholder('API endpoint')
-          .setValue(this.plugin.settings.endpoint)
-          .onChange(async (value) => {
-            this.plugin.settings.endpoint = value
-            await this.plugin.saveSettings()
-          }),
-      )
-
-    new Setting(advancedSettings)
       .setName('Front Matter Template')
       .setDesc(
         createFragment((fragment) => {
@@ -550,7 +549,7 @@ export class OmnivoreSettingTab extends PluginSettingTab {
             'Enter YAML template to render the front matter with ',
             fragment.createEl('a', {
               text: 'Reference',
-              href: 'https://docs.omnivore.app/integrations/obsidian.html#front-matter-template',
+              href: 'https://github.com/omnivore-app/docs.omnivore/tree/main/docs/integrations/obsidian.md#front-matter-template',
             }),
             fragment.createEl('br'),
             fragment.createEl('br'),

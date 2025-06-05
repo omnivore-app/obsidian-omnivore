@@ -16,7 +16,7 @@ interface GetContentResponse {
   }[]
 }
 
-const baseUrl = (endpoint: string) => endpoint.replace(/\/api\/graphql$/, '')
+export const baseUrl = (endpoint: string) => endpoint.replace(/\/api\/graphql$/, '')
 
 const getContent = async (
   endpoint: string,

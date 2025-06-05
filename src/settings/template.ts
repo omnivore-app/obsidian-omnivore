@@ -12,7 +12,7 @@ import {
   snakeToCamelCase,
 } from '../util'
 import { HighlightManagerId } from '.'
-
+import { baseUrl } from '../api'
 type FunctionMap = {
   [key: string]: () => (
     text: string,
@@ -159,16 +159,17 @@ const functionMap: FunctionMap = {
   formatDate: formatDateFunc,
 }
 
-const getOmnivoreUrl = (item: Item) => {
-  return `https://omnivore.app/me/${item.slug}`
+const getOmnivoreUrl = (item: Item, endpoint: string) => {
+  return `${baseUrl(endpoint)}/me/${item.slug}`
 }
 
 export const renderFilename = (
   item: Item,
   filename: string,
   dateFormat: string,
+  endpoint: string,
 ) => {
-  const renderedFilename = render(item, filename, dateFormat)
+  const renderedFilename = render(item, filename, dateFormat, endpoint)
 
   // truncate the filename to 100 characters
   return truncate(renderedFilename, {
@@ -193,6 +194,7 @@ export const renderItemContent = async (
   isSingleFile: boolean,
   frontMatterVariables: string[],
   frontMatterTemplate: string,
+  endpoint: string,
   fileAttachment?: string,
 ) => {
   // filter out notes and redactions
@@ -228,7 +230,7 @@ export const renderItemContent = async (
         template,
         highlightRenderOption,
       ),
-      highlightUrl: `https://omnivore.app/me/${item.slug}#${highlight.id}`,
+      highlightUrl: `${baseUrl(endpoint)}/me/${item.slug}#${highlight.id}`,
       highlightID: highlight.id.slice(0, 8),
       dateHighlighted: highlight.updatedAt
         ? formatDate(highlight.updatedAt, dateHighlightedFormat)
@@ -260,7 +262,7 @@ export const renderItemContent = async (
   const articleView: ArticleView = {
     id: item.id,
     title: item.title,
-    omnivoreUrl: `https://omnivore.app/me/${item.slug}`,
+    omnivoreUrl: `${baseUrl(endpoint)}/me/${item.slug}`,
     siteName,
     originalUrl: item.originalArticleUrl || item.url,
     author: item.author || 'unknown',
@@ -357,10 +359,10 @@ export const renderItemContent = async (
 
   const frontMatterStr = `---\n${frontMatterYaml}---`
 
-  return `${frontMatterStr}\n\n${contentWithoutFrontMatter}`
+  return `${frontMatterStr}\n${contentWithoutFrontMatter}`
 }
 
-export const render = (item: Item, template: string, dateFormat: string) => {
+export const render = (item: Item, template: string, dateFormat: string, endpoint: string) => {
   const dateSaved = formatDate(item.savedAt, dateFormat)
   const datePublished = item.publishedAt
     ? formatDate(item.publishedAt, dateFormat).trim()
@@ -376,7 +378,7 @@ export const render = (item: Item, template: string, dateFormat: string) => {
     siteName:
       item.siteName || siteNameFromUrl(item.originalArticleUrl || item.url),
     author: item.author || 'unknown',
-    omnivoreUrl: getOmnivoreUrl(item),
+    omnivoreUrl: getOmnivoreUrl(item, endpoint),
     originalUrl: item.originalArticleUrl || item.url,
     date: dateSaved,
     dateSaved,

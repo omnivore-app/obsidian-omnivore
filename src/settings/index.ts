@@ -52,7 +52,7 @@ export const DEFAULT_SETTINGS: OmnivoreSettings = {
   syncing: false,
   folder: 'Omnivore/{{{date}}}',
   folderDateFormat: 'yyyy-MM-dd',
-  endpoint: 'https://api-prod.omnivore.app/api/graphql',
+  endpoint: 'https://api-omnivore.mydomain.com/api/graphql',
   filename: '{{{title}}}',
   filenameDateFormat: 'yyyy-MM-dd',
   attachmentFolder: 'Omnivore/attachments',

@@ -45,10 +45,7 @@ export default class OmnivorePlugin extends Plugin {
       this.settings.version = latestVersion
       await this.saveSettings()
       // show release notes
-      const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.
-    
-    What's new: https://github.com/omnivore-app/obsidian-omnivore/blob/main/CHANGELOG.md
-    `
+      const releaseNotes = `Omnivore plugin is upgraded to ${latestVersion}.`
       new Notice(releaseNotes, 10000)
     }
 
@@ -174,6 +171,7 @@ export default class OmnivorePlugin extends Plugin {
         item,
         this.settings.attachmentFolder,
         this.settings.folderDateFormat,
+        this.settings.endpoint,
       ),
     )
     const folder = this.app.vault.getAbstractFileByPath(folderName)
@@ -251,7 +249,7 @@ export default class OmnivorePlugin extends Plugin {
 
         for (const item of items) {
           const folderName = replaceIllegalCharsFolder(
-            normalizePath(render(item, folder, this.settings.folderDateFormat)),
+            normalizePath(render(item, folder, this.settings.folderDateFormat, this.settings.endpoint)),
           )
           const omnivoreFolder =
             this.app.vault.getAbstractFileByPath(folderName)
@@ -274,11 +272,12 @@ export default class OmnivorePlugin extends Plugin {
             isSingleFile,
             frontMatterVariables,
             frontMatterTemplate,
+            this.settings.endpoint,
             fileAttachment,
           )
           // use the custom filename
           const customFilename = replaceIllegalCharsFile(
-            renderFilename(item, filename, this.settings.filenameDateFormat),
+            renderFilename(item, filename, this.settings.filenameDateFormat, this.settings.endpoint),
           )
           const pageName = `${folderName}/${customFilename}.md`
           const normalizedPath = normalizePath(pageName)
